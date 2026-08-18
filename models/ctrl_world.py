@@ -15,7 +15,6 @@ from tqdm.auto import tqdm
 import json
 from decord import VideoReader, cpu
 import wandb
-import swanlab
 import mediapy
 
 

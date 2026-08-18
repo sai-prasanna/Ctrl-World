@@ -28,7 +28,6 @@ from tqdm.auto import tqdm
 import wandb
 import json
 from decord import VideoReader, cpu
-import swanlab
 import mediapy
 import sys
 from scipy.spatial.transform import Rotation as R
