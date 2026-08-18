@@ -10,29 +10,29 @@ class wm_args:
     # model paths
     svd_model_path = "/cephfs/shared/llm/stable-video-diffusion-img2vid"
     clip_model_path = "/cephfs/shared/llm/clip-vit-base-patch32"
-    ckpt_path = '/cephfs/cjyyj/code/video_evaluation/output2/exp33_210_s11/checkpoint-10000.pt'
+    ckpt_path = None  # train the world model from the SVD init (set to a .pt to resume)
     pi_ckpt = '/cephfs/shared/llm/openpi/openpi-assets-preview/checkpoints/pi05_droid'
 
     # dataset parameters
     # raw data
     dataset_root_path = "dataset_example"
-    dataset_names = 'droid_subset'
+    dataset_names = 'abc_subset'
     # meta info
     dataset_meta_info_path = 'dataset_meta_info' #'/cephfs/cjyyj/code/video_evaluation/exp_cfg'#'dataset_meta_info'
     dataset_cfgs = dataset_names
     prob=[1.0]
     annotation_name='annotation' #'annotation_all_skip1'
     num_workers=4
-    down_sample=3 # downsample 15hz to 5hz
+    down_sample=6 # ABC is 30hz -> 5hz (DROID was 15hz -> 5hz, down_sample=3)
     skip_step = 1
     
 
     # logs parameters
     debug = False
-    tag = 'doird_subset'
+    tag = 'abc_subset'
     output_dir = f"model_ckpt/{tag}"
     wandb_run_name = tag
-    wandb_project_name = "droid_example"
+    wandb_project_name = "abc_wm"
 
 
     # training parameters
@@ -57,12 +57,12 @@ class wm_args:
     guidance_scale = 1.0 #2.0 #7.5 #7.5 #7.5 #3.0
     num_inference_steps = 50
     decode_chunk_size = 7
-    width = 320
+    width = 192   # ABC frames are square 224x224 -> 192x192 -> 24x24 latent
     height = 192
     # num history and num future predictions
     num_frames= 5
     num_history = 6
-    action_dim = 7
+    action_dim = 14  # ABC bimanual: (6 joints + gripper) x 2 arms
     text_cond = True
     frame_level_cond = True
     his_cond_zero = False
@@ -83,7 +83,7 @@ class wm_args:
     interact_num = 12 # number of interactions (each interaction contains pred_step steps)
 
     # wm
-    data_stat_path = 'dataset_meta_info/droid/stat.json'
+    data_stat_path = 'dataset_meta_info/abc_subset/stat.json'
     val_model_path = ckpt_path
     history_idx = [0,0,-12,-9,-6,-3]
 
@@ -101,7 +101,20 @@ class wm_args:
             self.task_name = "Rollouts_replay"
 
         # Configure per-task eval sets
-        if self.task_type == "replay":
+        if self.task_type == "abc_replay":
+            self.val_dataset_dir = "dataset_example/abc_subset"
+            self.val_id = []      # filled from the val split below
+            self.start_idx = []
+            self.instruction = []
+            self.task_name = "Rollouts_abc_replay"
+            import glob as _glob
+            _ann = sorted(_glob.glob(f"{self.val_dataset_dir}/annotation/val/*.json"))[:5]
+            for _p in _ann:
+                self.val_id.append(os.path.basename(_p)[:-5])
+                self.start_idx.append(8)
+                self.instruction.append("")
+
+        elif self.task_type == "replay":
             self.val_dataset_dir = "dataset_example/droid_subset"
             self.val_id = ["899", "18599","199",]
             self.start_idx = [8, 14, 8] * len(self.val_id)

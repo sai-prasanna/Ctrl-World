@@ -11,3 +11,7 @@ decord
 einops
 scipy
 pandas
+# ABC-130k (LeRobot v3) data path
+pyarrow
+huggingface_hub
+av

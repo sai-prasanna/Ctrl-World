@@ -146,7 +146,7 @@ class Dataset_mix(Dataset):
             
         # since we downsample the video from 15hz to 5 hz to save the storage space, the frame id is 1/3 of the state id
         joint_len = len(label['observation.state.joint_position'])-1
-        frame_len = np.floor(joint_len / 3)
+        frame_len = np.floor(joint_len / self.args.down_sample)
         skip = random.randint(1, 2)
         skip_his = int(skip*4)
         p = random.random()
@@ -180,16 +180,24 @@ class Dataset_mix(Dataset):
         latnt_cond1,_ = self._get_obs(label, rgb_id, cond_cam_id1, pre_encode=True, video_dir=dataset_dir)
         latnt_cond2,_ = self._get_obs(label, rgb_id, cond_cam_id2, pre_encode=True, video_dir=dataset_dir)
         latnt_cond3,_ = self._get_obs(label, rgb_id, cond_cam_id3, pre_encode=True, video_dir=dataset_dir)
-        latent = torch.zeros((self.args.num_frames+self.args.num_history, 4, 72, 40), dtype=torch.float32)
-        latent[:,:,0:24] =  latnt_cond1
-        latent[:,:,24:48] = latnt_cond2
-        latent[:,:,48:72] = latnt_cond3
+        lat_h, lat_w = self.args.height // 8, self.args.width // 8
+        latent = torch.zeros((self.args.num_frames+self.args.num_history, 4, 3*lat_h, lat_w), dtype=torch.float32)
+        latent[:,:,0*lat_h:1*lat_h] = latnt_cond1
+        latent[:,:,1*lat_h:2*lat_h] = latnt_cond2
+        latent[:,:,2*lat_h:3*lat_h] = latnt_cond3
         data['latent'] = latent.float()
 
         # prepare action cond data
-        cartesian_pose = np.array(label['observation.state.cartesian_position'])[state_id]
-        gripper_pose = np.array(label['observation.state.gripper_position'])[state_id][..., np.newaxis]
-        action = np.concatenate((cartesian_pose, gripper_pose), axis=-1)
+        if 'observation.state.gripper_position' in label:
+            # DROID: 6-D cartesian pose + 1-D gripper
+            cartesian_pose = np.array(label['observation.state.cartesian_position'])[state_id]
+            gripper_pose = np.array(label['observation.state.gripper_position'])[state_id][..., np.newaxis]
+            action = np.concatenate((cartesian_pose, gripper_pose), axis=-1)
+        else:
+            # ABC-130k: the 14-D bimanual state (6 joints + gripper, per arm) is already complete
+            action = np.array(label['observation.state.joint_position'])[state_id]
+        assert action.shape[-1] == self.args.action_dim, \
+            f"action_dim={self.args.action_dim} but data is {action.shape[-1]}-D"
         action = self.normalize_bound(action, state_p01, state_p99)
         data['action'] = torch.tensor(action).float()
 

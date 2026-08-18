@@ -168,6 +168,70 @@ Some examples is shown in below. Starting form the same initial condition, we ro
 </p>
 
 
+### 🛸 (4) Training on ABC-130k (bimanual YAM)
+
+The repo also supports [`lerobot/abc_130k_v3_train`](https://huggingface.co/datasets/lerobot/abc_130k_v3_train),
+a bimanual dataset in **LeRobot v3** format. Differences from DROID are handled by a
+separate selector + extractor; everything downstream (`create_meta_info.py`,
+`Dataset_mix`, `train_wm.py`) is shared.
+
+|                | DROID              | ABC-130k                                  |
+|----------------|--------------------|-------------------------------------------|
+| views          | ext1 / ext2 / wrist| top / left_wrist / right_wrist            |
+| resolution     | 192x320 (24x40)    | 224x224 -> 192x192 (24x24)                |
+| conditioning   | 7-D cartesian+grip | 14-D bimanual joints+grippers             |
+| rate           | 15 Hz, `down_sample=3` | 30 Hz, `down_sample=6`                |
+
+**(a) Pick a coherent task subset.** ABC has 201 tasks / 3541 h; the selector reads only
+`meta/` (no video download) and cuts to a target budget:
+
+```bash
+# inspect what is available
+python dataset_example/select_abc_episodes.py --dry_run
+
+# ~350 h of garment folding/rolling (matches DROID's training volume)
+python dataset_example/select_abc_episodes.py \
+  --task_regex '^(fold and stack the (t-shirts|long sleeve shirts|shorts|skirts|tank tops|towels|trousers|mixed laundry pile)|fold the inside-out t-shirt|roll the (socks|towels|t-shirts|underwear|ties))$' \
+  --max_hours 350 --output_path dataset_example/abc_subset
+```
+This writes `episode_list.json.gz` and `dataset_meta_info/abc_subset/stat.json`
+(14-D `state_01`/`state_99`, derived from the dataset's own per-episode q01/q99).
+
+**(b) Extract latents.** Episodes are packed many-per-file in LeRobot v3, so the
+extractor streams the exact byte ranges it needs from the Hub (av1 GOP size is 2, so
+slicing is cheap). Pass `--raw_path` to read a local copy instead.
+
+```bash
+accelerate launch dataset_example/extract_latent_abc.py \
+  --episode_list dataset_example/abc_subset \
+  --output_path dataset_example/abc_subset \
+  --svd_path ${path to svd}
+```
+Output is ~175 GB of latents for 350 h. Re-running skips episodes already extracted.
+
+> Note: ABC frames are letterboxed inside the 224x224 canvas - content is 4:3 in ~85% of
+> episodes and 16:9 in the rest, centred with black bars. We keep the square frame as-is,
+> so a constant black band occupies part of every latent. This is intentional: it keeps
+> the 3-view stacking and the compute budget unchanged.
+
+**(c) Meta info and training** are the standard commands:
+```bash
+python dataset_meta_info/create_meta_info.py --droid_output_path dataset_example/abc_subset --dataset_name abc_subset
+accelerate launch --main_process_port 29501 scripts/train_wm.py \
+  --dataset_root_path dataset_example --dataset_meta_info_path dataset_meta_info --dataset_names abc_subset
+```
+`config.py` already defaults to `abc_subset` (`action_dim=14`, `width=192`,
+`down_sample=6`, `ckpt_path=None` to train from the SVD init).
+
+**(d) Replay rollout:**
+```bash
+python scripts/rollout_replay_traj.py --task_type abc_replay --ckpt_path ${your checkpoint}
+```
+
+> Note: the $\pi_{0.5}$ policy-in-the-loop scripts are DROID-specific (7-DoF Franka FK and
+> action adapter) and do not apply to ABC.
+
+
 ## Acknowledgement
 
 Ctrl-World is developed from the opensourced video foundation model [Stable-Video-Diffusion](https://github.com/Stability-AI/generative-models). The VLA model used in this repo is from [openpi](https://github.com/Physical-Intelligence/openpi). We thank the authors for their efforts!

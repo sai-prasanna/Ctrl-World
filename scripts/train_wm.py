@@ -18,7 +18,10 @@ from tqdm.auto import tqdm
 import json
 from decord import VideoReader, cpu
 import wandb
-import swanlab
+try:
+    import swanlab
+except ImportError:  # optional mirror of the wandb logs
+    swanlab = None
 import mediapy
 from models.ctrl_world import CrtlWorld
 from config import wm_args
@@ -27,7 +30,10 @@ import math
 
 def main(args):
     logger = get_logger(__name__, log_level="INFO")
-    swanlab.sync_wandb()
+    # swanlab mirrors wandb, but its init needs a TTY to log in - skip it when there is
+    # none (cluster jobs, nohup) or when SWANLAB_DISABLED is set.
+    if swanlab is not None and not os.environ.get('SWANLAB_DISABLED') and sys.stdin.isatty():
+        swanlab.sync_wandb()
     accelerator = Accelerator(
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         mixed_precision=args.mixed_precision,
@@ -71,12 +77,18 @@ def main(args):
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset, 
         batch_size=args.train_batch_size,
-        shuffle=args.shuffle
+        shuffle=args.shuffle,
+        num_workers=args.num_workers,
+        pin_memory=True,
+        persistent_workers=args.num_workers > 0,
     )
     val_dataloader = torch.utils.data.DataLoader(
         val_dataset, 
         batch_size=args.train_batch_size,
-        shuffle=args.shuffle
+        shuffle=args.shuffle,
+        num_workers=args.num_workers,
+        pin_memory=True,
+        persistent_workers=args.num_workers > 0,
     )
 
     # Prepare everything with our accelerator
@@ -86,7 +98,7 @@ def main(args):
    
     ############################ training ##############################
     total_batch_size = args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps
-    num_train_epochs = math.ceil(args.max_train_steps * args.gradient_accumulation_steps*total_batch_size / len(train_dataloader))
+    num_train_epochs = math.ceil(args.max_train_steps * args.gradient_accumulation_steps / len(train_dataloader))
     logger.info("***** Running training *****")
     logger.info(f"  Num examples = {len(train_dataset)}")
     logger.info(f"  Num Epochs = {args.num_train_epochs}")
@@ -138,6 +150,15 @@ def main(args):
                             validate_video_generation(model, val_dataset, args,global_step, args.output_dir, id, accelerator)
                     model.train()
 
+                if global_step >= args.max_train_steps:
+                    break
+        if global_step >= args.max_train_steps:
+            break
+
+    if accelerator.is_main_process:
+        save_path = os.path.join(args.output_dir, f"checkpoint-{global_step}.pt")
+        torch.save(accelerator.unwrap_model(model).state_dict(), save_path)
+        logger.info(f"Saved final checkpoint to {save_path}")
 
 
 def main_val(args):
@@ -168,7 +189,8 @@ def validate_video_generation(model, val_dataset, args, train_steps, videos_dir,
     his_latent_gt, future_latent_ft = video_gt[:,:args.num_history], video_gt[:,args.num_history:]
     current_latent = future_latent_ft[:,0]
     print("image",current_latent.shape, 'action', actions.shape)
-    assert current_latent.shape[1:] == (4, 72, 40)
+    lat_h, lat_w = args.height // 8, args.width // 8
+    assert current_latent.shape[1:] == (4, 3*lat_h, lat_w)
     assert actions.shape[1:] == (int(args.num_frames+args.num_history), args.action_dim)
 
     # start generate
@@ -251,6 +273,18 @@ if __name__ == "__main__":
     parser.add_argument('--dataset_meta_info_path', type=str, default=None)
     # dataset_names
     parser.add_argument('--dataset_names', type=str, default=None)
+    parser.add_argument('--dataset_cfgs', type=str, default=None)
+    # training knobs, so a run can be configured without editing config.py
+    parser.add_argument('--train_batch_size', type=int, default=None)
+    parser.add_argument('--gradient_accumulation_steps', type=int, default=None)
+    parser.add_argument('--learning_rate', type=float, default=None)
+    parser.add_argument('--max_train_steps', type=int, default=None)
+    parser.add_argument('--checkpointing_steps', type=int, default=None)
+    parser.add_argument('--validation_steps', type=int, default=None)
+    parser.add_argument('--video_num', type=int, default=None)
+    parser.add_argument('--num_workers', type=int, default=None)
+    parser.add_argument('--output_dir', type=str, default=None)
+    parser.add_argument('--tag', type=str, default=None)
     args_new = parser.parse_args()
     args = wm_args()
 
@@ -261,6 +295,10 @@ if __name__ == "__main__":
         return args
     
     args = merge_args(args, args_new)
+    if args_new.dataset_names is not None and args_new.dataset_cfgs is None:
+        args.dataset_cfgs = args_new.dataset_names
+    if args_new.tag is not None and args_new.output_dir is None:
+        args.output_dir = f"model_ckpt/{args.tag}"
 
     main(args)
 

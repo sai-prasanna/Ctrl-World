@@ -148,7 +148,8 @@ class agent():
         # action should be normed
         action_cond = self.normalize_bound(action_cond, self.state_p01, self.state_p99, clip_min=-1, clip_max=1)
         action_cond = torch.tensor(action_cond).unsqueeze(0).to(self.device).to(self.dtype)
-        assert image_cond.shape[1:] == (4, 72, 40)
+        lat_h, lat_w = args.height // 8, args.width // 8
+        assert image_cond.shape[1:] == (4, 3*lat_h, lat_w)
         assert action_cond.shape[1:] == (args.num_frames+args.num_history, args.action_dim)
 
 
@@ -263,8 +264,10 @@ if __name__ == "__main__":
         his_cond = []
         his_joint = []
         his_eef = []
-        first_latent = torch.cat([v[0] for v in video_latents], dim=1).unsqueeze(0)  # (1, 4, 72, 40)
-        assert first_latent.shape == (1, 4, 72, 40), f"Expected first_latent shape (1, 4, 72, 40), got {first_latent.shape}"
+        lat_h, lat_w = args.height // 8, args.width // 8
+        latent_shape = (1, 4, 3*lat_h, lat_w)
+        first_latent = torch.cat([v[0] for v in video_latents], dim=1).unsqueeze(0)
+        assert first_latent.shape == latent_shape, f"Expected first_latent shape {latent_shape}, got {first_latent.shape}"
         for i in range(Agent.args.num_history*4):
             his_cond.append(first_latent)  # (1, 4, 72, 40)
             his_joint.append(joint_pos_gt[0:1])  # (1, 7)
@@ -284,8 +287,7 @@ if __name__ == "__main__":
                 video_first = [v[0] for v in video_dict]
             else:
                 video_first = [v[-1] for v in video_dict_pred]
-            assert joint_first.shape == (8,), f"Expected joint_first shape (8,), got {joint_first.shape}"
-            assert state_first.shape == (7,), f"Expected state_first shape (7,), got {state_first.shape}"
+            assert state_first.shape == (args.action_dim,), f"Expected state_first shape ({args.action_dim},), got {state_first.shape}"
             
             # forward policy
             print("################ policy forward ####################")
@@ -301,10 +303,10 @@ if __name__ == "__main__":
             his_pose = np.concatenate([his_eef[idx] for idx in history_idx], axis=0)  # (4, 7)
             action_cond = np.concatenate([his_pose, cartesian_pose], axis=0)
             his_cond_input = torch.cat([his_cond[idx] for idx in history_idx], dim=0).unsqueeze(0)
-            current_latent = his_cond[-1]  # (1, 4, 72, 40)
-            assert current_latent.shape == (1, 4, 72, 40), f"Expected current_latent shape (1, 4, 72, 40), got {current_latent.shape}"
-            assert action_cond.shape == (int(num_history+num_frames), 7), f"Expected action_cond shape ({int(num_history+num_frames)}, 7), got {action_cond.shape}"
-            assert his_cond_input.shape == (1, int(num_history), 4, 72, 40), f"Expected his_cond_input shape (1, {int(num_history)}, 72, 40), got {his_cond_input.shape}"
+            current_latent = his_cond[-1]
+            assert current_latent.shape == latent_shape, f"Expected current_latent shape {latent_shape}, got {current_latent.shape}"
+            assert action_cond.shape == (int(num_history+num_frames), args.action_dim), f"Expected action_cond shape ({int(num_history+num_frames)}, {args.action_dim}), got {action_cond.shape}"
+            assert his_cond_input.shape == (1, int(num_history), *latent_shape[1:]), f"Expected his_cond_input shape (1, {int(num_history)}, {latent_shape[1:]}), got {his_cond_input.shape}"
             # forward world model
             videos_cat, true_videos, video_dict_pred, predicted_latents = Agent.forward_wm(action_cond, video_latent_true, current_latent, his_cond=his_cond_input,text=text_i if Agent.args.text_cond else None)
 

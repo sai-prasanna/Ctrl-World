@@ -63,6 +63,8 @@ if __name__ == "__main__":
     parser.add_argument('--droid_output_path', type=str, default='dataset_example/droid_subset')
     # dataset_name
     parser.add_argument('--dataset_name', type=str, default='droid_subset')
+    parser.add_argument('--write_stat', action='store_true',
+                        help='recompute stat.json from the annotations (overwrites)')
     parser.add_argument('--debug', action='store_true')
     args = parser.parse_args()
     
@@ -83,30 +85,20 @@ if __name__ == "__main__":
         print(f'{data_root} {len(samples)} samples')
         samples_all.extend(samples)
         
-        # calculate the 1% and 99% of the action and state
-        print("########################### state ###########################")
-        # print(np.array(samples_all[0]['actions']).shape)
-        # print(np.array(samples_all[0]['states']).shape)
-        # # state_all = [samples['states'] for samples in samples_all]
-        # state_all = []
-        # for samples in samples_all:
-        #     state = np.array(samples['states']).squeeze(0)
-        #     state_all.append(state)
-
-        # state_all = np.array(state_all)
-        # print(state_all.shape)
-        # state_all = state_all.reshape(-1, state_all.shape[-1])
-        # # caculate the 1% and 99% of the action and state
-        # state_01 = np.percentile(state_all, 1, axis=0)
-        # state_99 = np.percentile(state_all, 99, axis=0)
-        # print('state_01:', state_01)
-        # print('state_99:', state_99)
-        # stat = {
-        #     'state_01': state_01.tolist(),
-        #     'state_99': state_99.tolist(),
-        # }
-        # with open(f'dataset_meta_info{dataset_name}/stat.json', 'w') as f:
-        #     json.dump(stat, f)
+        # calculate the 1% and 99% of the state, used by Dataset_mix.normalize_bound.
+        # Opt-in: for ABC, select_abc_episodes.py already derives stat.json from the
+        # dataset's own per-episode q01/q99, which is more accurate than this subsample.
+        if args.write_stat and data_type == 'train':
+            print("########################### state ###########################")
+            state_all = np.concatenate([np.array(s['states']).reshape(1, -1) for s in samples_all], axis=0)
+            print(state_all.shape)
+            state_01 = np.percentile(state_all, 1, axis=0)
+            state_99 = np.percentile(state_all, 99, axis=0)
+            print('state_01:', state_01)
+            print('state_99:', state_99)
+            os.makedirs(f'dataset_meta_info/{dataset_name}', exist_ok=True)
+            with open(f'dataset_meta_info/{dataset_name}/stat.json', 'w') as f:
+                json.dump({'state_01': state_01.tolist(), 'state_99': state_99.tolist()}, f, indent=2)
 
         
         # dataset meta info
