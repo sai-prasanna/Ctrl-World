@@ -29,8 +29,14 @@ class wm_args:
 
     # logs parameters
     debug = False
-    tag = 'abc_subset'
-    output_dir = f"outputs/{tag}"   # checkpoints + validation samples
+    # Every run writes under outputs/{exp_id}_{exp_name}/, split into model/ (checkpoints),
+    # samples/ (validation videos) and rollout/ (rollout videos).
+    exp_id = '0001'
+    exp_name = 'abc_subset'
+    tag = f"{exp_id}_{exp_name}"
+    run_dir = f"outputs/{exp_id}_{exp_name}"
+    output_dir = f"{run_dir}/model"
+    sample_dir = f"{run_dir}/samples"
     wandb_run_name = tag
     wandb_project_name = "abc_wm"
 
@@ -88,7 +94,7 @@ class wm_args:
     history_idx = [0,0,-12,-9,-6,-3]
 
     # save
-    save_dir = 'outputs/rollouts'  # rollout videos
+    save_dir = f"{run_dir}/rollout"
 
     # select different traj for different tasks
     def __post_init__(self):

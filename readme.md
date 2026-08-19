@@ -223,6 +223,18 @@ accelerate launch --main_process_port 29501 scripts/train_wm.py \
 `config.py` already defaults to `abc_subset` (`action_dim=14`, `width=192`,
 `down_sample=6`, `ckpt_path=None` to train from the SVD init).
 
+**Run layout.** Every run writes to `outputs/{exp_id}_{exp_name}/`:
+
+```
+outputs/0001_abc_subset/
+├── model/     # checkpoint-*.pt
+├── samples/   # training-time validation videos
+├── rollout/   # rollout videos
+└── figures/   # plots and stills
+```
+Set `exp_id`/`exp_name` in `config.py`, or pass `--tag <exp_id>_<exp_name>` to redirect the
+whole run directory at once. `outputs/` is gitignored, so artifacts stay untracked.
+
 **(d) Replay rollout:**
 ```bash
 python scripts/rollout_replay_traj.py --task_type abc_replay --ckpt_path ${your checkpoint}

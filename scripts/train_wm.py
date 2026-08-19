@@ -255,8 +255,9 @@ def validate_video_generation(model, val_dataset, args, train_steps, videos_dir,
     videos = np.concatenate([video_gt,videos],axis=-3) #(2,16,512,256,3)
     videos = np.concatenate([video for video in videos],axis=-2).astype(np.uint8) # (16,512,256*batch,3)
     
-    os.makedirs(f"{videos_dir}/samples", exist_ok=True)
-    filename = f"{videos_dir}/samples/train_steps_{train_steps}_{id}.mp4"
+    sample_dir = getattr(args, "sample_dir", f"{videos_dir}/samples")
+    os.makedirs(sample_dir, exist_ok=True)
+    filename = f"{sample_dir}/train_steps_{train_steps}_{id}.mp4"
     mediapy.write_video(filename, videos, fps=2)
     return 
 
@@ -298,7 +299,10 @@ if __name__ == "__main__":
     if args_new.dataset_names is not None and args_new.dataset_cfgs is None:
         args.dataset_cfgs = args_new.dataset_names
     if args_new.tag is not None and args_new.output_dir is None:
-        args.output_dir = f"model_ckpt/{args.tag}"
+        args.run_dir = f"outputs/{args.tag}"
+        args.output_dir = f"{args.run_dir}/model"
+        args.sample_dir = f"{args.run_dir}/samples"
+        args.save_dir = f"{args.run_dir}/rollout"
 
     main(args)
 
