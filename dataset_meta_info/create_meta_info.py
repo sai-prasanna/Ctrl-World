@@ -18,7 +18,8 @@ import json
 import numpy as np
 from scipy.spatial.transform import Rotation as R  
 
-def load_and_process_ann_file(data_root, ann_file, sequence_interval=1, start_interval=4, sequence_length=8):
+def load_and_process_ann_file(data_root, ann_file, sequence_interval=1, start_interval=4,
+                              sequence_length=8, keep_states=False):
     samples = []
     try:
         with open(f'{data_root}/{ann_file}', "r") as f:
@@ -38,7 +39,10 @@ def load_and_process_ann_file(data_root, ann_file, sequence_interval=1, start_in
         sample = dict()
         sample['episode_id'] = ann['episode_id']
         sample['frame_ids'] = [idx]
-        sample['states'] = np.array(ann['states'])[idx:idx+1]
+        if keep_states:
+            # one numpy array per sample; only needed for --write_stat, and there are
+            # millions of samples, so keep it off by default (it OOMs otherwise)
+            sample['states'] = np.array(ann['states'])[idx:idx+1]
         samples.append(sample)
     return samples
 
@@ -47,10 +51,11 @@ def init_anns(dataset_root, data_dir):
     ann_files = [os.path.join(data_dir, f) for f in os.listdir(final_path) if f.endswith('.json')]
     return ann_files
 
-def init_sequences(data_root, ann_files, sequence_interval, start_interval,sequence_length):
+def init_sequences(data_root, ann_files, sequence_interval, start_interval,sequence_length,
+                   keep_states=False):
     samples = []
     with ThreadPoolExecutor(32) as executor:
-        future_to_ann_file = {executor.submit(load_and_process_ann_file, data_root, ann_file, sequence_interval, start_interval, sequence_length): ann_file for ann_file in ann_files}
+        future_to_ann_file = {executor.submit(load_and_process_ann_file, data_root, ann_file, sequence_interval, start_interval, sequence_length, keep_states): ann_file for ann_file in ann_files}
         for future in tqdm(as_completed(future_to_ann_file), total=len(ann_files)):
             samples.extend(future.result())
     return samples
@@ -81,7 +86,8 @@ if __name__ == "__main__":
         ann_dir = f'annotation/{data_type}'
         ann_files = init_anns(data_root, ann_dir)
         ann_files_all.extend(ann_files)
-        samples = init_sequences(data_root, ann_files,sequence_interval, start_interval, sequence_length)
+        samples = init_sequences(data_root, ann_files,sequence_interval, start_interval, sequence_length,
+                                 keep_states=args.write_stat)
         print(f'{data_root} {len(samples)} samples')
         samples_all.extend(samples)
         
@@ -103,12 +109,12 @@ if __name__ == "__main__":
         
         # dataset meta info
         for samples in samples_all:
-            del samples['states']
+            samples.pop('states', None)
         import random
         random.shuffle(samples_all)
         print('step_num',data_type,len(samples_all))
         print('traj_num',data_type, len(ann_files_all))
         os.makedirs(f'dataset_meta_info/{dataset_name}', exist_ok=True)
         with open(f'dataset_meta_info/{dataset_name}/{data_type}_sample.json', 'w') as f:
-            json.dump(samples_all, f, indent=4)
+            json.dump(samples_all, f)
         
