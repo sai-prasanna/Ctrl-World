@@ -51,6 +51,9 @@ class wm_args:
 
     # training parameters
     learning_rate= 1e-5 # 5e-6
+    lr_scheduler = 'constant_with_warmup'  # constant, cosine, linear, ...
+    lr_warmup_steps = 500
+    resume = False   # continue from ckpt_path, or the newest checkpoint in output_dir
     gradient_accumulation_steps = 1
     mixed_precision = 'fp16'
     train_batch_size = 4

@@ -1,4 +1,5 @@
 # from diffusers import StableVideoDiffusionPipeline
+from diffusers.optimization import get_scheduler
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.pipeline_stable_video_diffusion import StableVideoDiffusionPipeline
@@ -26,6 +27,57 @@ import mediapy
 from models.ctrl_world import CrtlWorld
 from config import wm_args, merge_args
 import math
+import re
+
+
+def latest_checkpoint(output_dir):
+    """Highest-numbered checkpoint-<step>.pt in output_dir, or None."""
+    if not os.path.isdir(output_dir):
+        return None
+    steps = []
+    for f in os.listdir(output_dir):
+        m = re.fullmatch(r"checkpoint-(\d+)\.pt", f)
+        if m:
+            steps.append(int(m.group(1)))
+    if not steps:
+        return None
+    step = max(steps)
+    return step, os.path.join(output_dir, f"checkpoint-{step}.pt")
+
+
+def save_checkpoint(accelerator, model, optimizer, lr_scheduler, global_step, args, logger,
+                    final=False):
+    """Weights go to checkpoint-<step>.pt (bare state_dict, what the rollout scripts load);
+    optimizer/scheduler/step go alongside in trainstate-<step>.pt so a run can resume."""
+    os.makedirs(args.output_dir, exist_ok=True)
+    ckpt = os.path.join(args.output_dir, f"checkpoint-{global_step}.pt")
+    torch.save(accelerator.unwrap_model(model).state_dict(), ckpt)
+    torch.save({"optimizer": optimizer.state_dict(),
+                "lr_scheduler": lr_scheduler.state_dict(),
+                "global_step": global_step},
+               os.path.join(args.output_dir, f"trainstate-{global_step}.pt"))
+    logger.info(f"Saved {'final ' if final else ''}checkpoint to {ckpt}")
+
+
+def resume_training_state(args, optimizer, lr_scheduler, logger):
+    """Restore optimizer/scheduler/step from the checkpoint the weights were loaded from.
+    Returns the step to continue from (0 for a fresh run)."""
+    if not getattr(args, "resume", False) or args.ckpt_path is None:
+        return 0
+    m = re.search(r"checkpoint-(\d+)\.pt$", str(args.ckpt_path))
+    if not m:
+        logger.info(f"resume: {args.ckpt_path} is not a checkpoint-<step>.pt, starting at step 0")
+        return 0
+    step = int(m.group(1))
+    state_path = os.path.join(os.path.dirname(args.ckpt_path), f"trainstate-{step}.pt")
+    if not os.path.exists(state_path):
+        logger.info(f"resume: no {state_path}; keeping weights but restarting optimizer at step 0")
+        return 0
+    state = torch.load(state_path, map_location="cpu")
+    optimizer.load_state_dict(state["optimizer"])
+    lr_scheduler.load_state_dict(state["lr_scheduler"])
+    logger.info(f"resume: continuing from step {state['global_step']}")
+    return state["global_step"]
 
 
 def main(args):
@@ -43,6 +95,13 @@ def main(args):
 
     # model and optimizer
     model = CrtlWorld(args)
+    if getattr(args, "resume", False) and args.ckpt_path is None:
+        found = latest_checkpoint(args.output_dir)
+        if found:
+            _, args.ckpt_path = found
+            print(f"--resume: picked up {args.ckpt_path}")
+        else:
+            print(f"--resume: nothing to resume from in {args.output_dir}, training from SVD init")
     if args.ckpt_path is not None:
         print(f"Loading checkpoint from {args.ckpt_path}!")
         state_dict = torch.load(args.ckpt_path, map_location='cpu')
@@ -50,6 +109,12 @@ def main(args):
     model.to(accelerator.device)
     model.train()
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate)
+    lr_scheduler = get_scheduler(
+        args.lr_scheduler,
+        optimizer=optimizer,
+        num_warmup_steps=args.lr_warmup_steps * args.gradient_accumulation_steps,
+        num_training_steps=args.max_train_steps * args.gradient_accumulation_steps,
+    )
 
     # logs
     if accelerator.is_main_process:
@@ -92,8 +157,8 @@ def main(args):
     )
 
     # Prepare everything with our accelerator
-    model, optimizer, train_dataloader, val_dataloader = accelerator.prepare(
-        model, optimizer, train_dataloader, val_dataloader
+    model, optimizer, lr_scheduler, train_dataloader, val_dataloader = accelerator.prepare(
+        model, optimizer, lr_scheduler, train_dataloader, val_dataloader
     )
    
     ############################ training ##############################
@@ -108,7 +173,7 @@ def main(args):
     logger.info(f"  Total optimization steps = {args.max_train_steps}")
     logger.info(f"  checkpointing_steps = {args.checkpointing_steps}")
     logger.info(f"  validation_steps = {args.validation_steps}")
-    global_step = 0
+    global_step = resume_training_state(args, optimizer, lr_scheduler, logger)
     forward_step=0
     train_loss = 0.0
     progress_bar = tqdm(range(global_step, args.max_train_steps), disable=not accelerator.is_local_main_process)
@@ -126,6 +191,7 @@ def main(args):
                 if accelerator.sync_gradients:
                     accelerator.clip_grad_norm_(params_to_clip, args.max_grad_norm)
                 optimizer.step()
+                lr_scheduler.step()
                 optimizer.zero_grad()
                 forward_step += 1
             
@@ -135,13 +201,13 @@ def main(args):
                 # log loss every 100 steps
                 if global_step %100 == 0:
                     progress_bar.set_postfix({"loss": train_loss})
-                    accelerator.log({"train_loss": train_loss/100}, step=global_step)
+                    accelerator.log({"train_loss": train_loss/100,
+                                     "lr": lr_scheduler.get_last_lr()[0]}, step=global_step)
                     train_loss = 0.0
                 # save ckpt every checkpointing_steps
                 if global_step % args.checkpointing_steps == 0 and accelerator.is_main_process:
-                    save_path = os.path.join(args.output_dir, f"checkpoint-{global_step}.pt")
-                    torch.save(accelerator.unwrap_model(model).state_dict(), save_path)
-                    logger.info(f"Saved checkpoint to {save_path}")
+                    save_checkpoint(accelerator, model, optimizer, lr_scheduler,
+                                    global_step, args, logger)
                 # generate video every validation_steps
                 if global_step % args.validation_steps == 5 and accelerator.is_main_process:
                     model.eval()
@@ -155,10 +221,10 @@ def main(args):
         if global_step >= args.max_train_steps:
             break
 
+    accelerator.wait_for_everyone()
     if accelerator.is_main_process:
-        save_path = os.path.join(args.output_dir, f"checkpoint-{global_step}.pt")
-        torch.save(accelerator.unwrap_model(model).state_dict(), save_path)
-        logger.info(f"Saved final checkpoint to {save_path}")
+        save_checkpoint(accelerator, model, optimizer, lr_scheduler,
+                        global_step, args, logger, final=True)
 
 
 def main_val(args):
@@ -286,6 +352,11 @@ if __name__ == "__main__":
     parser.add_argument('--num_workers', type=int, default=None)
     parser.add_argument('--output_dir', type=str, default=None)
     parser.add_argument('--tag', type=str, default=None)
+    parser.add_argument('--lr_scheduler', type=str, default=None,
+                        help="constant, constant_with_warmup, cosine, linear, ...")
+    parser.add_argument('--lr_warmup_steps', type=int, default=None)
+    parser.add_argument('--resume', action='store_true', default=None,
+                        help='continue from --ckpt_path, or the newest checkpoint in output_dir')
     args_new = parser.parse_args()
     args = wm_args()
 
