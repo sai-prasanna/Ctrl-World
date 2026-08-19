@@ -58,10 +58,10 @@ class wm_args:
     resume = False   # continue from ckpt_path, or the newest checkpoint in output_dir
     gradient_accumulation_steps = 1
     mixed_precision = 'fp16'
-    train_batch_size = 4
+    train_batch_size = 4       # PER DEVICE; paper uses 16 GPUs -> total batch 64
     shuffle = True
     num_train_epochs = 100
-    max_train_steps = 500000
+    max_train_steps = 100000   # paper: "train for 100k steps"; repo default was 500000
     checkpointing_steps = 20000
     validation_steps = 2500
     max_grad_norm = 1.0
