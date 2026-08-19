@@ -229,6 +229,11 @@ if __name__ == "__main__":
     parser.add_argument('--dataset_meta_info_path', type=str, default=None)
     parser.add_argument('--dataset_names', type=str, default=None)
     parser.add_argument('--task_type', type=str, default='replay')
+    parser.add_argument('--val_dataset_dir', type=str, default=None,
+                        help='override the eval set baked into config.__post_init__')
+    parser.add_argument('--val_id', type=str, default=None,
+                        help='comma-separated episode ids to replay')
+    parser.add_argument('--save_dir', type=str, default=None)
     args_new = parser.parse_args()
 
     args = wm_args(task_type=args_new.task_type)
@@ -240,6 +245,10 @@ if __name__ == "__main__":
         return args
     
     args = merge_args(args, args_new)
+    if args_new.val_id is not None:
+        args.val_id = args_new.val_id.split(',')
+        args.start_idx = [8] * len(args.val_id)
+        args.instruction = [""] * len(args.val_id)
 
     # create rollout agent
     Agent = agent(args)
