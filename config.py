@@ -30,7 +30,7 @@ class wm_args:
     # logs parameters
     debug = False
     tag = 'abc_subset'
-    output_dir = f"model_ckpt/{tag}"
+    output_dir = f"outputs/{tag}"   # checkpoints + validation samples
     wandb_run_name = tag
     wandb_project_name = "abc_wm"
 
@@ -88,7 +88,7 @@ class wm_args:
     history_idx = [0,0,-12,-9,-6,-3]
 
     # save
-    save_dir = 'synthetic_traj'
+    save_dir = 'outputs/rollouts'  # rollout videos
 
     # select different traj for different tasks
     def __post_init__(self):
