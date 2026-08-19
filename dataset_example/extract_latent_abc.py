@@ -99,7 +99,8 @@ class EncodeLatentDataset(Dataset):
     """One item == one packed parquet file, i.e. all selected episodes sharing it."""
 
     def __init__(self, episode_list, new_path, svd_path, device, raw_path=None,
-                 repo_id=REPO_ID, size=(192, 192), rgb_skip=6, dtype=torch.float32):
+                 repo_id=REPO_ID, size=(192, 192), rgb_skip=6, dtype=torch.float32,
+                 shard=0, num_shards=1):
         self.new_path = new_path
         self.size = size
         self.skip = rgb_skip
@@ -113,7 +114,12 @@ class EncodeLatentDataset(Dataset):
         groups = defaultdict(list)
         for r in records:
             groups[r["data_file"]].append(r)
-        self.groups = [(k, v) for k, v in sorted(groups.items())]
+        all_groups = [(k, v) for k, v in sorted(groups.items())]
+        # Explicit sharding so a SLURM job array can split the work across independent
+        # jobs; within one job, accelerate shards these further across processes.
+        self.groups = all_groups[shard::num_shards]
+        print(f"shard {shard}/{num_shards}: {len(self.groups)} of {len(all_groups)} parquet groups",
+              flush=True)
 
     def __len__(self):
         return len(self.groups)
@@ -218,6 +224,9 @@ if __name__ == "__main__":
                         help='local copy of the HF repo; omit to stream from the Hub')
     parser.add_argument('--repo_id', type=str, default=REPO_ID)
     parser.add_argument('--svd_path', type=str, default='/cephfs/shared/llm/stable-video-diffusion-img2vid')
+    parser.add_argument('--shard', type=int, default=0,
+                        help='index of this shard (e.g. $SLURM_ARRAY_TASK_ID)')
+    parser.add_argument('--num_shards', type=int, default=1)
     parser.add_argument('--fp16', action='store_true',
                         help='encode with a fp16 VAE (~1.8x faster, negligible latent drift)')
     parser.add_argument('--debug', action='store_true')
@@ -234,6 +243,8 @@ if __name__ == "__main__":
         size=(192, 192),
         rgb_skip=6,  # to downsample 30hz video to 5hz video
         dtype=torch.float16 if args.fp16 else torch.float32,
+        shard=args.shard,
+        num_shards=args.num_shards,
     )
     tmp_data_loader = torch.utils.data.DataLoader(
         dataset,
