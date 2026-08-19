@@ -18,8 +18,10 @@ import argparse
 import gzip
 import json
 import os
+import random
 import sys
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import numpy as np
@@ -137,7 +139,21 @@ def download_raw(records, repo_id, raw_path, workers):
     lock, state = threading.Lock(), {"n": 0, "bytes": done_bytes}
 
     def fetch(f):
-        hf_hub_download(repo_id, f, repo_type="dataset", local_dir=raw_path)
+        # The Hub rate-limits (429) hard on bulk pulls; back off and retry rather than
+        # burning through the whole file list in seconds.
+        delay = 5.0
+        for attempt in range(8):
+            try:
+                hf_hub_download(repo_id, f, repo_type="dataset", local_dir=raw_path)
+                break
+            except Exception as e:  # noqa: BLE001
+                transient = any(t in str(e) for t in
+                                ("429", "Too Many Requests", "Connection", "timed out",
+                                 "Timeout", "IncompleteRead", "EOF"))
+                if not transient or attempt == 7:
+                    raise
+                time.sleep(delay + random.uniform(0, delay))
+                delay = min(delay * 2, 300)
         with lock:
             state["n"] += 1
             state["bytes"] += sizes.get(f, 0)
@@ -190,7 +206,8 @@ def main():
                     help="fetch the referenced raw files into --raw_path (resumable). Needed "
                          "when the compute nodes have no internet; extract with --raw_path.")
     ap.add_argument("--raw_path", default=None)
-    ap.add_argument("--workers", type=int, default=12)
+    ap.add_argument("--workers", type=int, default=8,
+                    help="parallel downloads; lower this if the Hub returns 429s")
     args = ap.parse_args()
 
     if args.print_files:
