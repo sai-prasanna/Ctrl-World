@@ -11,20 +11,21 @@ Usage:
   python dataset_example/select_abc_episodes.py \
       --tasks "fold and stack the t-shirts" "fold and stack the shorts" \
       --max_episodes 12000 --output_path dataset_example/abc_subset
-  # 3. download only the files that are referenced
-  python dataset_example/select_abc_episodes.py --print_files \
-      --output_path dataset_example/abc_subset | xargs -P8 -I{} \
-      hf download lerobot/abc_130k_v3_train {} --repo-type dataset --local-dir <raw>
+  # 3. pre-stage the referenced raw files (needed when compute nodes are offline)
+  python dataset_example/select_abc_episodes.py --download --raw_path $WORK/abc_raw
 """
 import argparse
 import gzip
 import json
 import os
+import sys
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
-from huggingface_hub import hf_hub_download, list_repo_files
+from huggingface_hub import HfApi, hf_hub_download, list_repo_files
 
 VIEW_KEYS = [
     "observation.images.top",
@@ -107,6 +108,56 @@ def aggregate_stat(df):
             "state_99": (q99 * w[:, None]).sum(0).tolist()}
 
 
+def referenced_files(records):
+    """Every repo file the manifest points at."""
+    return sorted({r["data_file"] for r in records}
+                  | {v["file"] for r in records for v in r["videos"]})
+
+
+def file_sizes(repo_id):
+    return {s.rfilename: (s.size or 0) for s in
+            HfApi().repo_info(repo_id, repo_type="dataset", files_metadata=True).siblings}
+
+
+def download_raw(records, repo_id, raw_path, workers):
+    """Fetch the manifest's files into raw_path. Resumable: complete files are skipped."""
+    files = referenced_files(records)
+    sizes = file_sizes(repo_id)
+    total = sum(sizes.get(f, 0) for f in files)
+
+    def have(f):
+        p = os.path.join(raw_path, f)
+        return os.path.exists(p) and (not sizes.get(f) or os.path.getsize(p) == sizes[f])
+
+    todo = [f for f in files if not have(f)]
+    done_bytes = total - sum(sizes.get(f, 0) for f in todo)
+    print(f"{len(files)} files, {total/1e12:.2f} TB total; "
+          f"{len(todo)} missing ({(total-done_bytes)/1e12:.2f} TB to fetch)", flush=True)
+
+    lock, state = threading.Lock(), {"n": 0, "bytes": done_bytes}
+
+    def fetch(f):
+        hf_hub_download(repo_id, f, repo_type="dataset", local_dir=raw_path)
+        with lock:
+            state["n"] += 1
+            state["bytes"] += sizes.get(f, 0)
+            if state["n"] % 50 == 0:
+                print(f"  {state['n']}/{len(todo)} files, "
+                      f"{state['bytes']/1e12:.2f}/{total/1e12:.2f} TB", flush=True)
+
+    failed = []
+    with ThreadPoolExecutor(workers) as ex:
+        futs = {ex.submit(fetch, f): f for f in todo}
+        for fut in as_completed(futs):
+            try:
+                fut.result()
+            except Exception as e:  # noqa: BLE001 - keep going; re-running picks up the rest
+                failed.append(futs[fut])
+                print(f"  FAILED {futs[fut]}: {e}", flush=True)
+    print(f"done; {len(failed)} failed (re-run to retry)", flush=True)
+    return failed
+
+
 def load_episode_list(path):
     """Accepts a directory, a .json or a .json.gz path."""
     if os.path.isdir(path):
@@ -134,15 +185,24 @@ def main():
                          "(more diverse, but multiplies the raw download by ~2.5x)")
     ap.add_argument("--dry_run", action="store_true", help="print the task histogram and exit")
     ap.add_argument("--print_files", action="store_true",
-                    help="print the raw repo files referenced by an existing episode_list.json")
+                    help="print the raw repo files referenced by an existing episode_list")
+    ap.add_argument("--download", action="store_true",
+                    help="fetch the referenced raw files into --raw_path (resumable). Needed "
+                         "when the compute nodes have no internet; extract with --raw_path.")
+    ap.add_argument("--raw_path", default=None)
+    ap.add_argument("--workers", type=int, default=12)
     args = ap.parse_args()
 
     if args.print_files:
-        recs = load_episode_list(args.output_path)
-        files = {r["data_file"] for r in recs}
-        files |= {v["file"] for r in recs for v in r["videos"]}
-        print("\n".join(sorted(files)))
+        print("\n".join(referenced_files(load_episode_list(args.output_path))))
         return
+
+    if args.download:
+        if not args.raw_path:
+            raise SystemExit("--download requires --raw_path")
+        failed = download_raw(load_episode_list(args.output_path), args.repo_id,
+                              args.raw_path, args.workers)
+        sys.exit(1 if failed else 0)
 
     df = load_episode_meta(args.repo_id)
     hist = histogram(df)

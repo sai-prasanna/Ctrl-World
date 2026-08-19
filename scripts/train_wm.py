@@ -24,7 +24,7 @@ except ImportError:  # optional mirror of the wandb logs
     swanlab = None
 import mediapy
 from models.ctrl_world import CrtlWorld
-from config import wm_args
+from config import wm_args, merge_args
 import math
 
 
@@ -289,12 +289,6 @@ if __name__ == "__main__":
     args_new = parser.parse_args()
     args = wm_args()
 
-    def merge_args(args, new_args):
-        for k, v in new_args.__dict__.items():
-            if v is not None:
-                args.__dict__[k] = v
-        return args
-    
     args = merge_args(args, args_new)
     if args_new.dataset_names is not None and args_new.dataset_cfgs is None:
         args.dataset_cfgs = args_new.dataset_names

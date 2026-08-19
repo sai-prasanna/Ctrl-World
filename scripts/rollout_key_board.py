@@ -218,7 +218,7 @@ class agent():
 
         
 if __name__ == "__main__":
-    from config import wm_args
+    from config import wm_args, merge_args
     from argparse import ArgumentParser
     parser = ArgumentParser()
     parser.add_argument('--svd_model_path', type=str, default=None)
@@ -233,12 +233,6 @@ if __name__ == "__main__":
 
     args = wm_args(task_type=args_new.task_type)
 
-    def merge_args(args, new_args):
-        for k, v in new_args.__dict__.items():
-            if v is not None:
-                args.__dict__[k] = v
-        return args
-    
     args = merge_args(args, args_new)
 
     # create rollout agent

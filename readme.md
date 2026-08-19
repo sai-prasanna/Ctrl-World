@@ -199,7 +199,13 @@ This writes `episode_list.json.gz` and `dataset_meta_info/abc_subset/stat.json`
 
 **(b) Extract latents.** Episodes are packed many-per-file in LeRobot v3, so the
 extractor streams the exact byte ranges it needs from the Hub (av1 GOP size is 2, so
-slicing is cheap). Pass `--raw_path` to read a local copy instead.
+slicing is cheap). If the compute nodes have no internet, pre-stage the referenced raw
+files from a login node first and read them locally:
+
+```bash
+python dataset_example/select_abc_episodes.py --download --raw_path $WORK/abc_raw
+```
+then add `--raw_path $WORK/abc_raw` below. Both steps are resumable.
 
 ```bash
 accelerate launch dataset_example/extract_latent_abc.py \

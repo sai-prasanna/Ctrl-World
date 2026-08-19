@@ -3,6 +3,8 @@ import os
 import json
 from dataclasses import dataclass
 
+from config import merge_args  # re-exported so eval scripts can import it from here
+
 
 @dataclass
 class wm_args:

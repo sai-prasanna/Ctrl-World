@@ -4,6 +4,14 @@ import json
 from dataclasses import dataclass
 
 
+def merge_args(cfg, cli_args):
+    """Overlay argparse values onto a config dataclass, ignoring unset (None) ones."""
+    for k, v in vars(cli_args).items():
+        if v is not None:
+            setattr(cfg, k, v)
+    return cfg
+
+
 @dataclass
 class wm_args:
     ########################### training args ##############################

@@ -295,7 +295,7 @@ class agent():
 
     
 if __name__ == "__main__":
-    from config_eval import wm_args
+    from config_eval import wm_args, merge_args
     from argparse import ArgumentParser
     parser = ArgumentParser()
     parser.add_argument('--svd_model_path', type=str, default=None)
@@ -309,12 +309,6 @@ if __name__ == "__main__":
     args_new = parser.parse_args()
 
     args = wm_args(task_type=args_new.task_type)
-
-    def merge_args(cfg, cli_args):
-        for k, v in vars(cli_args).items():
-            if v is not None:
-                setattr(cfg, k, v)
-        return cfg
 
     args = merge_args(args, args_new)
 
