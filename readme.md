@@ -223,7 +223,9 @@ accelerate launch --main_process_port 29501 scripts/train_wm.py \
 `config.py` already defaults to `abc_subset` (`action_dim=14`, `width=192`,
 `down_sample=6`, `ckpt_path=None` to train from the SVD init).
 
-**Run layout.** Every run writes to `outputs/{exp_id}_{exp_name}/`:
+**Run layout.** Everything a run produces goes under `outputs/{exp_id}_{exp_name}/`. That
+prefix is the convention; the subdirectories inside it are just whatever the run produces,
+so add or drop them freely. A world-model run currently uses:
 
 ```
 outputs/0001_abc_subset/
