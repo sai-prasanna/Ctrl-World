@@ -15,3 +15,5 @@ pandas
 pyarrow
 huggingface_hub
 av
+lpips
+torchvision
