@@ -1,0 +1,6 @@
+project: Ctrl-World
+defaults:
+  cluster: leonardo
+  gpus: 1
+  time: 01:00:00
+clusters: {}

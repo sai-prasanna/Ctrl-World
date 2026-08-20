@@ -15,3 +15,7 @@ pandas
 pyarrow
 huggingface_hub
 av
+lpips
+torchvision
+# point tracking for clipeval; install on a login node, Leonardo compute nodes have no network
+cotracker @ git+https://github.com/facebookresearch/co-tracker.git
