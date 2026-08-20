@@ -13,3 +13,6 @@ dataset_example/droid_subset/annotation/val_old*
 dataset_example/droid_new_setup_eval*
 .vscode
 process.pydataset_meta_info/abc_smoke/
+
+# cluster run metadata (provenance lives in the pushed refs)
+.cluster-runs/
