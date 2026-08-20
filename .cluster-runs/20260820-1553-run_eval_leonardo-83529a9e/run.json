@@ -1,0 +1,17 @@
+{
+  "runid": "20260820-1553-run_eval_leonardo-83529a9e",
+  "sha": "83529a9e66642550b001375dfe1e60eafb51c7c5",
+  "dirty": true,
+  "cluster": "leonardo",
+  "job_id": "53255225",
+  "command": [
+    "bash",
+    "scripts/run_eval_leonardo.sh",
+    "10000",
+    "--limit",
+    "8",
+    "--no_lpips"
+  ],
+  "rundir": "/leonardo_work/AIFAC_S07_034/sraman00/runs/Ctrl-World/20260820-1553-run_eval_leonardo-83529a9e",
+  "submitted_at": "2026-08-20T15:53:11.014846"
+}
