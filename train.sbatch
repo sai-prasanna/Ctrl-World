@@ -6,7 +6,11 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=32
 #SBATCH --gres=gpu:4
-#SBATCH --time=24:00:00
+# boost_qos_lprod allows 4 days (the default QoS caps at 24h) for up to 32 GPUs / 8
+# nodes per job, so a full run fits in one job with no resume seam. 100k steps at
+# ~4.71 s/it is ~131h and still needs chaining; 30k from a 10k checkpoint does not.
+#SBATCH --qos=boost_qos_lprod
+#SBATCH --time=36:00:00
 #SBATCH --output=%x-%j.out
 
 set -x
