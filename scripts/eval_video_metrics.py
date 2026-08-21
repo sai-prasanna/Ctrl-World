@@ -142,6 +142,11 @@ def parse_args():
                    help='seed a grid of this many points per side when no per-clip '
                         'queries are supplied')
     p.add_argument('--bootstrap', type=int, default=1000)
+    p.add_argument('--dist_bootstrap', type=int, default=0,
+                   help='episode-bootstrap draws for FID/FVD. These are corpus-level, '
+                        'so every draw recomputes a matrix square root over the whole '
+                        'feature bank: 100 draws cost minutes, not the milliseconds the '
+                        'per-clip bootstrap does. 0 reports the point value only')
     p.add_argument('--seed', type=int, default=0)
     return p.parse_args()
 
@@ -394,7 +399,7 @@ def main():
         view_groups=VIEW_GROUPS, device=runner.device, i3d_ckpt=args.i3d_ckpt,
         tracker=tracker, grid=args.track_grid, track_horizon=TRACK_HORIZON,
         hsd_views=HSD_VIEWS, track_views=TRACK_VIEWS, bootstrap=args.bootstrap,
-        seed=args.seed)
+        dist_bootstrap=args.dist_bootstrap, seed=args.seed)
 
     latent_l2_all = []
     dumped_bytes = 0

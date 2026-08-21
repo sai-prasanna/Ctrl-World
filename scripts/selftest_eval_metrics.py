@@ -81,25 +81,43 @@ def main():
     else:
         bank = FeatureBank(torch.device('cpu'), torch.float32,
                            fid=True, i3d_ckpt=args.i3d_ckpt)
-        frames = torch.randint(0, 256, (6, 64, 64, 3)).float()
-        bank.add_frames('v/pred', frames)
-        bank.add_frames('v/real', frames)
-        videos = torch.randint(0, 256, (2, 16, 64, 64, 3)).float()
-        bank.add_videos('v/pred', videos)
-        bank.add_videos('v/real', videos)
+        # Three episodes, so the episode bootstrap has something to resample.
+        for ep in ('e0', 'e1', 'e2'):
+            frames = torch.randint(0, 256, (6, 64, 64, 3)).float()
+            bank.add_frames('v/pred', frames, ep)
+            bank.add_frames('v/real', frames, ep)
+            videos = torch.randint(0, 256, (2, 16, 64, 64, 3)).float()
+            bank.add_videos('v/pred', videos, ep)
+            bank.add_videos('v/real', videos, ep)
         out = bank.results(['v'])
         check('fid backbone ran', 'fid' in out, str(bank.backbones.get('fid', '')))
         # Identical feature sets must give a Frechet distance of zero.
         if 'fid' in out:
-            check('fid of a set against itself is 0', abs(out['fid']['v']) < 1e-3,
-                  f'{out["fid"]["v"]:.6f}')
+            check('fid of a set against itself is 0', abs(out['fid']['v']['value']) < 1e-3,
+                  f'{out["fid"]["v"]["value"]:.6f}')
+            check('no CI without --dist_bootstrap', 'ci95' not in out['fid']['v'])
         if args.i3d_ckpt:
             check('fvd backbone ran', 'fvd' in out, str(bank.backbones.get('fvd', '')))
             if 'fvd' in out:
-                check('fvd of a set against itself is 0', abs(out['fvd']['v']) < 1e-3,
-                      f'{out["fvd"]["v"]:.6f}')
+                check('fvd of a set against itself is 0', abs(out['fvd']['v']['value']) < 1e-3,
+                      f'{out["fvd"]["v"]["value"]:.6f}')
         else:
             print('SKIP  fvd (no --i3d_ckpt)')
+
+        # ---- episode bootstrap of a corpus-level metric --------------------------
+        boot = bank.results(['v'], n_boot=8, seed=0)['fid']['v']
+        check('bootstrap adds a CI', 'ci95' in boot,
+              str([round(x, 4) for x in boot.get('ci95', [])]))
+        check('bootstrap resampled episodes, not clips',
+              boot['bootstrap']['n_episodes'] == 3, str(boot['bootstrap']))
+        # Every draw compares a set against itself, so the whole interval sits at zero.
+        check('CI of a set against itself brackets 0',
+              boot['ci95'][0] <= 1e-3 and boot['ci95'][1] < 1e-2,
+              f'[{boot["ci95"][0]:.2e}, {boot["ci95"][1]:.2e}]')
+        # An episode present on one side only cannot be paired, so it is dropped.
+        bank.add_frames('v/pred', torch.zeros(6, 64, 64, 3), 'lonely')
+        check('unpaired episode dropped from the bootstrap',
+              bank.results(['v'], n_boot=4)['fid']['v']['bootstrap']['n_episodes'] == 3)
 
     print()
     if FAILURES:

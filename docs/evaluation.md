@@ -118,8 +118,25 @@ PSNR values has no fixed meaning, because it moves with the data range.
 ### Confidence intervals
 
 Intervals on PSNR, SSIM, and LPIPS come from a bootstrap over episodes, not clips,
-because two clips from one episode share a scene and lighting. FID and FVD are biased at
-small sample sizes, so they carry no interval; compare them only at a fixed clip count.
+because two clips from one episode share a scene and lighting.
+
+FID and FVD are corpus-level: there is no per-clip value to average, so the same
+bootstrap does not apply. Pass `--dist_bootstrap <draws>` to get an interval anyway. Each
+draw resamples episodes with replacement and recomputes the Fréchet distance over the
+resampled corpus, drawing the predicted and real sets on the same episodes because they
+are two halves of the same clips. The reported value stays the full-sample one, not the
+bootstrap mean.
+
+Read that interval as sampling variability only. Both metrics are also biased at small
+sample sizes, and the bootstrap does not remove that bias: two checkpoints scored over
+the same clip list share it, so a difference is readable, but a magnitude is not. Compare
+them only at a fixed clip count.
+
+Each draw costs a matrix square root over the whole feature bank — about 6 s for the
+2048-dim FID features and 1 s for FVD, so the default of 100 draws adds roughly 25 min
+per checkpoint across both views. That is why it is off by default in
+`eval_video_metrics.py` and why it is not the 1000 draws the per-clip metrics use.
+`eval_leonardo.sh run` sets it to 100; override with `DIST_BOOTSTRAP=0` to skip it.
 
 ### FID and FVD
 

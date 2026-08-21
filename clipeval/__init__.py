@@ -104,7 +104,7 @@ class Scorer:
                  view_names=('view',), view_groups=None, device='cpu',
                  i3d_ckpt=None, lpips_net='alex', tracker=None, grid=16,
                  track_horizon=None, hsd_views=None, track_views=None,
-                 bootstrap=1000, seed=0):
+                 bootstrap=1000, dist_bootstrap=0, seed=0):
         self.metrics = list(metrics)
         self.rounds = int(rounds)
         self.per_round = int(per_round)
@@ -113,6 +113,9 @@ class Scorer:
         self.view_groups = dict(view_groups or {})
         self.device = torch.device(device)
         self.bootstrap = bootstrap
+        # FID/FVD are corpus-level: each draw recomputes a matrix square root, so this
+        # gets its own, much smaller, draw count. 0 disables the CI entirely.
+        self.dist_bootstrap = dist_bootstrap
         self.seed = seed
         self.grid = grid
         self.track_horizon = track_horizon
@@ -213,10 +216,11 @@ class Scorer:
         if self.lpips is not None:
             self._series('lpips', view, self.lpips(pred, target))
         if self.bank.enabled:
-            self.bank.add_frames(f'{view}/pred', pred)
-            self.bank.add_frames(f'{view}/real', target)
-            self.bank.add_videos(f'{view}/pred', pred[None])
-            self.bank.add_videos(f'{view}/real', target[None])
+            episode = episode_id if episode_id is not None else clip_id
+            self.bank.add_frames(f'{view}/pred', pred, episode)
+            self.bank.add_frames(f'{view}/real', target, episode)
+            self.bank.add_videos(f'{view}/pred', pred[None], episode)
+            self.bank.add_videos(f'{view}/real', target[None], episode)
         if self._tracking_on and (self.track_views is None
                                   or view in self.track_views):
             out.update(self._add_tracking(gt, pred, view, queries, mask))
@@ -414,12 +418,15 @@ class Scorer:
 
         self._add_psnr_gains(out)
 
-        for metric, per_view in self.bank.results(self.view_names).items():
-            for view, value in per_view.items():
-                out['per_view'].setdefault(view, {})[metric] = {'value': value}
+        dist = self.bank.results(self.view_names, self.dist_bootstrap, self.seed)
+        for metric, per_view in dist.items():
+            for view, entry in per_view.items():
+                out['per_view'].setdefault(view, {})[metric] = entry
             for group, members in self.view_groups.items():
+                # A group average of two corpus-level distances is not itself a Frechet
+                # distance, so it carries no CI even when the members have one.
                 out['per_group'].setdefault(group, {})[metric] = {
-                    'value': float(np.mean([per_view[v] for v in members]))}
+                    'value': float(np.mean([per_view[v]['value'] for v in members]))}
         return out
 
     def _add_groups(self, out, metric, per_view, series):
