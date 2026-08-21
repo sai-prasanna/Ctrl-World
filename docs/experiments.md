@@ -75,9 +75,10 @@ where Fréchet estimators still carry sample-size bias, so read the wrist −10.
 rather than as a real change.
 
 `--dist_bootstrap` resamples episodes and recomputes both distances per draw, which gives
-these two metrics an interval. It does not apply to steps 5000 and 10000 retroactively:
-the features exist only during a rollout, and neither run passed `--dump_frames`. Scoring
-either step with an interval means rolling it out again, about 2.5 hours per checkpoint.
+these two metrics an interval. It stays off by default: it costs about 25 minutes per
+checkpoint, published FID and FVD numbers carry no interval either, and the pixel metrics
+already answer whether one checkpoint beats another. Turn it on to settle a specific
+question, such as whether the wrist FVD move is real.
 
 FVD uses stylegan-v's I3D (MD5-pinned in `scripts/eval_leonardo.sh`), the de facto
 standard, so the absolute scale is comparable to published numbers. **FID is not
@@ -150,5 +151,6 @@ python scripts/selftest_eval_metrics.py   # 22 checks, CPU only
 - **No fair per-round baseline.** A baseline repeating the model's *own* conditioning
   frame would separate "this round predicted no motion" from "the rollout has drifted",
   which the current oracle baseline confounds.
-- **No CIs on FID/FVD for steps 5000 and 10000**, as the distribution-metrics section
-  explains. `--dist_bootstrap` covers later checkpoints.
+- **No CIs on FID/FVD**, as the distribution-metrics section explains. `--dist_bootstrap`
+  produces them on request; it is off by default, so read the FID and FVD columns as
+  directional rather than as evidence on their own.

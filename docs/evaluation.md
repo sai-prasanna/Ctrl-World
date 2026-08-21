@@ -136,7 +136,11 @@ Each draw costs a matrix square root over the whole feature bank: about 6 second
 the 2048-dimensional FID features and 1 second for FVD. At 100 draws that adds roughly
 25 minutes per checkpoint across both views, which is why `eval_video_metrics.py`
 defaults to 0 rather than to the 1000 draws the per-clip metrics use.
-`scripts/eval_leonardo.sh run` sets it to 100. To skip it, pass `DIST_BOOTSTRAP=0`.
+Both `eval_video_metrics.py` and `scripts/eval_leonardo.sh run` therefore leave it off.
+Published FID and FVD numbers carry no interval either, so turn it on only to settle a
+specific question about whether a move is real: `DIST_BOOTSTRAP=100 scripts/eval_leonardo.sh
+run <step>`. To decide whether one checkpoint beats another, prefer PSNR, SSIM, and LPIPS,
+which are per-clip and carry episode-bootstrapped intervals at no extra cost.
 
 ### FID and FVD
 
