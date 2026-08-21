@@ -69,11 +69,16 @@ FVD moves −7.0% third-view but only −2.6% wrist, against −7.3% / −5.3% o
 wrist rollouts are landing closer to the right frames without their distribution of
 motion looking much more real.
 
-Neither metric carries a confidence interval: both are computed once over the whole
-pooled feature set rather than per episode. On 226 clips a ~10-point FVD move is within
-the range where Fréchet estimators are still biased by sample size, so the wrist −10.7
-should not be read as a real change. Bootstrapping the feature bank over episodes would
-fix this and needs no re-rollout, since the per-clip features are already computed.
+Neither number above carries a confidence interval: both were computed once over the
+whole pooled feature set. On 226 clips a ~10-point FVD move is within the range where
+Fréchet estimators are still biased by sample size, so the wrist −10.7 should not be
+read as a real change.
+
+`--dist_bootstrap` now resamples episodes and recomputes both distances per draw, so
+later checkpoints will carry an interval. It cannot be applied to these two steps
+retroactively: the features exist only during a rollout and neither run passed
+`--dump_frames`, so re-scoring 5000 or 10000 with an interval means re-rolling them
+(~2.5 h each).
 
 FVD uses stylegan-v's I3D (MD5-pinned in `scripts/eval_leonardo.sh`), the de facto
 standard, so the absolute scale is comparable to published numbers. **FID is not
@@ -128,14 +133,15 @@ you need a path outside the default `outputs/0002_abc_rigid/model/` layout.
 Verify the scoring code without a GPU or the dataset:
 
 ```bash
-python scripts/selftest_eval_metrics.py   # 18 checks, CPU only
+python scripts/selftest_eval_metrics.py   # 22 checks, CPU only
 ```
 
 ### Known gaps
 
-- **Not converged.** The next run should go to at least 30000 steps. 20000 more steps at
-  ~4.71 s/it is ~26 h, past the 24 h wall limit, so it needs two chained jobs:
-  `MAX_STEPS=30000 RESUME=--resume sbatch train.sbatch`, submitted twice. `--resume`
+- **Not converged.** A run to 30000 steps is in flight (job 53334785, resumed from
+  `checkpoint-10000.pt`). 20000 steps at ~4.5 s/it is ~25 h, past the default QoS's 24 h
+  wall, so it runs under `boost_qos_lprod` with a 36 h limit as a single job rather than
+  two chained ones: `MAX_STEPS=30000 RESUME=--resume sbatch train.sbatch`. `--resume`
   with no `--ckpt_path` auto-picks the newest `checkpoint-<step>.pt`.
 - **No tracking metrics yet.** Pixel metrics score appearance, not control accuracy —
   PSNR and SSIM reward a blurred mean-future. `clipeval/tracking` and the CoTracker3
@@ -144,4 +150,5 @@ python scripts/selftest_eval_metrics.py   # 18 checks, CPU only
 - **No fair per-round baseline.** A baseline repeating the model's *own* conditioning
   frame would separate "this round predicted no motion" from "the rollout has drifted",
   which the current oracle baseline confounds.
-- **No CIs on FID/FVD**, as above.
+- **No CIs on FID/FVD for these two steps**, as above. The machinery exists now; the
+  step-30000 eval will be the first to report them.
