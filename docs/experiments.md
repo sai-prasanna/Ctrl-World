@@ -71,14 +71,9 @@ motion looking much more real.
 
 Neither table entry carries a confidence interval: both runs computed the distance once
 over the whole pooled feature set. On 226 clips a 10-point FVD move sits within the range
-where Fréchet estimators still carry sample-size bias, so read the wrist −10.7 as noise
-rather than as a real change.
-
-`--dist_bootstrap` resamples episodes and recomputes both distances per draw, which gives
-these two metrics an interval. It stays off by default: it costs about 25 minutes per
-checkpoint, published FID and FVD numbers carry no interval either, and the pixel metrics
-already answer whether one checkpoint beats another. Turn it on to settle a specific
-question, such as whether the wrist FVD move is real.
+where Fréchet estimators still carry sample-size bias, so read the wrist −10.7 as
+directional rather than as a measured change. Published FID and FVD numbers carry no
+interval either. The pixel metrics are what settle whether one checkpoint beats another.
 
 FVD uses stylegan-v's I3D (MD5-pinned in `scripts/eval_leonardo.sh`), the de facto
 standard, so the absolute scale is comparable to published numbers. **FID is not
@@ -133,7 +128,7 @@ you need a path outside the default `outputs/0002_abc_rigid/model/` layout.
 Verify the scoring code without a GPU or the dataset:
 
 ```bash
-python scripts/selftest_eval_metrics.py   # 22 checks, CPU only
+python scripts/selftest_eval_metrics.py   # 18 checks, CPU only
 ```
 
 ### Known gaps
@@ -151,6 +146,5 @@ python scripts/selftest_eval_metrics.py   # 22 checks, CPU only
 - **No fair per-round baseline.** A baseline repeating the model's *own* conditioning
   frame would separate "this round predicted no motion" from "the rollout has drifted",
   which the current oracle baseline confounds.
-- **No CIs on FID/FVD**, as the distribution-metrics section explains. `--dist_bootstrap`
-  produces them on request; it is off by default, so read the FID and FVD columns as
-  directional rather than as evidence on their own.
+- **No CIs on FID/FVD**, as the distribution-metrics section explains. Read those two
+  columns as directional rather than as evidence on their own.

@@ -120,27 +120,11 @@ PSNR values has no fixed meaning, because it moves with the data range.
 Intervals on PSNR, SSIM, and LPIPS come from a bootstrap over episodes, not clips,
 because two clips from one episode share a scene and lighting.
 
-FID and FVD are corpus-level: there is no per-clip value to average, so the same
-bootstrap does not apply. Pass `--dist_bootstrap <draws>` to get an interval anyway. Each
-draw resamples episodes with replacement and recomputes the Fréchet distance over the
-resampled corpus, drawing the predicted and real sets on the same episodes because they
-are two halves of the same clips. The reported value stays the full-sample one, not the
-bootstrap mean.
-
-Read that interval as sampling variability only. Both metrics are also biased at small
-sample sizes, and the bootstrap does not remove that bias: two checkpoints scored over
-the same clip list share it, so a difference is readable, but a magnitude is not. Compare
-them only at a fixed clip count.
-
-Each draw costs a matrix square root over the whole feature bank: about 6 seconds for
-the 2048-dimensional FID features and 1 second for FVD. At 100 draws that adds roughly
-25 minutes per checkpoint across both views, which is why `eval_video_metrics.py`
-defaults to 0 rather than to the 1000 draws the per-clip metrics use.
-Both `eval_video_metrics.py` and `scripts/eval_leonardo.sh run` therefore leave it off.
-Published FID and FVD numbers carry no interval either, so turn it on only to settle a
-specific question about whether a move is real: `DIST_BOOTSTRAP=100 scripts/eval_leonardo.sh
-run <step>`. To decide whether one checkpoint beats another, prefer PSNR, SSIM, and LPIPS,
-which are per-clip and carry episode-bootstrapped intervals at no extra cost.
+FID and FVD carry no interval. Both are corpus-level, so there is no per-clip value to
+average and the same bootstrap does not apply, and both are biased at small sample sizes.
+Compare them only at a fixed clip count, and treat a move in either as directional. To
+decide whether one checkpoint beats another, use PSNR, SSIM, and LPIPS, which are
+per-clip and carry episode-bootstrapped intervals.
 
 ### FID and FVD
 

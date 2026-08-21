@@ -107,7 +107,6 @@ cmd_run() {
         --svd_model_path "$svd" --clip_model_path "$clip" \
         --batch_size "${BATCH_SIZE:-4}" \
         --fid $i3d_arg \
-        --dist_bootstrap "${DIST_BOOTSTRAP:-0}" \
         --out "$out" \
         "$@"
 }
