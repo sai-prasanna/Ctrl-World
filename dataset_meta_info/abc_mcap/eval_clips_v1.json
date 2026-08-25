@@ -1,0 +1,1564 @@
+{
+  "version": "eval_clips_v1",
+  "val_dataset_dir": "/leonardo_work/AIFAC_S07_034/sraman00/ctrlworld/data/abc_mcap",
+  "seed": 0,
+  "n_clips": 256,
+  "n_episodes": 182,
+  "clip_frames": 49,
+  "needed_frames": 68,
+  "pred_step": 5,
+  "interact_num": 12,
+  "max_per_episode": 2,
+  "episodes_dropped_too_short": 40,
+  "task_counts": {
+    "sort the legos into containers by color": 102,
+    "put the plastic bottles in the bin": 70,
+    "sort the stationery into containers": 16,
+    "sort the pills into containers": 16,
+    "sort the tools into containers": 10,
+    "put the trash bags into the trash bin": 10,
+    "sort the screws and nuts into containers": 9,
+    "sort the eating utensils into containers": 7,
+    "throw the plastic bottles in the bin": 6,
+    "sort the hair-cutting tools": 6,
+    "put the screwdriver in the bin": 4
+  },
+  "clips": [
+    {
+      "episode_id": "00ce9827-879c-4bed-82ef-8bfd07302d60",
+      "start_idx": 3,
+      "task": "put the screwdriver in the bin",
+      "length": 73
+    },
+    {
+      "episode_id": "016f2a41-e549-4b00-b786-c5b0842bcaa2",
+      "start_idx": 594,
+      "task": "put the plastic bottles in the bin",
+      "length": 983
+    },
+    {
+      "episode_id": "03cb8b5e-05c4-4a3b-9c0a-31228878df68",
+      "start_idx": 78,
+      "task": "sort the tools into containers",
+      "length": 255
+    },
+    {
+      "episode_id": "03cb8b5e-05c4-4a3b-9c0a-31228878df68",
+      "start_idx": 181,
+      "task": "sort the tools into containers",
+      "length": 255
+    },
+    {
+      "episode_id": "03fe16ad-5ec4-41fe-99ff-a33f46928165",
+      "start_idx": 119,
+      "task": "sort the legos into containers by color",
+      "length": 487
+    },
+    {
+      "episode_id": "03fe16ad-5ec4-41fe-99ff-a33f46928165",
+      "start_idx": 254,
+      "task": "sort the legos into containers by color",
+      "length": 487
+    },
+    {
+      "episode_id": "04ff9b0c-7f4a-4432-bcbe-7821d60b6b1f",
+      "start_idx": 7,
+      "task": "sort the legos into containers by color",
+      "length": 300
+    },
+    {
+      "episode_id": "06226917-d405-498f-9e36-201ee419a4ad",
+      "start_idx": 187,
+      "task": "sort the legos into containers by color",
+      "length": 910
+    },
+    {
+      "episode_id": "063e12ce-6e0e-451e-8fbb-f399729411a5",
+      "start_idx": 363,
+      "task": "sort the legos into containers by color",
+      "length": 742
+    },
+    {
+      "episode_id": "08600946-ee25-4853-bb2f-9f5971668875",
+      "start_idx": 20,
+      "task": "sort the legos into containers by color",
+      "length": 443
+    },
+    {
+      "episode_id": "08600946-ee25-4853-bb2f-9f5971668875",
+      "start_idx": 82,
+      "task": "sort the legos into containers by color",
+      "length": 443
+    },
+    {
+      "episode_id": "08649ea5-2809-4bfc-a1bf-d89db0520d91",
+      "start_idx": 165,
+      "task": "sort the legos into containers by color",
+      "length": 641
+    },
+    {
+      "episode_id": "08649ea5-2809-4bfc-a1bf-d89db0520d91",
+      "start_idx": 551,
+      "task": "sort the legos into containers by color",
+      "length": 641
+    },
+    {
+      "episode_id": "0bc1bd7e-30ff-47bc-905d-ad3b9de574ad",
+      "start_idx": 81,
+      "task": "put the trash bags into the trash bin",
+      "length": 618
+    },
+    {
+      "episode_id": "0ecdb947-0675-43de-945d-348a7b4ebfda",
+      "start_idx": 216,
+      "task": "sort the legos into containers by color",
+      "length": 656
+    },
+    {
+      "episode_id": "0ecdb947-0675-43de-945d-348a7b4ebfda",
+      "start_idx": 426,
+      "task": "sort the legos into containers by color",
+      "length": 656
+    },
+    {
+      "episode_id": "0f06dc99-eeac-48bc-8f4f-c8c0ae6089e2",
+      "start_idx": 172,
+      "task": "sort the stationery into containers",
+      "length": 421
+    },
+    {
+      "episode_id": "0f06dc99-eeac-48bc-8f4f-c8c0ae6089e2",
+      "start_idx": 337,
+      "task": "sort the stationery into containers",
+      "length": 421
+    },
+    {
+      "episode_id": "0f4ed64f-24d7-4c75-bae6-c43d88d0820b",
+      "start_idx": 69,
+      "task": "put the plastic bottles in the bin",
+      "length": 1160
+    },
+    {
+      "episode_id": "0f4ed64f-24d7-4c75-bae6-c43d88d0820b",
+      "start_idx": 841,
+      "task": "put the plastic bottles in the bin",
+      "length": 1160
+    },
+    {
+      "episode_id": "1091e48e-d575-4984-8bf0-5a5b940efdea",
+      "start_idx": 56,
+      "task": "sort the legos into containers by color",
+      "length": 348
+    },
+    {
+      "episode_id": "155b821d-ed7e-4d0b-b1a5-a680e006ab80",
+      "start_idx": 551,
+      "task": "put the plastic bottles in the bin",
+      "length": 1130
+    },
+    {
+      "episode_id": "155b821d-ed7e-4d0b-b1a5-a680e006ab80",
+      "start_idx": 676,
+      "task": "put the plastic bottles in the bin",
+      "length": 1130
+    },
+    {
+      "episode_id": "1a4d046f-cecc-42aa-9b3b-d27a1469f5e5",
+      "start_idx": 67,
+      "task": "sort the legos into containers by color",
+      "length": 345
+    },
+    {
+      "episode_id": "1bc8e710-cd7d-482e-be2a-d2ed9bca22c9",
+      "start_idx": 62,
+      "task": "put the plastic bottles in the bin",
+      "length": 230
+    },
+    {
+      "episode_id": "1bc8e710-cd7d-482e-be2a-d2ed9bca22c9",
+      "start_idx": 143,
+      "task": "put the plastic bottles in the bin",
+      "length": 230
+    },
+    {
+      "episode_id": "1c570102-a42c-4567-afc5-ddebf4761ab4",
+      "start_idx": 7,
+      "task": "throw the plastic bottles in the bin",
+      "length": 291
+    },
+    {
+      "episode_id": "1c570102-a42c-4567-afc5-ddebf4761ab4",
+      "start_idx": 129,
+      "task": "throw the plastic bottles in the bin",
+      "length": 291
+    },
+    {
+      "episode_id": "1c759f54-a905-4950-9907-4a4dc726bf54",
+      "start_idx": 120,
+      "task": "put the plastic bottles in the bin",
+      "length": 482
+    },
+    {
+      "episode_id": "1c759f54-a905-4950-9907-4a4dc726bf54",
+      "start_idx": 346,
+      "task": "put the plastic bottles in the bin",
+      "length": 482
+    },
+    {
+      "episode_id": "1d3fee67-161b-40b3-9c73-2ee486426f3e",
+      "start_idx": 158,
+      "task": "sort the legos into containers by color",
+      "length": 837
+    },
+    {
+      "episode_id": "1d96ca1f-cfda-48cc-99f7-80967fed7220",
+      "start_idx": 21,
+      "task": "sort the pills into containers",
+      "length": 883
+    },
+    {
+      "episode_id": "224e785f-ddb6-49ff-bf53-ca61cd33551c",
+      "start_idx": 449,
+      "task": "sort the pills into containers",
+      "length": 894
+    },
+    {
+      "episode_id": "224e785f-ddb6-49ff-bf53-ca61cd33551c",
+      "start_idx": 816,
+      "task": "sort the pills into containers",
+      "length": 894
+    },
+    {
+      "episode_id": "227e2ec4-a16b-49e4-a028-60b3222b6caa",
+      "start_idx": 18,
+      "task": "sort the stationery into containers",
+      "length": 305
+    },
+    {
+      "episode_id": "25dce261-6203-4eae-883a-fed523f92395",
+      "start_idx": 44,
+      "task": "sort the legos into containers by color",
+      "length": 940
+    },
+    {
+      "episode_id": "26156adf-a545-40d4-ba3b-9e4fca6ef623",
+      "start_idx": 351,
+      "task": "sort the legos into containers by color",
+      "length": 840
+    },
+    {
+      "episode_id": "267339ef-de9b-4245-a481-d26a32ccf785",
+      "start_idx": 49,
+      "task": "put the plastic bottles in the bin",
+      "length": 342
+    },
+    {
+      "episode_id": "273cdc4d-9991-4eb3-ae13-5ba57cf90652",
+      "start_idx": 252,
+      "task": "sort the legos into containers by color",
+      "length": 427
+    },
+    {
+      "episode_id": "277fbb1a-7e5f-413b-b851-d4263b842602",
+      "start_idx": 160,
+      "task": "put the plastic bottles in the bin",
+      "length": 1273
+    },
+    {
+      "episode_id": "277fbb1a-7e5f-413b-b851-d4263b842602",
+      "start_idx": 497,
+      "task": "put the plastic bottles in the bin",
+      "length": 1273
+    },
+    {
+      "episode_id": "2821c8ee-308a-42f0-ac55-98ee7e26c44b",
+      "start_idx": 558,
+      "task": "sort the pills into containers",
+      "length": 949
+    },
+    {
+      "episode_id": "2821c8ee-308a-42f0-ac55-98ee7e26c44b",
+      "start_idx": 840,
+      "task": "sort the pills into containers",
+      "length": 949
+    },
+    {
+      "episode_id": "28765d55-ca04-41db-9011-effb5f81000f",
+      "start_idx": 235,
+      "task": "put the plastic bottles in the bin",
+      "length": 1067
+    },
+    {
+      "episode_id": "296a0474-de9a-44f8-b96b-70397d2e1bc7",
+      "start_idx": 183,
+      "task": "sort the legos into containers by color",
+      "length": 452
+    },
+    {
+      "episode_id": "296a0474-de9a-44f8-b96b-70397d2e1bc7",
+      "start_idx": 283,
+      "task": "sort the legos into containers by color",
+      "length": 452
+    },
+    {
+      "episode_id": "2af50a8e-b8c2-4e63-8216-bc199977b89f",
+      "start_idx": 259,
+      "task": "sort the hair-cutting tools",
+      "length": 619
+    },
+    {
+      "episode_id": "2af50a8e-b8c2-4e63-8216-bc199977b89f",
+      "start_idx": 366,
+      "task": "sort the hair-cutting tools",
+      "length": 619
+    },
+    {
+      "episode_id": "2c142328-8ed0-49e9-a307-87493ab9b822",
+      "start_idx": 106,
+      "task": "sort the legos into containers by color",
+      "length": 398
+    },
+    {
+      "episode_id": "2c142328-8ed0-49e9-a307-87493ab9b822",
+      "start_idx": 201,
+      "task": "sort the legos into containers by color",
+      "length": 398
+    },
+    {
+      "episode_id": "2d423abc-fb5a-4260-96b3-9a1e311afe9a",
+      "start_idx": 141,
+      "task": "sort the legos into containers by color",
+      "length": 684
+    },
+    {
+      "episode_id": "2dd54afd-de7e-44e6-a201-e37e6892e63b",
+      "start_idx": 365,
+      "task": "sort the screws and nuts into containers",
+      "length": 715
+    },
+    {
+      "episode_id": "2e1d34ec-a958-40dc-9475-90185bc7c0d7",
+      "start_idx": 158,
+      "task": "sort the legos into containers by color",
+      "length": 818
+    },
+    {
+      "episode_id": "2e1d34ec-a958-40dc-9475-90185bc7c0d7",
+      "start_idx": 484,
+      "task": "sort the legos into containers by color",
+      "length": 818
+    },
+    {
+      "episode_id": "2e23ffb7-9168-4e92-9cc1-940010edd65d",
+      "start_idx": 261,
+      "task": "sort the legos into containers by color",
+      "length": 702
+    },
+    {
+      "episode_id": "2e23ffb7-9168-4e92-9cc1-940010edd65d",
+      "start_idx": 413,
+      "task": "sort the legos into containers by color",
+      "length": 702
+    },
+    {
+      "episode_id": "302e1d98-ba25-48f8-a244-781edcc13a0e",
+      "start_idx": 193,
+      "task": "sort the pills into containers",
+      "length": 1570
+    },
+    {
+      "episode_id": "3189040f-f199-4f2f-9ce8-8221ef3a12b5",
+      "start_idx": 86,
+      "task": "sort the legos into containers by color",
+      "length": 803
+    },
+    {
+      "episode_id": "3189040f-f199-4f2f-9ce8-8221ef3a12b5",
+      "start_idx": 378,
+      "task": "sort the legos into containers by color",
+      "length": 803
+    },
+    {
+      "episode_id": "31be0bf8-59c0-4ca7-815b-cbb6090a373c",
+      "start_idx": 121,
+      "task": "put the plastic bottles in the bin",
+      "length": 300
+    },
+    {
+      "episode_id": "344a5df3-6652-4e79-b439-deaadf14b5b6",
+      "start_idx": 25,
+      "task": "put the plastic bottles in the bin",
+      "length": 298
+    },
+    {
+      "episode_id": "349a712d-4cf6-45df-9ca1-a49f1dafa44e",
+      "start_idx": 43,
+      "task": "sort the tools into containers",
+      "length": 285
+    },
+    {
+      "episode_id": "351a2fa4-de3f-4d90-8eb8-87d9dcbb3bec",
+      "start_idx": 12,
+      "task": "sort the pills into containers",
+      "length": 958
+    },
+    {
+      "episode_id": "351a2fa4-de3f-4d90-8eb8-87d9dcbb3bec",
+      "start_idx": 254,
+      "task": "sort the pills into containers",
+      "length": 958
+    },
+    {
+      "episode_id": "36700d4c-7339-474a-a5ea-29be8d7a63d4",
+      "start_idx": 6,
+      "task": "put the plastic bottles in the bin",
+      "length": 91
+    },
+    {
+      "episode_id": "3755d558-3180-4250-9cd3-615fc2b82a58",
+      "start_idx": 30,
+      "task": "sort the legos into containers by color",
+      "length": 398
+    },
+    {
+      "episode_id": "3755d558-3180-4250-9cd3-615fc2b82a58",
+      "start_idx": 89,
+      "task": "sort the legos into containers by color",
+      "length": 398
+    },
+    {
+      "episode_id": "38d967db-eb95-4b20-8932-f0d05ed507bf",
+      "start_idx": 2,
+      "task": "sort the tools into containers",
+      "length": 351
+    },
+    {
+      "episode_id": "4081ed38-7fc5-4140-8119-66512e57ebc1",
+      "start_idx": 36,
+      "task": "sort the screws and nuts into containers",
+      "length": 510
+    },
+    {
+      "episode_id": "4081ed38-7fc5-4140-8119-66512e57ebc1",
+      "start_idx": 294,
+      "task": "sort the screws and nuts into containers",
+      "length": 510
+    },
+    {
+      "episode_id": "4278b981-215c-4ed2-8202-ed867718a642",
+      "start_idx": 211,
+      "task": "put the plastic bottles in the bin",
+      "length": 540
+    },
+    {
+      "episode_id": "4278b981-215c-4ed2-8202-ed867718a642",
+      "start_idx": 463,
+      "task": "put the plastic bottles in the bin",
+      "length": 540
+    },
+    {
+      "episode_id": "4457a343-0cf1-4422-a997-22ca40add15c",
+      "start_idx": 692,
+      "task": "put the plastic bottles in the bin",
+      "length": 903
+    },
+    {
+      "episode_id": "46572e05-cb71-4ef2-aa94-f9f25c6a8a95",
+      "start_idx": 154,
+      "task": "put the plastic bottles in the bin",
+      "length": 798
+    },
+    {
+      "episode_id": "467e3367-90b4-4227-a062-d408c0da78d8",
+      "start_idx": 162,
+      "task": "sort the stationery into containers",
+      "length": 328
+    },
+    {
+      "episode_id": "47d81e9a-5eb9-45a6-adca-245e256e71ac",
+      "start_idx": 69,
+      "task": "sort the legos into containers by color",
+      "length": 234
+    },
+    {
+      "episode_id": "4a754d86-f95c-4c22-a947-4d9462967bc3",
+      "start_idx": 100,
+      "task": "sort the legos into containers by color",
+      "length": 431
+    },
+    {
+      "episode_id": "4a754d86-f95c-4c22-a947-4d9462967bc3",
+      "start_idx": 270,
+      "task": "sort the legos into containers by color",
+      "length": 431
+    },
+    {
+      "episode_id": "4e331a52-838c-423e-852b-a3fae5488d16",
+      "start_idx": 197,
+      "task": "sort the legos into containers by color",
+      "length": 807
+    },
+    {
+      "episode_id": "4e331a52-838c-423e-852b-a3fae5488d16",
+      "start_idx": 506,
+      "task": "sort the legos into containers by color",
+      "length": 807
+    },
+    {
+      "episode_id": "4fa2b0db-9d92-4e5e-963b-0f471cf1aafa",
+      "start_idx": 79,
+      "task": "sort the stationery into containers",
+      "length": 377
+    },
+    {
+      "episode_id": "50dc7916-5164-41b3-a39d-02f8d3dcdc8d",
+      "start_idx": 553,
+      "task": "sort the pills into containers",
+      "length": 975
+    },
+    {
+      "episode_id": "535f2e48-3c28-4966-a3bf-e58ed6f92ac3",
+      "start_idx": 107,
+      "task": "put the trash bags into the trash bin",
+      "length": 688
+    },
+    {
+      "episode_id": "54d58abb-0068-44b4-8180-10fcf0581b68",
+      "start_idx": 175,
+      "task": "put the plastic bottles in the bin",
+      "length": 902
+    },
+    {
+      "episode_id": "55657413-4f80-4236-900e-2eb27df3e6c5",
+      "start_idx": 110,
+      "task": "put the trash bags into the trash bin",
+      "length": 858
+    },
+    {
+      "episode_id": "5643424d-f9cf-4d7d-91b9-4f2f3d2855bc",
+      "start_idx": 119,
+      "task": "sort the legos into containers by color",
+      "length": 415
+    },
+    {
+      "episode_id": "590057a0-eca7-4c5b-98c4-19cd108b406b",
+      "start_idx": 44,
+      "task": "put the plastic bottles in the bin",
+      "length": 123
+    },
+    {
+      "episode_id": "5957ff87-1d95-4607-9761-cd8e449b5581",
+      "start_idx": 43,
+      "task": "sort the legos into containers by color",
+      "length": 914
+    },
+    {
+      "episode_id": "5b486f93-768f-42eb-a0df-7e6e533cef6d",
+      "start_idx": 336,
+      "task": "sort the screws and nuts into containers",
+      "length": 685
+    },
+    {
+      "episode_id": "5b486f93-768f-42eb-a0df-7e6e533cef6d",
+      "start_idx": 475,
+      "task": "sort the screws and nuts into containers",
+      "length": 685
+    },
+    {
+      "episode_id": "5c9e517a-e520-44ba-93aa-a2475b6c60dc",
+      "start_idx": 124,
+      "task": "put the plastic bottles in the bin",
+      "length": 375
+    },
+    {
+      "episode_id": "5fce59f1-e9f7-4e7a-8356-0aa6feba06b5",
+      "start_idx": 472,
+      "task": "sort the pills into containers",
+      "length": 817
+    },
+    {
+      "episode_id": "5fce59f1-e9f7-4e7a-8356-0aa6feba06b5",
+      "start_idx": 653,
+      "task": "sort the pills into containers",
+      "length": 817
+    },
+    {
+      "episode_id": "60d8808b-a9e5-4b6b-b4a5-1d26fa5597fd",
+      "start_idx": 65,
+      "task": "sort the legos into containers by color",
+      "length": 467
+    },
+    {
+      "episode_id": "6247459b-5b17-49e1-99c5-269117caa8ca",
+      "start_idx": 30,
+      "task": "put the plastic bottles in the bin",
+      "length": 338
+    },
+    {
+      "episode_id": "6404f091-02ea-4b9d-8164-4e6137146d3e",
+      "start_idx": 6,
+      "task": "sort the legos into containers by color",
+      "length": 800
+    },
+    {
+      "episode_id": "640b10a3-b239-4919-b7df-3e0baf71923f",
+      "start_idx": 10,
+      "task": "put the plastic bottles in the bin",
+      "length": 173
+    },
+    {
+      "episode_id": "640b10a3-b239-4919-b7df-3e0baf71923f",
+      "start_idx": 72,
+      "task": "put the plastic bottles in the bin",
+      "length": 173
+    },
+    {
+      "episode_id": "6416a9a6-e88c-4ab0-8269-c5c0e834bdb0",
+      "start_idx": 10,
+      "task": "put the plastic bottles in the bin",
+      "length": 88
+    },
+    {
+      "episode_id": "66fa7bab-2f50-4557-b3fd-1f687f032189",
+      "start_idx": 23,
+      "task": "sort the legos into containers by color",
+      "length": 712
+    },
+    {
+      "episode_id": "67363e39-4e40-4c34-8893-3de94ac972ad",
+      "start_idx": 4,
+      "task": "sort the stationery into containers",
+      "length": 358
+    },
+    {
+      "episode_id": "67363e39-4e40-4c34-8893-3de94ac972ad",
+      "start_idx": 112,
+      "task": "sort the stationery into containers",
+      "length": 358
+    },
+    {
+      "episode_id": "6740eeaa-49ec-427f-8935-e02d883d9e54",
+      "start_idx": 89,
+      "task": "put the plastic bottles in the bin",
+      "length": 449
+    },
+    {
+      "episode_id": "6740eeaa-49ec-427f-8935-e02d883d9e54",
+      "start_idx": 282,
+      "task": "put the plastic bottles in the bin",
+      "length": 449
+    },
+    {
+      "episode_id": "67fb64ff-5879-4a25-8200-d2ae1061484a",
+      "start_idx": 395,
+      "task": "sort the legos into containers by color",
+      "length": 932
+    },
+    {
+      "episode_id": "67fb64ff-5879-4a25-8200-d2ae1061484a",
+      "start_idx": 737,
+      "task": "sort the legos into containers by color",
+      "length": 932
+    },
+    {
+      "episode_id": "68029732-9cfe-4612-b057-f8949ee65e81",
+      "start_idx": 149,
+      "task": "sort the legos into containers by color",
+      "length": 637
+    },
+    {
+      "episode_id": "696a439b-716d-4ac0-9353-247766497859",
+      "start_idx": 5,
+      "task": "put the screwdriver in the bin",
+      "length": 73
+    },
+    {
+      "episode_id": "6b6b4d11-8f05-4ae8-8fd4-8a6181f479c2",
+      "start_idx": 323,
+      "task": "sort the eating utensils into containers",
+      "length": 805
+    },
+    {
+      "episode_id": "6d34abfd-fe8b-4735-a8c9-352f82b26f0e",
+      "start_idx": 451,
+      "task": "sort the pills into containers",
+      "length": 668
+    },
+    {
+      "episode_id": "6ef096c3-f286-4992-a735-e98863248798",
+      "start_idx": 99,
+      "task": "sort the legos into containers by color",
+      "length": 347
+    },
+    {
+      "episode_id": "6fd26635-f7b6-4655-a704-83465e2ce79f",
+      "start_idx": 86,
+      "task": "sort the tools into containers",
+      "length": 659
+    },
+    {
+      "episode_id": "6fe8bb66-ff8a-417d-96a9-278f9a0346c5",
+      "start_idx": 364,
+      "task": "put the plastic bottles in the bin",
+      "length": 898
+    },
+    {
+      "episode_id": "6fe8bb66-ff8a-417d-96a9-278f9a0346c5",
+      "start_idx": 698,
+      "task": "put the plastic bottles in the bin",
+      "length": 898
+    },
+    {
+      "episode_id": "70b5767c-f075-4e5d-9f46-7cec17ba8317",
+      "start_idx": 289,
+      "task": "put the trash bags into the trash bin",
+      "length": 615
+    },
+    {
+      "episode_id": "70b5767c-f075-4e5d-9f46-7cec17ba8317",
+      "start_idx": 350,
+      "task": "put the trash bags into the trash bin",
+      "length": 615
+    },
+    {
+      "episode_id": "71abbef4-1b57-4b7d-bf15-5ca06f82f8a7",
+      "start_idx": 279,
+      "task": "put the plastic bottles in the bin",
+      "length": 736
+    },
+    {
+      "episode_id": "71abbef4-1b57-4b7d-bf15-5ca06f82f8a7",
+      "start_idx": 621,
+      "task": "put the plastic bottles in the bin",
+      "length": 736
+    },
+    {
+      "episode_id": "71fd0a89-acbd-4e37-b89a-95b3ea941c65",
+      "start_idx": 45,
+      "task": "sort the tools into containers",
+      "length": 236
+    },
+    {
+      "episode_id": "728f7a66-b306-4abf-8470-0b93d8ca9b04",
+      "start_idx": 23,
+      "task": "put the trash bags into the trash bin",
+      "length": 414
+    },
+    {
+      "episode_id": "72a183ed-3269-4e6b-83be-cb58521e1566",
+      "start_idx": 66,
+      "task": "sort the stationery into containers",
+      "length": 220
+    },
+    {
+      "episode_id": "72a183ed-3269-4e6b-83be-cb58521e1566",
+      "start_idx": 126,
+      "task": "sort the stationery into containers",
+      "length": 220
+    },
+    {
+      "episode_id": "72caa26c-c0ed-44f8-9e42-3df89f118d83",
+      "start_idx": 339,
+      "task": "put the plastic bottles in the bin",
+      "length": 861
+    },
+    {
+      "episode_id": "72caa26c-c0ed-44f8-9e42-3df89f118d83",
+      "start_idx": 581,
+      "task": "put the plastic bottles in the bin",
+      "length": 861
+    },
+    {
+      "episode_id": "73992664-5d66-4c61-ae2e-5c413df91fd4",
+      "start_idx": 540,
+      "task": "sort the legos into containers by color",
+      "length": 710
+    },
+    {
+      "episode_id": "73992664-5d66-4c61-ae2e-5c413df91fd4",
+      "start_idx": 642,
+      "task": "sort the legos into containers by color",
+      "length": 710
+    },
+    {
+      "episode_id": "75a54fba-d5f7-4127-b32b-5f2a74c12b3d",
+      "start_idx": 236,
+      "task": "put the plastic bottles in the bin",
+      "length": 1166
+    },
+    {
+      "episode_id": "75a54fba-d5f7-4127-b32b-5f2a74c12b3d",
+      "start_idx": 1072,
+      "task": "put the plastic bottles in the bin",
+      "length": 1166
+    },
+    {
+      "episode_id": "765c4dd9-68b1-48f2-a269-0580272f66cd",
+      "start_idx": 113,
+      "task": "sort the legos into containers by color",
+      "length": 243
+    },
+    {
+      "episode_id": "773ec310-12c4-49c9-a65e-2ad40c46d4f3",
+      "start_idx": 326,
+      "task": "sort the legos into containers by color",
+      "length": 775
+    },
+    {
+      "episode_id": "773ec310-12c4-49c9-a65e-2ad40c46d4f3",
+      "start_idx": 522,
+      "task": "sort the legos into containers by color",
+      "length": 775
+    },
+    {
+      "episode_id": "77fdbee6-6aa1-4c09-8488-d76308767707",
+      "start_idx": 8,
+      "task": "put the plastic bottles in the bin",
+      "length": 162
+    },
+    {
+      "episode_id": "79191926-120a-47bb-a2ee-9066089942d9",
+      "start_idx": 373,
+      "task": "sort the screws and nuts into containers",
+      "length": 644
+    },
+    {
+      "episode_id": "7a9a0bca-7b85-4b85-96f0-95f2149cf2b3",
+      "start_idx": 324,
+      "task": "sort the hair-cutting tools",
+      "length": 570
+    },
+    {
+      "episode_id": "7d681218-c3bd-4885-87fe-03fcd7c5c41a",
+      "start_idx": 130,
+      "task": "sort the legos into containers by color",
+      "length": 426
+    },
+    {
+      "episode_id": "84c0c1d1-3981-495d-a543-67fae1bdccc7",
+      "start_idx": 66,
+      "task": "sort the legos into containers by color",
+      "length": 312
+    },
+    {
+      "episode_id": "84cb8070-6145-4df8-b2bf-352417959162",
+      "start_idx": 86,
+      "task": "sort the legos into containers by color",
+      "length": 405
+    },
+    {
+      "episode_id": "84f012cc-db7b-4e8c-bc70-88289c897abf",
+      "start_idx": 0,
+      "task": "put the plastic bottles in the bin",
+      "length": 284
+    },
+    {
+      "episode_id": "851c71e4-85a4-474d-b796-2da464198f14",
+      "start_idx": 183,
+      "task": "put the plastic bottles in the bin",
+      "length": 1262
+    },
+    {
+      "episode_id": "851c71e4-85a4-474d-b796-2da464198f14",
+      "start_idx": 991,
+      "task": "put the plastic bottles in the bin",
+      "length": 1262
+    },
+    {
+      "episode_id": "85f6615c-d9e3-4c65-8b5b-3020ab989a0f",
+      "start_idx": 1,
+      "task": "throw the plastic bottles in the bin",
+      "length": 311
+    },
+    {
+      "episode_id": "85f6615c-d9e3-4c65-8b5b-3020ab989a0f",
+      "start_idx": 198,
+      "task": "throw the plastic bottles in the bin",
+      "length": 311
+    },
+    {
+      "episode_id": "86022250-9f83-411a-ad9f-f2489d1c0d85",
+      "start_idx": 103,
+      "task": "sort the hair-cutting tools",
+      "length": 713
+    },
+    {
+      "episode_id": "86022250-9f83-411a-ad9f-f2489d1c0d85",
+      "start_idx": 237,
+      "task": "sort the hair-cutting tools",
+      "length": 713
+    },
+    {
+      "episode_id": "860e15c2-fd37-4fbf-98fa-a80249d222d9",
+      "start_idx": 433,
+      "task": "sort the legos into containers by color",
+      "length": 788
+    },
+    {
+      "episode_id": "8744ab33-fb53-4488-a2dd-b3679cb9f5cb",
+      "start_idx": 144,
+      "task": "sort the legos into containers by color",
+      "length": 740
+    },
+    {
+      "episode_id": "88914b80-404d-4045-a97e-f4239335c562",
+      "start_idx": 405,
+      "task": "sort the legos into containers by color",
+      "length": 887
+    },
+    {
+      "episode_id": "898c5e7c-da9d-494d-a193-8020206ca34a",
+      "start_idx": 462,
+      "task": "sort the legos into containers by color",
+      "length": 805
+    },
+    {
+      "episode_id": "8c727617-3bb4-4551-8720-883187ed164d",
+      "start_idx": 17,
+      "task": "put the plastic bottles in the bin",
+      "length": 102
+    },
+    {
+      "episode_id": "8ce3f2d2-2c71-462f-834d-99da3082f735",
+      "start_idx": 291,
+      "task": "sort the pills into containers",
+      "length": 1331
+    },
+    {
+      "episode_id": "8ce3f2d2-2c71-462f-834d-99da3082f735",
+      "start_idx": 349,
+      "task": "sort the pills into containers",
+      "length": 1331
+    },
+    {
+      "episode_id": "8e282731-7b08-4d89-9a4a-88589cdec19b",
+      "start_idx": 355,
+      "task": "put the plastic bottles in the bin",
+      "length": 923
+    },
+    {
+      "episode_id": "8e86d0bd-a9d8-4ded-ba9e-0cb16bf6d423",
+      "start_idx": 89,
+      "task": "sort the stationery into containers",
+      "length": 563
+    },
+    {
+      "episode_id": "8e86d0bd-a9d8-4ded-ba9e-0cb16bf6d423",
+      "start_idx": 274,
+      "task": "sort the stationery into containers",
+      "length": 563
+    },
+    {
+      "episode_id": "8f375293-6c32-4090-8cbe-aeddf536e65d",
+      "start_idx": 134,
+      "task": "sort the legos into containers by color",
+      "length": 858
+    },
+    {
+      "episode_id": "8f375293-6c32-4090-8cbe-aeddf536e65d",
+      "start_idx": 387,
+      "task": "sort the legos into containers by color",
+      "length": 858
+    },
+    {
+      "episode_id": "9063fd87-6962-455e-af0f-0cf213a7025c",
+      "start_idx": 20,
+      "task": "sort the legos into containers by color",
+      "length": 398
+    },
+    {
+      "episode_id": "9105b874-1f06-4932-96dd-68b7a32773cb",
+      "start_idx": 115,
+      "task": "sort the eating utensils into containers",
+      "length": 580
+    },
+    {
+      "episode_id": "9105b874-1f06-4932-96dd-68b7a32773cb",
+      "start_idx": 272,
+      "task": "sort the eating utensils into containers",
+      "length": 580
+    },
+    {
+      "episode_id": "931ca663-efba-4503-bd2c-02acc7eb4fd0",
+      "start_idx": 0,
+      "task": "put the screwdriver in the bin",
+      "length": 76
+    },
+    {
+      "episode_id": "95728083-cb01-4957-b6e9-d82fa6900c47",
+      "start_idx": 208,
+      "task": "sort the legos into containers by color",
+      "length": 495
+    },
+    {
+      "episode_id": "95f3a0b2-9ba4-4709-b723-3358a5c7b76e",
+      "start_idx": 21,
+      "task": "put the plastic bottles in the bin",
+      "length": 225
+    },
+    {
+      "episode_id": "98404c44-5619-44a5-824b-8aafc6ecc9ae",
+      "start_idx": 189,
+      "task": "sort the legos into containers by color",
+      "length": 747
+    },
+    {
+      "episode_id": "9a8ca9d4-6d0d-494a-a47f-55e30ea800a6",
+      "start_idx": 44,
+      "task": "put the plastic bottles in the bin",
+      "length": 376
+    },
+    {
+      "episode_id": "9b393e66-96cb-460c-9d74-90756ed6c34f",
+      "start_idx": 64,
+      "task": "sort the legos into containers by color",
+      "length": 814
+    },
+    {
+      "episode_id": "9b393e66-96cb-460c-9d74-90756ed6c34f",
+      "start_idx": 633,
+      "task": "sort the legos into containers by color",
+      "length": 814
+    },
+    {
+      "episode_id": "9b3b9115-7a87-43a9-a6d3-1f2da86a5a5d",
+      "start_idx": 14,
+      "task": "put the plastic bottles in the bin",
+      "length": 98
+    },
+    {
+      "episode_id": "9e839b51-3a8d-4c6f-b5bc-c5a2f573cf75",
+      "start_idx": 117,
+      "task": "sort the legos into containers by color",
+      "length": 817
+    },
+    {
+      "episode_id": "a0479839-659d-4f02-bb91-c58a1622bc16",
+      "start_idx": 266,
+      "task": "put the plastic bottles in the bin",
+      "length": 931
+    },
+    {
+      "episode_id": "a2323ca7-e4af-4f37-89e1-512390b88147",
+      "start_idx": 144,
+      "task": "put the plastic bottles in the bin",
+      "length": 602
+    },
+    {
+      "episode_id": "a2323ca7-e4af-4f37-89e1-512390b88147",
+      "start_idx": 200,
+      "task": "put the plastic bottles in the bin",
+      "length": 602
+    },
+    {
+      "episode_id": "a52c9264-69cd-4fb6-b0e7-d9d26f8c5a4b",
+      "start_idx": 215,
+      "task": "sort the legos into containers by color",
+      "length": 691
+    },
+    {
+      "episode_id": "a52c9264-69cd-4fb6-b0e7-d9d26f8c5a4b",
+      "start_idx": 389,
+      "task": "sort the legos into containers by color",
+      "length": 691
+    },
+    {
+      "episode_id": "a5520325-5f6d-4625-9a21-0dc81929fb6f",
+      "start_idx": 158,
+      "task": "sort the legos into containers by color",
+      "length": 427
+    },
+    {
+      "episode_id": "a5520325-5f6d-4625-9a21-0dc81929fb6f",
+      "start_idx": 279,
+      "task": "sort the legos into containers by color",
+      "length": 427
+    },
+    {
+      "episode_id": "a64657af-9526-45ea-b0ec-f2594509fe38",
+      "start_idx": 15,
+      "task": "put the plastic bottles in the bin",
+      "length": 100
+    },
+    {
+      "episode_id": "a7a4755b-50ef-4e35-a696-f69f34f6554e",
+      "start_idx": 11,
+      "task": "put the plastic bottles in the bin",
+      "length": 95
+    },
+    {
+      "episode_id": "a921b7fb-ab0b-4a13-9602-8e7ef0538ae5",
+      "start_idx": 449,
+      "task": "put the plastic bottles in the bin",
+      "length": 939
+    },
+    {
+      "episode_id": "a9fd019f-7522-4bad-9870-f7d708a2c48f",
+      "start_idx": 45,
+      "task": "put the plastic bottles in the bin",
+      "length": 207
+    },
+    {
+      "episode_id": "a9fd019f-7522-4bad-9870-f7d708a2c48f",
+      "start_idx": 135,
+      "task": "put the plastic bottles in the bin",
+      "length": 207
+    },
+    {
+      "episode_id": "aecf3954-91b8-4c2f-b8d5-4e9a73e8451d",
+      "start_idx": 11,
+      "task": "put the plastic bottles in the bin",
+      "length": 146
+    },
+    {
+      "episode_id": "b1cc8219-09b1-44ed-a448-f925018aff0c",
+      "start_idx": 292,
+      "task": "sort the legos into containers by color",
+      "length": 435
+    },
+    {
+      "episode_id": "b1cc8219-09b1-44ed-a448-f925018aff0c",
+      "start_idx": 354,
+      "task": "sort the legos into containers by color",
+      "length": 435
+    },
+    {
+      "episode_id": "b1d3c49f-5765-4870-b7c9-f2396ec27542",
+      "start_idx": 175,
+      "task": "sort the legos into containers by color",
+      "length": 397
+    },
+    {
+      "episode_id": "b36a73f4-38da-4045-90b3-bec0a7993b5c",
+      "start_idx": 113,
+      "task": "sort the stationery into containers",
+      "length": 528
+    },
+    {
+      "episode_id": "b36a73f4-38da-4045-90b3-bec0a7993b5c",
+      "start_idx": 345,
+      "task": "sort the stationery into containers",
+      "length": 528
+    },
+    {
+      "episode_id": "b419dc98-65b1-4b14-bd34-3583bfd192a8",
+      "start_idx": 279,
+      "task": "put the plastic bottles in the bin",
+      "length": 1521
+    },
+    {
+      "episode_id": "b4500f44-dc93-4fc2-a613-39bda46f92f5",
+      "start_idx": 286,
+      "task": "sort the legos into containers by color",
+      "length": 694
+    },
+    {
+      "episode_id": "b4500f44-dc93-4fc2-a613-39bda46f92f5",
+      "start_idx": 362,
+      "task": "sort the legos into containers by color",
+      "length": 694
+    },
+    {
+      "episode_id": "b49dcbdb-c626-4a97-8851-ba2695ff624f",
+      "start_idx": 331,
+      "task": "sort the screws and nuts into containers",
+      "length": 659
+    },
+    {
+      "episode_id": "b49dcbdb-c626-4a97-8851-ba2695ff624f",
+      "start_idx": 516,
+      "task": "sort the screws and nuts into containers",
+      "length": 659
+    },
+    {
+      "episode_id": "b5ce4f9b-40c2-4c19-86a7-41d1c9b4cfc3",
+      "start_idx": 12,
+      "task": "put the plastic bottles in the bin",
+      "length": 927
+    },
+    {
+      "episode_id": "b730d58f-2314-45f7-b06e-4a1ae907aed0",
+      "start_idx": 116,
+      "task": "sort the stationery into containers",
+      "length": 253
+    },
+    {
+      "episode_id": "bf0ea75e-466a-4fe1-8fb0-0a7431a1ea91",
+      "start_idx": 423,
+      "task": "put the plastic bottles in the bin",
+      "length": 909
+    },
+    {
+      "episode_id": "bf420971-187f-42a9-ad8d-e6c50549f89d",
+      "start_idx": 305,
+      "task": "sort the legos into containers by color",
+      "length": 866
+    },
+    {
+      "episode_id": "bf420971-187f-42a9-ad8d-e6c50549f89d",
+      "start_idx": 691,
+      "task": "sort the legos into containers by color",
+      "length": 866
+    },
+    {
+      "episode_id": "bfb7dd87-f805-41d4-acdf-e055f0647dc1",
+      "start_idx": 7,
+      "task": "sort the tools into containers",
+      "length": 169
+    },
+    {
+      "episode_id": "bfb7dd87-f805-41d4-acdf-e055f0647dc1",
+      "start_idx": 65,
+      "task": "sort the tools into containers",
+      "length": 169
+    },
+    {
+      "episode_id": "c7ffe00e-6efe-46d0-99a0-2140bb1e6eec",
+      "start_idx": 73,
+      "task": "put the plastic bottles in the bin",
+      "length": 700
+    },
+    {
+      "episode_id": "c83bf764-550e-4268-afa4-380d1ec04032",
+      "start_idx": 10,
+      "task": "sort the legos into containers by color",
+      "length": 341
+    },
+    {
+      "episode_id": "c83bf764-550e-4268-afa4-380d1ec04032",
+      "start_idx": 61,
+      "task": "sort the legos into containers by color",
+      "length": 341
+    },
+    {
+      "episode_id": "ca9623f9-2654-4834-a0aa-6fcea3649745",
+      "start_idx": 35,
+      "task": "put the trash bags into the trash bin",
+      "length": 284
+    },
+    {
+      "episode_id": "ca9623f9-2654-4834-a0aa-6fcea3649745",
+      "start_idx": 188,
+      "task": "put the trash bags into the trash bin",
+      "length": 284
+    },
+    {
+      "episode_id": "cc21f204-d065-4e89-99f6-5969695af1d2",
+      "start_idx": 33,
+      "task": "throw the plastic bottles in the bin",
+      "length": 633
+    },
+    {
+      "episode_id": "cc61376f-a1f2-4409-a5ad-0c9da2bdd690",
+      "start_idx": 229,
+      "task": "sort the legos into containers by color",
+      "length": 720
+    },
+    {
+      "episode_id": "cc61376f-a1f2-4409-a5ad-0c9da2bdd690",
+      "start_idx": 498,
+      "task": "sort the legos into containers by color",
+      "length": 720
+    },
+    {
+      "episode_id": "d03323f2-245f-4ccd-b80b-0549ce71153a",
+      "start_idx": 7,
+      "task": "put the plastic bottles in the bin",
+      "length": 179
+    },
+    {
+      "episode_id": "d03323f2-245f-4ccd-b80b-0549ce71153a",
+      "start_idx": 111,
+      "task": "put the plastic bottles in the bin",
+      "length": 179
+    },
+    {
+      "episode_id": "d0dea976-4cdc-4c04-a723-c84d2d3844af",
+      "start_idx": 4,
+      "task": "sort the stationery into containers",
+      "length": 460
+    },
+    {
+      "episode_id": "d140c844-1a4d-4808-b7a2-ba77502b972c",
+      "start_idx": 12,
+      "task": "sort the legos into containers by color",
+      "length": 689
+    },
+    {
+      "episode_id": "d651217d-93d3-49cb-8a01-6609e73f416a",
+      "start_idx": 118,
+      "task": "sort the legos into containers by color",
+      "length": 772
+    },
+    {
+      "episode_id": "d680a81f-da86-4890-b45c-1a7f9d3654ce",
+      "start_idx": 261,
+      "task": "sort the legos into containers by color",
+      "length": 888
+    },
+    {
+      "episode_id": "d7ebdc08-2588-4f41-95cb-0c65f0cc5c35",
+      "start_idx": 74,
+      "task": "sort the legos into containers by color",
+      "length": 767
+    },
+    {
+      "episode_id": "d7ebdc08-2588-4f41-95cb-0c65f0cc5c35",
+      "start_idx": 630,
+      "task": "sort the legos into containers by color",
+      "length": 767
+    },
+    {
+      "episode_id": "d804b5f7-46de-4ed7-ade7-d8917ca0e4cd",
+      "start_idx": 2,
+      "task": "sort the legos into containers by color",
+      "length": 698
+    },
+    {
+      "episode_id": "d804b5f7-46de-4ed7-ade7-d8917ca0e4cd",
+      "start_idx": 78,
+      "task": "sort the legos into containers by color",
+      "length": 698
+    },
+    {
+      "episode_id": "d9be7ad1-b79a-4f85-9cad-eb17f676568e",
+      "start_idx": 37,
+      "task": "sort the legos into containers by color",
+      "length": 447
+    },
+    {
+      "episode_id": "d9e74df7-345f-4bf4-af32-c3a0293ac346",
+      "start_idx": 217,
+      "task": "throw the plastic bottles in the bin",
+      "length": 580
+    },
+    {
+      "episode_id": "da3b2fdc-b7e7-443c-a9b8-196051fb8d6c",
+      "start_idx": 83,
+      "task": "put the plastic bottles in the bin",
+      "length": 288
+    },
+    {
+      "episode_id": "da6686a5-dc7b-43a7-b6ff-ecaabaa2366d",
+      "start_idx": 126,
+      "task": "sort the legos into containers by color",
+      "length": 754
+    },
+    {
+      "episode_id": "db21e31a-bfd4-463a-866d-dd3af85b8939",
+      "start_idx": 98,
+      "task": "put the plastic bottles in the bin",
+      "length": 370
+    },
+    {
+      "episode_id": "dde505d5-c974-44dd-b3bb-b3485adc91b9",
+      "start_idx": 6,
+      "task": "sort the legos into containers by color",
+      "length": 275
+    },
+    {
+      "episode_id": "dde505d5-c974-44dd-b3bb-b3485adc91b9",
+      "start_idx": 102,
+      "task": "sort the legos into containers by color",
+      "length": 275
+    },
+    {
+      "episode_id": "e01b6a85-f605-4111-bab2-d39a8cd63001",
+      "start_idx": 31,
+      "task": "sort the legos into containers by color",
+      "length": 393
+    },
+    {
+      "episode_id": "e01b6a85-f605-4111-bab2-d39a8cd63001",
+      "start_idx": 117,
+      "task": "sort the legos into containers by color",
+      "length": 393
+    },
+    {
+      "episode_id": "e2706a7a-8bd9-4f34-81bc-1e78a8a4a858",
+      "start_idx": 261,
+      "task": "sort the legos into containers by color",
+      "length": 766
+    },
+    {
+      "episode_id": "e2706a7a-8bd9-4f34-81bc-1e78a8a4a858",
+      "start_idx": 513,
+      "task": "sort the legos into containers by color",
+      "length": 766
+    },
+    {
+      "episode_id": "e37154ab-61bc-47ed-8598-0a04ff120e3b",
+      "start_idx": 95,
+      "task": "put the trash bags into the trash bin",
+      "length": 487
+    },
+    {
+      "episode_id": "e37154ab-61bc-47ed-8598-0a04ff120e3b",
+      "start_idx": 271,
+      "task": "put the trash bags into the trash bin",
+      "length": 487
+    },
+    {
+      "episode_id": "e4c40027-2ea1-458f-955d-db4aea21ef70",
+      "start_idx": 226,
+      "task": "sort the screws and nuts into containers",
+      "length": 541
+    },
+    {
+      "episode_id": "e68911e5-be9a-47bf-80f9-b5083d188e42",
+      "start_idx": 243,
+      "task": "sort the legos into containers by color",
+      "length": 724
+    },
+    {
+      "episode_id": "e68911e5-be9a-47bf-80f9-b5083d188e42",
+      "start_idx": 404,
+      "task": "sort the legos into containers by color",
+      "length": 724
+    },
+    {
+      "episode_id": "e731cd68-4ea1-454e-be7b-829ccc5f86ec",
+      "start_idx": 507,
+      "task": "sort the pills into containers",
+      "length": 1636
+    },
+    {
+      "episode_id": "e82239d4-08bc-4781-a09b-1d09806fef08",
+      "start_idx": 47,
+      "task": "put the plastic bottles in the bin",
+      "length": 126
+    },
+    {
+      "episode_id": "e84d0e9e-be55-41b5-ba4e-c90ab31b1754",
+      "start_idx": 163,
+      "task": "sort the eating utensils into containers",
+      "length": 313
+    },
+    {
+      "episode_id": "e9ec2070-619c-4771-8993-38fa7ab90e2f",
+      "start_idx": 6,
+      "task": "sort the stationery into containers",
+      "length": 253
+    },
+    {
+      "episode_id": "ea18ee3e-f6cd-40f9-b18e-3b9db427be6b",
+      "start_idx": 8,
+      "task": "put the plastic bottles in the bin",
+      "length": 199
+    },
+    {
+      "episode_id": "eb01da60-a6db-4867-b3aa-7f25d18f2cee",
+      "start_idx": 46,
+      "task": "sort the legos into containers by color",
+      "length": 806
+    },
+    {
+      "episode_id": "eba6588d-cb6a-42c4-995f-632ee3a4bfca",
+      "start_idx": 45,
+      "task": "sort the tools into containers",
+      "length": 451
+    },
+    {
+      "episode_id": "eba6588d-cb6a-42c4-995f-632ee3a4bfca",
+      "start_idx": 225,
+      "task": "sort the tools into containers",
+      "length": 451
+    },
+    {
+      "episode_id": "ef2e66d3-9d58-4ef6-bbad-d718e9f017b1",
+      "start_idx": 31,
+      "task": "put the plastic bottles in the bin",
+      "length": 179
+    },
+    {
+      "episode_id": "f0f28fcd-f43a-4042-9d39-a6234cd2cb88",
+      "start_idx": 64,
+      "task": "sort the legos into containers by color",
+      "length": 737
+    },
+    {
+      "episode_id": "f0f28fcd-f43a-4042-9d39-a6234cd2cb88",
+      "start_idx": 168,
+      "task": "sort the legos into containers by color",
+      "length": 737
+    },
+    {
+      "episode_id": "f2dcfc32-8518-48d4-9f5b-049352164ccd",
+      "start_idx": 195,
+      "task": "sort the legos into containers by color",
+      "length": 785
+    },
+    {
+      "episode_id": "f2dcfc32-8518-48d4-9f5b-049352164ccd",
+      "start_idx": 639,
+      "task": "sort the legos into containers by color",
+      "length": 785
+    },
+    {
+      "episode_id": "f393f277-7207-4913-845f-5a7bfcc2af74",
+      "start_idx": 26,
+      "task": "sort the eating utensils into containers",
+      "length": 499
+    },
+    {
+      "episode_id": "f56133b0-06b8-4fbb-9383-b74c10e9411b",
+      "start_idx": 145,
+      "task": "sort the hair-cutting tools",
+      "length": 721
+    },
+    {
+      "episode_id": "f6f5e1e5-bf7c-45e4-8bfa-b9c8d04055e7",
+      "start_idx": 71,
+      "task": "sort the eating utensils into containers",
+      "length": 212
+    },
+    {
+      "episode_id": "f6f5e1e5-bf7c-45e4-8bfa-b9c8d04055e7",
+      "start_idx": 137,
+      "task": "sort the eating utensils into containers",
+      "length": 212
+    },
+    {
+      "episode_id": "f716ec15-ff1e-4a59-b52a-ad6e9ee86838",
+      "start_idx": 233,
+      "task": "sort the pills into containers",
+      "length": 626
+    },
+    {
+      "episode_id": "f8cc6361-0d64-44dd-83eb-f2a2c24c483b",
+      "start_idx": 9,
+      "task": "put the plastic bottles in the bin",
+      "length": 157
+    },
+    {
+      "episode_id": "f8cc6361-0d64-44dd-83eb-f2a2c24c483b",
+      "start_idx": 61,
+      "task": "put the plastic bottles in the bin",
+      "length": 157
+    },
+    {
+      "episode_id": "fc6ef0be-0649-4f16-85b5-088dbfc0a3f8",
+      "start_idx": 5,
+      "task": "put the screwdriver in the bin",
+      "length": 74
+    },
+    {
+      "episode_id": "fce56dc6-0a68-4ab2-8890-6eeb7e144f52",
+      "start_idx": 419,
+      "task": "put the plastic bottles in the bin",
+      "length": 898
+    },
+    {
+      "episode_id": "ff5f2da8-359a-48bb-a652-d4ace9c98633",
+      "start_idx": 12,
+      "task": "sort the legos into containers by color",
+      "length": 383
+    },
+    {
+      "episode_id": "ffd7f2b1-0d77-4008-925c-f4708f15b9d5",
+      "start_idx": 14,
+      "task": "put the plastic bottles in the bin",
+      "length": 103
+    }
+  ]
+}
