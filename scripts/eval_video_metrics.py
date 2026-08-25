@@ -84,24 +84,6 @@ VIEW_NAMES = ['top', 'left_wrist', 'right_wrist']
 # The paper reports a third-person row and a wrist row; ours are grouped the same way.
 VIEW_GROUPS = {'third_view': ['top'], 'wrist_view': ['left_wrist', 'right_wrist']}
 
-# Tracking runs on the fixed overhead camera only. The wrist cameras are bolted to the
-# arms, and a tracked pixel there does not mean what the metric claims: image motion is
-# dominated by ego-motion, which the replayed ground-truth actions already determine, so
-# the number grades the model on re-rendering its own conditioning input. Worse for the
-# stated purpose, the end effector is very nearly stationary in its own wrist frame, so
-# that view cannot measure end-effector motion at all, and the static/dynamic split has
-# no meaning when the whole scene sweeps. CoTracker3 does track wrist views acceptably
-# per round (median error 3.5 px against 13.5 px of motion), so this is a validity
-# judgement, not a tracker limitation. Pixel metrics still cover all three views, and
-# they already penalize mis-rendered ego-motion.
-TRACK_VIEWS = ['top']
-# Whole-clip passes for the fixed camera: it accumulates only ~0.2 px of median motion
-# per round, which is below the tracker's own floor, so a short horizon measures nothing.
-TRACK_HORIZON = {'top': None}
-# HSD is a maximum over the trajectory, so it is only meaningful where the tracker's tail
-# is well below the signal.
-HSD_VIEWS = ['top']
-
 
 
 def stable_seed(base_seed, key):
@@ -140,15 +122,6 @@ def parse_args():
     p.add_argument('--dump_frames', type=str, default=None,
                    help='also write lossless per-clip frames (npz) to this directory, '
                         'so clipeval can be re-run offline without a GPU rollout')
-    p.add_argument('--track', action='store_true',
-                   help='add point-tracking metrics (static drift, dynamic error, '
-                        'HSD/nDTW/DYN)')
-    p.add_argument('--tracker_ckpt', type=str, default=None,
-                   help='local path to CoTracker3 scaled_offline.pth. torch.hub.load '
-                        'reaches GitHub at call time, which fails on a compute node')
-    p.add_argument('--track_grid', type=int, default=16,
-                   help='seed a grid of this many points per side when no per-clip '
-                        'queries are supplied')
     p.add_argument('--bootstrap', type=int, default=1000)
     p.add_argument('--seed', type=int, default=0)
     return p.parse_args()
@@ -339,9 +312,8 @@ class BatchRollout:
 def dump_clip(out_dir, clip, gt, pred, view_names):
     """Write one clip's frames losslessly, for offline scoring.
 
-    npz of uint8 arrays, not mp4: H.264 artifacts perturb a point tracker, and ground
-    truth and prediction would take different amounts of that distortion, which would
-    show up as model error. Compression is zlib, which buys perhaps a third on natural
+    npz of uint8 arrays, not mp4: H.264 artifacts land differently on ground truth and
+    prediction, and that difference would show up as model error. Compression is zlib, which buys perhaps a third on natural
     images; the run prints the total so the npz-versus-PNG question can be settled on
     measured size rather than guessed.
     """
@@ -387,22 +359,10 @@ def main():
         metrics.append('fid')
     if args.i3d_ckpt:
         metrics.append('fvd')
-    tracker = None
-    if args.track:
-        metrics.append('tracking')
-        if args.tracker_ckpt:
-            tracker = clipeval.tracking.Tracker(args.tracker_ckpt, device=runner.device)
-        else:
-            print('--track given without --tracker_ckpt; tracking will be reported as '
-                  'skipped. Download scaled_offline.pth on a login node: Leonardo '
-                  'compute nodes have no network.')
-
     scorer = clipeval.Scorer(
         metrics, rounds=n_rounds, per_round=per_round, view_names=VIEW_NAMES,
         view_groups=VIEW_GROUPS, device=runner.device, i3d_ckpt=args.i3d_ckpt,
-        tracker=tracker, grid=args.track_grid, track_horizon=TRACK_HORIZON,
-        hsd_views=HSD_VIEWS, track_views=TRACK_VIEWS, bootstrap=args.bootstrap,
-        seed=args.seed)
+        bootstrap=args.bootstrap, seed=args.seed)
 
     latent_l2_all = []
     dumped_bytes = 0
@@ -479,13 +439,6 @@ def main():
             if baseline in row:
                 print(f'    vs {baseline:20s} {row[baseline]["mean"]:.3f} dB   '
                       f'gain {row[f"{baseline}_gain_db"]:+.3f} dB')
-        for bucket in ('static', 'disp4_16', 'disp16_64', 'disp64plus'):
-            key = f'track_err_{bucket}'
-            if key in row:
-                acc = row.get(f'track_{bucket}_acc_4px', {}).get('mean')
-                acc_str = f'   within 4px {acc:.2%}' if acc is not None else ''
-                print(f'    track {bucket:8s} median {row[key]["mean"]:.2f} px'
-                      f'{acc_str}')
     print(f'  latent MSE first round {results["latent_mse"]["per_round"][0]:.4f} -> '
           f'last round {results["latent_mse"]["per_round"][-1]:.4f}')
     for metric, reason in results['metrics_skipped'].items():

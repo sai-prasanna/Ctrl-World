@@ -139,10 +139,9 @@ python scripts/selftest_eval_metrics.py   # 18 checks, CPU only
   `boost_qos_lprod` and its 36-hour limit as a single job instead of two chained ones:
   `MAX_STEPS=30000 RESUME=--resume sbatch train.sbatch`. Without `--ckpt_path`,
   `--resume` selects the highest-numbered `checkpoint-<step>.pt`.
-- **No tracking metrics yet.** Pixel metrics score appearance, not control accuracy —
-  PSNR and SSIM reward a blurred mean-future. `clipeval/tracking` and the CoTracker3
-  noise floor exist; `--track --tracker_ckpt <path>` has not been run on either
-  checkpoint.
+- **Pixel metrics score appearance, not control accuracy.** PSNR and SSIM reward a
+  blurred mean-future, and nothing currently measures whether the predicted motion is
+  the commanded one. The region metrics in `clipeval/regions` are the intended answer.
 - **No fair per-round baseline.** A baseline repeating the model's *own* conditioning
   frame would separate "this round predicted no motion" from "the rollout has drifted",
   which the current oracle baseline confounds.

@@ -33,8 +33,6 @@ mkdir -p $(dirname $OUT)
 # FVD is skipped rather than silently faked when the I3D backbone is missing.
 I3D=""
 [ -f "$ROOT/i3d_torchscript.pt" ] && I3D="--i3d_ckpt $ROOT/i3d_torchscript.pt"
-# CoTracker weights are not staged; --track needs a login-node download first, so the
-# tracking metrics stay off rather than failing the run half way through.
 
 echo "eval step=$STEP ckpt=$CKPT"
 srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK --cpu-bind=none \

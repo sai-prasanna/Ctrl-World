@@ -109,7 +109,7 @@ test-like entry point; run it after touching anything in `clipeval/`.
   split per camera before the VAE decode. Adding/removing a view changes latent height.
 - `clipeval/` — model-independent scoring package. `Scorer` is an accumulator because
   FID/FVD are corpus-level. `pixel` (PSNR/SSIM/LPIPS), `distribution` (FID/FVD),
-  `tracking` (CoTracker3 point tracks, binned by ground-truth displacement), `regions`
+  `regions`
   (mask-based, WoW-World-Eval style). Each optional `add()` input unlocks more metrics;
   `results()` reports what was skipped instead of failing.
 - `scripts/eval_video_metrics.py` owns the rollout and checkpoint loading; `clipeval` knows
@@ -146,7 +146,7 @@ from the eval JSON); `docs/evaluation.md` is the protocol and the reasoning. Upd
 
 `train.sbatch` and `rollout.sbatch` are the Slurm entry points; `$ROOT=$WORK/sraman00/ctrlworld`
 with a prestaged venv, `HF_HOME`, and `HF_HUB_OFFLINE=1`. Compute nodes have **no internet** —
-anything that downloads (HF data, LPIPS/Inception/I3D/CoTracker weights) must run on a login
+anything that downloads (HF data, LPIPS/Inception/I3D weights) must run on a login
 node first. `scripts/eval_leonardo.sh` encodes that split: `setup`, `clips`, and
 `tracker_setup` are login-node commands; `run` and `noisefloor` run inside a job.
 The `cluster` skill handles submission and log fetching.
