@@ -42,10 +42,17 @@ __all__ = ['Scorer', 'pixel', 'stats', 'FeatureBank', 'keep_indices', 'anchor_in
 PIXEL_METRICS = ('psnr', 'ssim', 'lpips')
 # Static baselines. Raw PSNR is not comparable across clips: a clip where little moves
 # scores well no matter what the model does. Repeating a real frame gives a per-clip
-# floor to measure against. `static_round` repeats the frame each round was conditioned
-# on. It is an oracle: it receives the real frame at each round start, while a
-# free-running model conditions on its own drifted prediction.
-BASELINES = {'static_round': 'psnr_static_round'}
+# floor to measure against, and the two floors answer different questions.
+#
+# `static_first` freezes the clip's first real frame for the whole rollout. Beating it is
+# the minimum bar: it says the model predicted motion that is better than no motion at
+# all. `static_round` instead repeats the frame each round was conditioned on, so it
+# re-anchors on real pixels every round. That one is an oracle - it is handed ground
+# truth twelve times per clip while a free-running model conditions on its own drifted
+# prediction - so trailing it is expected early in training and is not the same finding
+# as trailing `static_first`.
+BASELINES = {'static_first': 'psnr_static_first',
+             'static_round': 'psnr_static_round'}
 DISTRIBUTION_METRICS = ('fid', 'fvd')
 
 
@@ -159,6 +166,8 @@ class Scorer:
         if 'psnr' in self.metrics:
             self._series('psnr', view, pixel.psnr(pred, target))
             self._series('psnr_static_round', view, pixel.psnr(gt[self.anchor], target))
+            first = gt[self.anchor[0]].expand_as(target)
+            self._series('psnr_static_first', view, pixel.psnr(first, target))
         if 'ssim' in self.metrics:
             self._series('ssim', view, pixel.ssim(pred, target))
         if self.lpips is not None:

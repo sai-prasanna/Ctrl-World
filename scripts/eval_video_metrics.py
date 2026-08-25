@@ -390,7 +390,13 @@ def main():
         'mode': 'teacher_forced' if args.teacher_forced else 'free_running',
         'ground_truth': 'raw mp4 frames at the 5Hz latent rate (no VAE round-trip)',
         'psnr_baselines': {
-            'static_round': "repeat each round's conditioning frame (absolute frame 4i)",
+            'static_first': "freeze the clip's first real frame for the whole rollout; "
+                            'the minimum bar, since beating it only means the model '
+                            'predicted motion better than no motion',
+            'static_round': "repeat each round's conditioning frame (absolute frame 4i); "
+                            'an oracle, re-anchored on real pixels every round while the '
+                            'model free-runs, so trailing it is not the same finding as '
+                            'trailing static_first',
             'reading': 'gain_db is model PSNR minus baseline PSNR; positive means the '
                        'model beats freezing a real frame. PSNR is logarithmic, so '
                        'this difference is exactly the ratio of mean squared errors.',
