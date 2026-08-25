@@ -222,6 +222,9 @@ if __name__ == "__main__":
     from config import wm_args, merge_args
     from argparse import ArgumentParser
     parser = ArgumentParser()
+    parser.add_argument('--history_idx', type=str, default="-6,-5,-4,-3,-2,-1",
+                        help="history buffer indices, oldest first, in buffer steps of "
+                             "(pred_step - 1) frames; the default matches training's skip=1")
     parser.add_argument('--svd_model_path', type=str, default=None)
     parser.add_argument('--clip_model_path', type=str, default=None)
     parser.add_argument('--ckpt_path', type=str, default=None)
@@ -239,6 +242,12 @@ if __name__ == "__main__":
     args = wm_args(task_type=args_new.task_type)
 
     args = merge_args(args, args_new)
+    # merge_args would leave this as the comma-separated string it arrives as, and
+    # config.py's own history_idx is the policy-in-the-loop one, so parse it here.
+    args.history_idx = [int(x) for x in str(args_new.history_idx).split(',')]
+    assert len(args.history_idx) == args.num_history, \
+        f"history_idx has {len(args.history_idx)} entries, num_history is {args.num_history}"
+    print(f'history_idx {args.history_idx} (buffer steps of {args.pred_step - 1} frames)')
     if args_new.val_id is not None:
         args.val_id = args_new.val_id.split(',')
         args.start_idx = [8] * len(args.val_id)
@@ -301,7 +310,15 @@ if __name__ == "__main__":
             print("################ world model forward ################")
             print(f'traj_id:{val_id_i}, interact step: {i}/{interact_num}')
             # retrive history cond and action cond
-            history_idx = [0,0,-8,-6,-4,-2]
+            # One buffer step is (pred_step - 1) frames, so these indices have to be read
+            # in buffer steps, not frames. Training couples the history spacing to the
+            # future spacing through a single `skip` (dataset_droid_exp33.py: skip_his =
+            # 4 * skip): skip=1 gives history every 4 frames and consecutive future
+            # frames, skip=2 gives every 8 and every other. Replay predicts consecutive
+            # frames, so it is the skip=1 regime and wants the six most recent buffer
+            # steps. The old [0,0,-8,-6,-4,-2] paired skip=2's history with skip=1's
+            # future, a combination training never draws.
+            history_idx = args.history_idx
             his_pose = np.concatenate([his_eef[idx] for idx in history_idx], axis=0)  # (4, 7)
             action_cond = np.concatenate([his_pose, cartesian_pose], axis=0)
             his_cond_input = torch.cat([his_cond[idx] for idx in history_idx], dim=0).unsqueeze(0)
