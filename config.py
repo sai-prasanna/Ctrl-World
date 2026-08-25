@@ -76,7 +76,9 @@ class wm_args:
     guidance_scale = 1.0 #2.0 #7.5 #7.5 #7.5 #3.0
     num_inference_steps = 50
     decode_chunk_size = 7
-    width = 192   # ABC frames are square 224x224 -> 192x192 -> 24x24 latent
+    # The original ABC release (XDOF/ABC-130k) ships native 4:3 cameras, so 256x192
+    # keeps the aspect and drops the letterbox the LeRobot mirror's 224x224 baked in.
+    width = 256   # -> 32x24 latent per view, 32x72 once the three views are stacked
     height = 192
     # num history and num future predictions
     num_frames= 5
