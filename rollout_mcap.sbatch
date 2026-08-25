@@ -17,6 +17,10 @@ cd $ROOT/repo
 export HF_HOME=$ROOT/hf HF_HUB_OFFLINE=1
 export PATH=$ROOT/venv/bin:$PATH
 export PYTHONUNBUFFERED=1 OMP_NUM_THREADS=8
+# config.py still defaults these to the upstream authors' /cephfs paths, which do not
+# exist here; every entry script has to name them explicitly.
+SVD=$HF_HOME/hub/models--stabilityai--stable-video-diffusion-img2vid/snapshots/9cf024d5bfa8f56622af86c884f26a52f6676f2e
+CLIP=$HF_HOME/hub/models--openai--clip-vit-base-patch32/snapshots/3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268
 CKPT=${CKPT:-$ROOT/repo/outputs/0003_abc_mcap/model/checkpoint-5000.pt}
 IDS=${IDS:-00ce9827-879c-4bed-82ef-8bfd07302d60,016f2a41-e549-4b00-b786-c5b0842bcaa2,02eb2789-4234-4d4c-984e-08872ed00c1d}
 echo "rollout ckpt=$CKPT"
@@ -25,5 +29,6 @@ echo "rollout ckpt=$CKPT"
 srun --cpu-bind=none $ROOT/venv/bin/python scripts/rollout_replay_traj.py \
   --task_type abc_replay \
   --ckpt_path $CKPT \
+  --svd_model_path $SVD --clip_model_path $CLIP \
   --val_dataset_dir $ROOT/data/abc_mcap \
   --val_id $IDS
