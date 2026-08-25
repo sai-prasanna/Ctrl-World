@@ -64,13 +64,21 @@ from models.pipeline_ctrl_world import CtrlWorldDiffusionPipeline  # noqa: E402
 from models.ctrl_world import CrtlWorld  # noqa: E402
 
 # The history buffer holds one entry per rollout round, and rounds advance
-# pred_step - 1 = 4 latent frames, so these indices are -32, -24, -16 and -8 frames
-# with the clip's first observation in slots 0 and 1. That spacing of 8 frames is what
-# the dataset produces when it draws skip=2 (dataset_droid_exp33.py builds history at
-# skip_his = 4 * skip for skip in {1, 2}). The [0,0,-12,-9,-6,-3] in config.py implies a
-# spacing of 12, which training never draws; it is only read by the policy-in-the-loop
-# scripts. Pinned here so the number is part of the eval record.
-HISTORY_IDX = [0, 0, -8, -6, -4, -2]
+# pred_step - 1 = 4 latent frames, so these six indices are the frames 24, 20, 16, 12, 8
+# and 4 back: evenly spaced by 4, ending at the most recent round.
+#
+# That is the skip=1 regime of dataset_droid_exp33.py, which builds history at
+# skip_his = 4 * skip and future frames at skip, for skip in {1, 2}. A rollout predicts
+# consecutive frames, so it is a skip=1 clip and wants skip=1 history; the earlier
+# [0, 0, -8, -6, -4, -2] paired skip=2's 8-frame history spacing with skip=1's future,
+# which training never draws, and pinned two slots permanently on the clip's first
+# observation. The paper (arXiv 2510.10125, S4.1) conditions on o_{t-km}, ..., o_{t-m},
+# o_t - evenly spaced, ending at the current frame, with no first-frame anchor - so the
+# anchor was ours rather than theirs. The paper's stated interval is 1-2 s against the
+# 0.8 s here; matching that would mean the skip=2 pairing, which this training run does
+# not exclusively draw. The [0,0,-12,-9,-6,-3] in config.py is read only by the
+# policy-in-the-loop scripts. Pinned here so the number is part of the eval record.
+HISTORY_IDX = [-6, -5, -4, -3, -2, -1]
 
 VIEW_NAMES = ['top', 'left_wrist', 'right_wrist']
 # The paper reports a third-person row and a wrist row; ours are grouped the same way.

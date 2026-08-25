@@ -47,16 +47,30 @@ output file. Changing any of them moves the numbers more than most checkpoint de
 
 ### History indices
 
-The evaluation pins `history_idx = [0, 0, -8, -6, -4, -2]`, matching
+The evaluation pins `history_idx = [-6, -5, -4, -3, -2, -1]`, matching
 `scripts/rollout_replay_traj.py`. The buffer holds one entry per round and rounds advance
-4 latent frames, so those indices are 32, 24, 16, and 8 frames back, with the clip's first
-observation in the two leading slots. That 8-frame spacing is what the dataset produces
-when it draws `skip=2`; see `dataset_droid_exp33.py`, which builds history at
-`skip_his = 4 * skip` for `skip` in `{1, 2}`.
+4 latent frames, so those indices are 24, 20, 16, 12, 8 and 4 frames back: evenly spaced,
+ending at the most recent round.
+
+That is the `skip=1` regime of `dataset_droid_exp33.py`, which builds history at
+`skip_his = 4 * skip` and future frames at `skip`, for `skip` in `{1, 2}`. A rollout
+predicts consecutive frames, so it is a `skip=1` clip and takes `skip=1` history. Pairing
+`skip=2` history with `skip=1` future, as `[0, 0, -8, -6, -4, -2]` did, is a combination
+training never draws.
+
+The paper conditions on `o_{t-km}, ..., o_{t-m}, o_t`: evenly spaced, ending at the
+current frame, with no anchor on the clip's first observation. The two leading zero slots
+of the earlier value were an artifact of the rollout buffer being pre-filled with copies
+of the first latent, not something the paper asks for. The paper's stated history interval
+is 1-2 seconds against the 0.8 seconds here, which would argue for the `skip=2` spacing;
+this pin follows what the checkpoint was trained to predict instead.
 
 The `[0, 0, -12, -9, -6, -3]` in `config.py` implies a 12-frame spacing, which training
 never draws. Only the policy-in-the-loop scripts read that value. Training itself reads
 neither, because the dataset lays out history by frame offset.
+
+Numbers recorded before 2026-08-25 used `[0, 0, -8, -6, -4, -2]` and are not comparable
+across this change.
 
 ## Clip selection
 

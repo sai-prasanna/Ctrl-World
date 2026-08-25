@@ -127,8 +127,9 @@ adding it to the dataclass *and* to the script's `ArgumentParser` with `default=
 
 Values that silently change results: `down_sample` (DROID 15 Hz -> 3, ABC 30 Hz -> 6),
 `num_inference_steps`, `guidance_scale`, `history_idx`. The `history_idx` in `config.py`
-(`[0,0,-12,-9,-6,-3]`) is only read by the policy-in-the-loop scripts; the evaluation pins
-`[0,0,-8,-6,-4,-2]` to match what training actually draws.
+(`[0,0,-12,-9,-6,-3]`) is only read by the policy-in-the-loop scripts; the evaluation and
+`rollout_replay_traj.py` pin `[-6,-5,-4,-3,-2,-1]`, the evenly spaced `skip=1` history
+that pairs with the consecutive frames a rollout predicts.
 
 ## Outputs and provenance
 
