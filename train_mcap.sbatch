@@ -28,6 +28,23 @@ MAX_STEPS=${MAX_STEPS:-30000}
 # 256x192 is 1.33x the tokens of the 192x192 run, so per-device batch drops 4 -> 2 and
 # grad_accum rises 4 -> 8, keeping the paper effective batch of 64.
 
+LAST_AT_START=$(ls -1 $OUT 2>/dev/null | grep -o "checkpoint-[0-9]\+" | grep -o "[0-9]\+" \
+  | sort -n | tail -1)
+# Chain the successor now, not after training returns. A 30k-step run at ~6.4 s/it needs
+# about 55 h, so every job except the last one is killed at the 24 h wall: Slurm sends
+# SIGTERM, the step dies, and anything after the training command never runs. The first
+# attempt learned this the hard way, stopping at step 12,591 with nobody to resume it.
+#
+# afterany means the successor starts whether this job times out, fails or completes, and
+# the guard above makes a successor that has nothing left to do exit immediately. That
+# also stops the chain: once a job resumes from a checkpoint at MAX_STEPS, it leaves.
+if [ -n "$LAST_AT_START" ] && [ "$LAST_AT_START" -ge "$MAX_STEPS" ]; then
+  echo "already at step $LAST_AT_START of $MAX_STEPS; nothing to resume"
+  exit 0
+fi
+sbatch --dependency=afterany:$SLURM_JOB_ID --export=ALL,MAX_STEPS=$MAX_STEPS \
+  $ROOT/train_mcap.sbatch
+
 $ROOT/venv/bin/accelerate launch --num_processes 4 --mixed_precision fp16 --dynamo_backend no \
   scripts/train_wm.py \
   --svd_model_path $SVD --clip_model_path $CLIP \
@@ -38,8 +55,3 @@ $ROOT/venv/bin/accelerate launch --num_processes 4 --mixed_precision fp16 --dyna
   --validation_steps 2500 --video_num 4 \
   --tag $TAG --resume  # --resume is a no-op on the first job: it just finds nothing to resume
 
-# Requeue until 30k, unless the run finished or died before writing a checkpoint.
-LAST=$(ls -1 $OUT 2>/dev/null | grep -o "checkpoint-[0-9]\+" | grep -o "[0-9]\+" | sort -n | tail -1)
-if [ -n "$LAST" ] && [ "$LAST" -lt "$MAX_STEPS" ]; then
-  sbatch --export=ALL,MAX_STEPS=$MAX_STEPS $ROOT/train_mcap.sbatch
-fi
