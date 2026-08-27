@@ -2,8 +2,22 @@
 # Stage half of the split pipeline: download episode blobs on a LOGIN node.
 # Only login nodes have a route to the Hub (a boost node cannot even resolve
 # huggingface.co), so the network stage runs here and does no decoding at all.
-ROOT=$WORK/sraman00/ctrlworld
-cd $ROOT/repo
+#
+# Normally started detached through launch_download.sh rather than run directly.
+# Run --dump_episode_files once before the first shard; it is the other stage that
+# needs the Hub, and every later stage reads its output offline:
+#
+#   python dataset_example/extract_latent_abc_mcap.py \
+#     --dump_episode_files $CTRLWORLD_ROOT/abc_mcap_files.json
+#
+# Run from wherever this file was checked out, not from a fixed $ROOT/repo, so the same
+# file works from a checkout, from `cluster submit`, and on a machine with no Slurm.
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+# $ROOT holds everything that outlives a run: the venv, the HF cache, the data, the
+# generated index and the outputs. It defaults to the Leonardo layout but is overridable,
+# so the same file reproduces the run on another machine or from a `cluster submit`
+# checkout: CTRLWORLD_ROOT=/path/to/scratch sbatch|bash <this file>.
+ROOT=${CTRLWORLD_ROOT:-$WORK/sraman00/ctrlworld}
 export HF_HOME=$ROOT/hf PYTHONUNBUFFERED=1
 export PATH=$ROOT/venv/bin:$PATH
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
@@ -12,9 +26,13 @@ export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_TH
 # --workers low and let xet supply the parallelism.
 export HF_XET_HIGH_PERFORMANCE=1
 unset HF_HUB_OFFLINE
+# The task selection is committed beside the code because it is a scientific choice;
+# the episode index is a derived Hub listing, so it lives under $ROOT and is regenerated.
+TASKS=${CTRLWORLD_TASKS:-dataset_example/rigid_tasks.txt}
 exec $ROOT/venv/bin/python dataset_example/extract_latent_abc_mcap.py \
-  --episode_files $ROOT/abc_mcap_files.json --tasks $(cat $ROOT/rigid_tasks.txt) \
+  --episode_files ${CTRLWORLD_EPISODE_FILES:-$ROOT/abc_mcap_files.json} \
+  --tasks "$(cat "$TASKS")" \
   --split ${SPLIT:-train} --skip_latent --download_only \
-  --output_path $ROOT/data/abc_mcap --cache_dir $ROOT/mcap_cache \
+  --output_path ${CTRLWORLD_DATA:-$ROOT/data}/abc_mcap --cache_dir $ROOT/mcap_cache \
   --max_staged ${MAX_STAGED:-400} \
   --shard ${SHARD:-0} --num_shards ${NSHARD:-1} --workers ${WORKERS:-8}

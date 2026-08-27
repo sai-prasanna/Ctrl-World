@@ -26,13 +26,19 @@
 # so the same file reproduces the run on another machine or from a `cluster submit`
 # checkout: CTRLWORLD_ROOT=/path/to/scratch sbatch|bash <this file>.
 ROOT=${CTRLWORLD_ROOT:-$WORK/sraman00/ctrlworld}
-cd $ROOT/repo
+# Run from wherever this file was checked out; see train_mcap.sbatch for why.
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export HF_HOME=$ROOT/hf HF_HUB_OFFLINE=1
 export PATH=$ROOT/venv/bin:$PATH
 export PYTHONUNBUFFERED=1
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
 SVD=$HF_HOME/hub/models--stabilityai--stable-video-diffusion-img2vid/snapshots/9cf024d5bfa8f56622af86c884f26a52f6676f2e
-DATA=$ROOT/data/abc_mcap
+DATA=${CTRLWORLD_DATA:-$ROOT/data}/abc_mcap
+# The task selection is committed beside the code because it is a scientific choice; the
+# episode index is a derived Hub listing, so it lives under $ROOT. Generate it once on a
+# login node with --dump_episode_files before the first download shard starts.
+TASKS=${CTRLWORLD_TASKS:-dataset_example/rigid_tasks.txt}
+EPISODE_FILES=${CTRLWORLD_EPISODE_FILES:-$ROOT/abc_mcap_files.json}
 SHARD=${SLURM_ARRAY_TASK_ID:-0}
 NSHARD=${NSHARD:-4}
 SPLIT=${SPLIT:-train}
@@ -44,7 +50,7 @@ echo "shard $SHARD/$NSHARD split=$SPLIT on $(hostname), alloc=$SLURM_CPUS_PER_TA
 # Stop sweeping half an hour before the wall clock so the job exits between episodes.
 srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK --cpu-bind=none \
   $ROOT/venv/bin/python dataset_example/extract_latent_abc_mcap.py \
-    --episode_files $ROOT/abc_mcap_files.json --tasks $(cat $ROOT/rigid_tasks.txt) \
+    --episode_files "$EPISODE_FILES" --tasks "$(cat "$TASKS")" \
     --split $SPLIT --skip_latent --decode_cached \
     --output_path $DATA --cache_dir $ROOT/mcap_cache \
     --deadline $(( 7 * 3600 + 1800 )) --sweep_wait 60 \

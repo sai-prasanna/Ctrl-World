@@ -137,7 +137,7 @@ python scripts/selftest_eval_metrics.py   # 18 checks, CPU only
   from `checkpoint-10000.pt`. 20000 steps at 4.5 s/it takes about 25 hours, which exceeds
   the 24-hour wall of the default quality of service (QoS), so the job runs under
   `boost_qos_lprod` and its 36-hour limit as a single job instead of two chained ones:
-  `MAX_STEPS=30000 RESUME=--resume sbatch train.sbatch`. Without `--ckpt_path`,
+  `MAX_STEPS=30000 RESUME=--resume sbatch jobs/train.sbatch`. Without `--ckpt_path`,
   `--resume` selects the highest-numbered `checkpoint-<step>.pt`.
 - **Pixel metrics score appearance, not control accuracy.** PSNR and SSIM reward a
   blurred mean-future, and nothing currently measures whether the predicted motion is

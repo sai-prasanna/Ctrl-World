@@ -14,8 +14,10 @@
 #SBATCH --output=%x-%j.out
 
 set -x
-ROOT=$WORK/sraman00/ctrlworld
-cd $ROOT/repo
+ROOT=${CTRLWORLD_ROOT:-${CLUSTER_SHARED_DIR:-$WORK/sraman00/ctrlworld}}
+# Run from the checkout this file sits in, not a fixed $ROOT/repo; see
+# train_mcap.sbatch for why. jobs/ is one level below the repo root.
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export HF_HOME=$ROOT/hf HF_HUB_OFFLINE=1
 export PATH=$ROOT/venv/bin:$PATH
 export WANDB_MODE=offline SWANLAB_DISABLED=1 PYTHONUNBUFFERED=1

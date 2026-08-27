@@ -15,12 +15,13 @@
 # $ROOT holds everything that outlives a run: the venv, the HF cache, the data, the
 # generated index and the outputs. It defaults to the Leonardo layout but is overridable,
 # so the same file reproduces the run on another machine or from a `cluster submit`
-# checkout: CTRLWORLD_ROOT=/path/to/scratch sbatch|bash <this file>.
-ROOT=${CTRLWORLD_ROOT:-$WORK/sraman00/ctrlworld}
+# checkout: CTRLWORLD_ROOT=/path/to/scratch sbatch|bash <this file>. A submitted run needs
+# no argument -- `cluster submit` exports CLUSTER_SHARED_DIR for exactly this.
+ROOT=${CTRLWORLD_ROOT:-${CLUSTER_SHARED_DIR:-$WORK/sraman00/ctrlworld}}
 DATA=${CTRLWORLD_DATA:-$ROOT/data}
 META=${CTRLWORLD_META:-$ROOT/dataset_meta_info}
 # Run from wherever this file was checked out; see train_mcap.sbatch for why.
-cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export HF_HOME=$ROOT/hf HF_HUB_OFFLINE=1
 export PATH=$ROOT/venv/bin:$PATH
 export PYTHONUNBUFFERED=1 OMP_NUM_THREADS=8
@@ -59,3 +60,9 @@ srun --cpu-bind=none $ROOT/venv/bin/python scripts/rollout_replay_traj.py \
   --val_dataset_dir $DATA/abc_mcap \
   --val_id $IDS \
   --save_dir $RUN_DIR/rollout
+
+# As in eval_mcap.sbatch: the rollouts stay in the durable tree, with a copy in the run
+# dir so `cluster fetch` brings them back from a submitted run.
+if [ -n "$CLUSTER_OUTPUT_DIR" ]; then
+  cp -r "$RUN_DIR/rollout" "$CLUSTER_OUTPUT_DIR/"
+fi

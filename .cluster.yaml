@@ -1,6 +1,11 @@
 project: Ctrl-World
+# CTRLWORLD_ROOT, not runs/Ctrl-World/shared: the venv, the HF cache and the extracted
+# ABC data already live here and run to hundreds of GB, so pointing at them beats moving
+# them. The *.sbatch files read $CLUSTER_SHARED_DIR, so this is the only place the path
+# is named.
+shared_dir: /leonardo_work/AIFAC_S07_034/sraman00/ctrlworld
 defaults:
   cluster: leonardo
-  gpus: 1
-  time: 01:00:00
+  gpus: 4
+  time: 24:00:00
 clusters: {}

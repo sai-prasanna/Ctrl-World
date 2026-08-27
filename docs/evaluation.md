@@ -204,7 +204,7 @@ internet access and the clip list is built from the validation annotations.
    The job writes `$WORK/sraman00/ctrlworld/eval/metrics_step<step>.json`.
 
 Prefer `cluster submit` over copying the repository to `$WORK/sraman00/ctrlworld/repo` by
-hand. An earlier untracked copy of `rollout.sbatch` pointed at the wrong dataset, and the
+hand. An earlier untracked copy of `jobs/rollout.sbatch` pointed at the wrong dataset, and the
 runs it produced looked normal.
 
 ### Job sizing
