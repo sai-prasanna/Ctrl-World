@@ -53,13 +53,25 @@ needs a network, which only login nodes have, and the decode and VAE passes need
 a GPU, which only the offline boost nodes have.
 
 ```bash
-./launch_download.sh <shard> <num_shards> <workers> [split]   # login node, once per shard
-sbatch --array=0-3 --export=ALL,NSHARD=4 abc_gpu.sbatch      # boost: decode, then encode
-sbatch meta_and_train.sbatch                                  # index, then start training
+python dataset_example/extract_latent_abc_mcap.py \
+  --dump_episode_files $CTRLWORLD_ROOT/abc_mcap_files.json   # login node, once per release
+jobs/launch_download.sh <shard> <num_shards> <workers> [split]   # login node, once per shard
+sbatch --array=0-3 --export=ALL,NSHARD=4 jobs/abc_gpu.sbatch      # boost: decode, then encode
+sbatch jobs/meta_and_train.sbatch                                  # index, then start training
 ```
 
+Two inputs sit outside that chain, and the split between them is deliberate.
+`dataset_example/rigid_tasks.txt` is the *task selection* — the 11 rigid pick-and-place
+tasks, chosen over the deformable ones because cloth state is not recoverable from a 14-D
+joint vector — so it is a scientific choice and is committed. `abc_mcap_files.json` is a
+derived listing of every `episode.mcap` in the release; regenerate it with
+`--dump_episode_files` rather than copying it between machines. Both are overridable with
+`CTRLWORLD_TASKS` and `CTRLWORLD_EPISODE_FILES`. `--tasks` splits on commas and whitespace
+and ignores `#` comments, so the list file explains itself; a slug that matches nothing
+warns, and only an empty selection fails.
+
 The download shards stage MCAP blobs into `mcap_cache` and stop once `--max_staged` blobs
-are waiting, so `$WORK` cannot fill while the decoders lag. `abc_gpu.sbatch` decodes those
+are waiting, so `$WORK` cannot fill while the decoders lag. `jobs/abc_gpu.sbatch` decodes those
 blobs to `videos/` and `annotation/` and then VAE-encodes `latent_videos/` on the same
 allocation; it sweeps the episode list repeatedly, so it can start while downloads are
 still arriving and `not staged` is a normal status rather than an error. Both halves shard
@@ -144,7 +156,11 @@ from the eval JSON); `docs/evaluation.md` is the protocol and the reasoning. Upd
 
 ## Cluster (Leonardo)
 
-`train.sbatch` and `rollout.sbatch` are the Slurm entry points; `$ROOT=$WORK/sraman00/ctrlworld`
+All Slurm entry points live in `jobs/`, one per pipeline stage: `launch_download.sh` and
+`download_login.sh` stage blobs on a login node, `abc_gpu.sbatch` decodes and encodes,
+`meta_and_train.sbatch` indexes and starts training, `train_mcap.sbatch` /
+`rollout_mcap.sbatch` / `eval_mcap.sbatch` are the live `abc_mcap` generation, and
+`train.sbatch` / `rollout.sbatch` the superseded `abc_rigid` one. `$ROOT=$WORK/sraman00/ctrlworld`
 with a prestaged venv, `HF_HOME`, and `HF_HUB_OFFLINE=1`. Compute nodes have **no internet** —
 anything that downloads (HF data, LPIPS/Inception/I3D weights) must run on a login
 node first. `scripts/eval_leonardo.sh` encodes that split: `setup`, `clips`, and
@@ -159,8 +175,16 @@ Every `*.sbatch` file runs unchanged in three contexts: `sbatch <file>` from a c
 `cluster submit`, and `bash <file>` on a machine with no Slurm. Two conventions make that
 work, so preserve them when you add an entry point.
 
-Each file locates itself with `BASH_SOURCE` and `cd`s there instead of naming `$ROOT/repo`,
-because `cluster submit` stages the run in `$WORK/runs/<project>/<runid>/code`. The
+Keep the `#SBATCH` headers even though `cluster submit` writes its own sbatch and runs the
+file as a `bash` payload, which makes them dead for the *first* job. They are still what
+the chain reads: `train_mcap.sbatch` resubmits itself and `meta_and_train.sbatch` submits
+`train_mcap.sbatch`, both with a plain `sbatch`, so every link after the first takes its
+account, partition, GPUs and wall clock from the headers. A 30k-step run spans three
+chained jobs, so that is the normal path.
+
+Each file locates itself with `BASH_SOURCE` and `cd`s to the repo root — `jobs/..`, not its
+own directory — instead of naming `$ROOT/repo`, because `cluster submit` stages the run in
+`$WORK/runs/<project>/<runid>/code`. The
 training chain re-submits its own resolved path, which keeps every link on one commit.
 
 Anything that outlives a run lives outside the code snapshot, under overridable paths:

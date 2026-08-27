@@ -15,15 +15,16 @@ set -x
 # $ROOT holds everything that outlives a run: the venv, the HF cache, the data, the
 # generated index and the outputs. It defaults to the Leonardo layout but is overridable,
 # so the same file reproduces the run on another machine or from a `cluster submit`
-# checkout: CTRLWORLD_ROOT=/path/to/scratch sbatch|bash <this file>.
-ROOT=${CTRLWORLD_ROOT:-$WORK/sraman00/ctrlworld}
+# checkout: CTRLWORLD_ROOT=/path/to/scratch sbatch|bash <this file>. A submitted run needs
+# no argument -- `cluster submit` exports CLUSTER_SHARED_DIR for exactly this.
+ROOT=${CTRLWORLD_ROOT:-${CLUSTER_SHARED_DIR:-$WORK/sraman00/ctrlworld}}
 DATA=${CTRLWORLD_DATA:-$ROOT/data}
 META=${CTRLWORLD_META:-$ROOT/dataset_meta_info}
 # Resolve this file's own location instead of a fixed checkout. `cluster submit` drops each
 # run in $WORK/runs/Ctrl-World/<runid>/code, so the chain must re-submit whichever copy it
 # was started from; that also keeps every link of the chain on the same commit.
 SCRIPT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")
-cd "$(dirname "$SCRIPT")"
+cd "$(dirname "$SCRIPT")/.."
 export HF_HOME=$ROOT/hf HF_HUB_OFFLINE=1
 export PATH=$ROOT/venv/bin:$PATH
 export WANDB_MODE=offline SWANLAB_DISABLED=1 PYTHONUNBUFFERED=1
@@ -50,8 +51,14 @@ fi
 SVD=$HF_HOME/hub/models--stabilityai--stable-video-diffusion-img2vid/snapshots/9cf024d5bfa8f56622af86c884f26a52f6676f2e
 CLIP=$HF_HOME/hub/models--openai--clip-vit-base-patch32/snapshots/3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268
 TAG=0003_abc_mcap
-RUN_DIR=outputs/$TAG
-OUT=$RUN_DIR/model
+# Checkpoints and samples want different homes. The chain resumes from the previous job's
+# checkpoints, so those stay in the durable tag-keyed tree and are the same directory for
+# every runid. Samples and rollouts are the one job's own, so under `cluster submit` they
+# go in its run dir, which is what `cluster fetch` copies back; standalone they fall back
+# beside the checkpoints. train_wm.py keeps --output_dir independent of --run_dir for
+# exactly this.
+OUT=outputs/$TAG/model
+RUN_DIR=${CLUSTER_OUTPUT_DIR:-outputs/$TAG}
 MAX_STEPS=${MAX_STEPS:-30000}
 
 # 256x192 is 1.33x the tokens of the 192x192 run, so per-device batch drops 4 -> 2 and
@@ -81,6 +88,6 @@ $ROOT/venv/bin/accelerate launch --num_processes 4 --mixed_precision fp16 --dyna
   --train_batch_size 2 --gradient_accumulation_steps 8 --num_workers 8 \
   --max_train_steps $MAX_STEPS --checkpointing_steps 5000 \
   --validation_steps 2500 --video_num 4 \
-  --tag $TAG \
+  --tag $TAG --run_dir $RUN_DIR --output_dir $OUT \
   --resume  # --resume is a no-op on the first job: it just finds nothing to resume
 

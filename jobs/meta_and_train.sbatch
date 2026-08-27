@@ -15,13 +15,14 @@
 # $ROOT holds everything that outlives a run: the venv, the HF cache, the data, the
 # generated index and the outputs. It defaults to the Leonardo layout but is overridable,
 # so the same file reproduces the run on another machine or from a `cluster submit`
-# checkout: CTRLWORLD_ROOT=/path/to/scratch sbatch|bash <this file>.
-ROOT=${CTRLWORLD_ROOT:-$WORK/sraman00/ctrlworld}
+# checkout: CTRLWORLD_ROOT=/path/to/scratch sbatch|bash <this file>. A submitted run needs
+# no argument -- `cluster submit` exports CLUSTER_SHARED_DIR for exactly this.
+ROOT=${CTRLWORLD_ROOT:-${CLUSTER_SHARED_DIR:-$WORK/sraman00/ctrlworld}}
 DATA=${CTRLWORLD_DATA:-$ROOT/data}
 META=${CTRLWORLD_META:-$ROOT/dataset_meta_info}
 # Run from wherever this file was checked out; see train_mcap.sbatch for why.
 SCRIPT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")
-cd "$(dirname "$SCRIPT")"
+cd "$(dirname "$SCRIPT")/.."
 export HF_HOME=$ROOT/hf HF_HUB_OFFLINE=1
 export PATH=$ROOT/venv/bin:$PATH
 export PYTHONUNBUFFERED=1
