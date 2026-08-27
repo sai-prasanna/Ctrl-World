@@ -26,20 +26,20 @@ Training (per-device batch; effective batch = devices x batch x grad_accum, pape
 
 ```bash
 WANDB_MODE=offline accelerate launch --main_process_port 29501 scripts/train_wm.py \
-  --dataset_root_path dataset_example --dataset_meta_info_path dataset_meta_info \
+  --dataset_root_path preprocessing --dataset_meta_info_path dataset_meta_info \
   --dataset_names abc_subset
 ```
 
 Data prep for ABC (see readme.md section 4 for the full flow):
 
 ```bash
-python dataset_example/select_abc_episodes.py --dry_run          # inspect tasks/hours
-python dataset_example/select_abc_episodes.py --task_regex ... --max_hours 350 --output_path dataset_example/abc_subset
-accelerate launch dataset_example/extract_latent_abc.py --episode_list ... --output_path ... --svd_path ...
-python dataset_meta_info/create_meta_info.py --droid_output_path dataset_example/abc_subset --dataset_name abc_subset
+python preprocessing/select_abc_episodes.py --dry_run          # inspect tasks/hours
+python preprocessing/select_abc_episodes.py --task_regex ... --max_hours 350 --output_path preprocessing/abc_subset
+accelerate launch preprocessing/extract_latent_abc.py --episode_list ... --output_path ... --svd_path ...
+python dataset_meta_info/create_meta_info.py --droid_output_path preprocessing/abc_subset --dataset_name abc_subset
 ```
 
-`dataset_example/extract_latent.py` is the DROID equivalent of `extract_latent_abc.py`.
+`preprocessing/extract_latent.py` is the DROID equivalent of `extract_latent_abc.py`.
 
 The LeRobot mirror those scripts read (`lerobot/abc_130k_v3_train`) letterboxes the 4:3
 cameras into 224x224, so a quarter of every latent is encoded black. `extract_latent_abc_mcap.py`
@@ -53,7 +53,7 @@ needs a network, which only login nodes have, and the decode and VAE passes need
 a GPU, which only the offline boost nodes have.
 
 ```bash
-python dataset_example/extract_latent_abc_mcap.py \
+python preprocessing/extract_latent_abc_mcap.py \
   --dump_episode_files $CTRLWORLD_ROOT/abc_mcap_files.json   # login node, once per release
 jobs/launch_download.sh <shard> <num_shards> <workers> [split]   # login node, once per shard
 sbatch --array=0-3 --export=ALL,NSHARD=4 jobs/abc_gpu.sbatch      # boost: decode, then encode
@@ -61,7 +61,7 @@ sbatch jobs/meta_and_train.sbatch                                  # index, then
 ```
 
 Two inputs sit outside that chain, and the split between them is deliberate.
-`dataset_example/rigid_tasks.txt` is the *task selection* — the 11 rigid pick-and-place
+`preprocessing/rigid_tasks.txt` is the *task selection* — the 11 rigid pick-and-place
 tasks, chosen over the deformable ones because cloth state is not recoverable from a 14-D
 joint vector — so it is a scientific choice and is committed. `abc_mcap_files.json` is a
 derived listing of every `episode.mcap` in the release; regenerate it with

@@ -6,7 +6,7 @@
 #
 # Slugs are the `data/{split}/{task}/` directory names in XDOF/ABC-130k, which are the
 # LeRobot task strings with spaces replaced by underscores. Derived from the 11 tasks in
-# dataset_example/abc_rigid/episode_list.json.gz (15477 episodes on the mirror), so both
+# preprocessing/abc_rigid/episode_list.json.gz (15477 episodes on the mirror), so both
 # generations of the port cover the same tasks and their stat.json carries over.
 #
 # Read by --tasks, which splits on commas and whitespace and ignores these lines.

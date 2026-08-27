@@ -7,7 +7,7 @@
 # Run --dump_episode_files once before the first shard; it is the other stage that
 # needs the Hub, and every later stage reads its output offline:
 #
-#   python dataset_example/extract_latent_abc_mcap.py \
+#   python preprocessing/extract_latent_abc_mcap.py \
 #     --dump_episode_files $CTRLWORLD_ROOT/abc_mcap_files.json
 #
 # Run from wherever this file was checked out, not from a fixed $ROOT/repo, so the same
@@ -28,8 +28,8 @@ export HF_XET_HIGH_PERFORMANCE=1
 unset HF_HUB_OFFLINE
 # The task selection is committed beside the code because it is a scientific choice;
 # the episode index is a derived Hub listing, so it lives under $ROOT and is regenerated.
-TASKS=${CTRLWORLD_TASKS:-dataset_example/rigid_tasks.txt}
-exec $ROOT/venv/bin/python dataset_example/extract_latent_abc_mcap.py \
+TASKS=${CTRLWORLD_TASKS:-preprocessing/rigid_tasks.txt}
+exec $ROOT/venv/bin/python preprocessing/extract_latent_abc_mcap.py \
   --episode_files ${CTRLWORLD_EPISODE_FILES:-$ROOT/abc_mcap_files.json} \
   --tasks "$(cat "$TASKS")" \
   --split ${SPLIT:-train} --skip_latent --download_only \

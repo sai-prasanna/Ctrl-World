@@ -6,13 +6,13 @@ Reads only the ~300MB of `meta/` (no video download) and emits:
 
 Usage:
   # 1. inspect what is available
-  python dataset_example/select_abc_episodes.py --dry_run
+  python preprocessing/select_abc_episodes.py --dry_run
   # 2. pick a task family and cut it
-  python dataset_example/select_abc_episodes.py \
+  python preprocessing/select_abc_episodes.py \
       --tasks "fold and stack the t-shirts" "fold and stack the shorts" \
-      --max_episodes 12000 --output_path dataset_example/abc_subset
+      --max_episodes 12000 --output_path preprocessing/abc_subset
   # 3. pre-stage the referenced raw files (needed when compute nodes are offline)
-  python dataset_example/select_abc_episodes.py --download --raw_path $WORK/abc_raw
+  python preprocessing/select_abc_episodes.py --download --raw_path $WORK/abc_raw
 """
 import argparse
 import gzip
@@ -187,7 +187,7 @@ def load_episode_list(path):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo_id", default="lerobot/abc_130k_v3_train")
-    ap.add_argument("--output_path", default="dataset_example/abc_subset")
+    ap.add_argument("--output_path", default="preprocessing/abc_subset")
     ap.add_argument("--dataset_meta_info_path", default="dataset_meta_info")
     ap.add_argument("--dataset_name", default="abc_subset")
     ap.add_argument("--tasks", nargs="*", default=None,

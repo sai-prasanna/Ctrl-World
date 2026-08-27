@@ -1,6 +1,6 @@
 """Extract SVD latents from the ABC-130k bimanual dataset (LeRobot v3) for Ctrl-World.
 
-Mirrors dataset_example/extract_latent.py (DROID / LeRobot v2) but:
+Mirrors preprocessing/extract_latent.py (DROID / LeRobot v2) but:
   * LeRobot v3 packing: many episodes share one parquet and one mp4, so an episode is a
     row slice + a [from_timestamp, to_timestamp) video slice (see select_abc_episodes.py).
   * 3 views are top / left_wrist / right_wrist -> 0.mp4 / 1.mp4 / 2.mp4
@@ -11,9 +11,9 @@ By default the raw files are STREAMED from the Hub with HTTP range requests
 (av1 GOP size is 2, so slicing is cheap) - no multi-TB local copy required.
 Pass --raw_path to read from a local copy of the repo instead.
 
-  accelerate launch dataset_example/extract_latent_abc.py \
-      --episode_list dataset_example/abc_subset/episode_list.json \
-      --output_path dataset_example/abc_subset \
+  accelerate launch preprocessing/extract_latent_abc.py \
+      --episode_list preprocessing/abc_subset/episode_list.json \
+      --output_path preprocessing/abc_subset \
       --svd_path <stable-video-diffusion-img2vid>
 """
 import json
@@ -218,8 +218,8 @@ class EncodeLatentDataset(Dataset):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('--episode_list', type=str, default='dataset_example/abc_subset')
-    parser.add_argument('--output_path', type=str, default='dataset_example/abc_subset')
+    parser.add_argument('--episode_list', type=str, default='preprocessing/abc_subset')
+    parser.add_argument('--output_path', type=str, default='preprocessing/abc_subset')
     parser.add_argument('--raw_path', type=str, default=None,
                         help='local copy of the HF repo; omit to stream from the Hub')
     parser.add_argument('--repo_id', type=str, default=REPO_ID)

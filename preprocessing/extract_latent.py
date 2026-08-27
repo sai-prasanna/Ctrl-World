@@ -158,7 +158,7 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
     parser = ArgumentParser()
     parser.add_argument('--droid_hf_path', type=str, default='/cephfs/shared/droid_hf/droid_1.0.1')
-    parser.add_argument('--droid_output_path', type=str, default='dataset_example/droid_subset')
+    parser.add_argument('--droid_output_path', type=str, default='sample_data/droid_subset')
     parser.add_argument('--svd_path', type=str, default='/cephfs/shared/llm/stable-video-diffusion-img2vid')
     # debug
     parser.add_argument('--debug', action='store_true')
@@ -186,5 +186,5 @@ if __name__ == "__main__":
         if idx % 100 == 0 and accelerator.is_main_process:
             print(f"Precomputed {idx} samples")
 
-# accelerate launch dataset_example/extract_latent.py --droid_hf_path /cephfs/shared/droid_hf/droid_1.0.1 --droid_output_path dataset_example/droid_subset --svd_path /cephfs/shared/llm/stable-video-diffusion-img2vid --debug
+# accelerate launch preprocessing/extract_latent.py --droid_hf_path /cephfs/shared/droid_hf/droid_1.0.1 --droid_output_path sample_data/droid_subset --svd_path /cephfs/shared/llm/stable-video-diffusion-img2vid --debug
 

@@ -17,7 +17,7 @@ class wm_args:
 
     # dataset parameters
     # raw data
-    dataset_root_path = "dataset_example"
+    dataset_root_path = "sample_data"
     dataset_names = 'droid_subset'
     # meta info
     dataset_meta_info_path = 'dataset_meta_info' #'/cephfs/cjyyj/code/video_evaluation/exp_cfg'#'dataset_meta_info'
@@ -105,14 +105,14 @@ class wm_args:
 
         # Configure per-task eval sets
         if self.task_type == "replay":
-            self.val_dataset_dir = "dataset_example/droid_subset"
+            self.val_dataset_dir = "sample_data/droid_subset"
             self.val_id = ["899", "18599","199",]
             self.start_idx = [8, 14, 8] * len(self.val_id)
             self.instruction = [""] * len(self.val_id)
             self.task_name = "Rollouts_replay"
 
         elif self.task_type == "keyboard":
-            self.val_dataset_dir = "dataset_example/droid_subset"
+            self.val_dataset_dir = "sample_data/droid_subset"
             self.val_id = ["1799"]
             self.start_idx = [23] * len(self.val_id)
             self.instruction = [""] * len(self.val_id)
@@ -121,7 +121,7 @@ class wm_args:
 
         elif self.task_type == "pickplace":
             self.interact_num = 15
-            self.val_dataset_dir = f'dataset_example/droid_new_setup_full/{self.task_type}'
+            self.val_dataset_dir = f'sample_data/droid_new_setup_full/{self.task_type}'
             repeat_num = 2
             self.val_id = ['0000','0001','0002','0003','0004','0005','0006','0007','0008','0009']*repeat_num
             self.start_idx = [0]*len(self.val_id)
@@ -138,14 +138,14 @@ class wm_args:
 
         elif self.task_type == "towel_fold":
             self.interact_num = 15
-            self.val_dataset_dir = f'dataset_example/droid_new_setup_full/{self.task_type}'
+            self.val_dataset_dir = f'sample_data/droid_new_setup_full/{self.task_type}'
             repeat_num = 2
             self.val_id = ['0000','0001','0002','0003','0004','0005','0006','0007','0008','0009']*repeat_num
             self.start_idx = [0]*len(self.val_id)
             self.instruction = ['fold the towel']*len(self.val_id)
 
         elif self.task_type == "wipe_table":
-            self.val_dataset_dir = f'dataset_example/droid_new_setup_full/{self.task_type}'
+            self.val_dataset_dir = f'sample_data/droid_new_setup_full/{self.task_type}'
             repeat_num = 4
             self.val_id = ['0000','0001','0002','0003','0004']*repeat_num
             self.start_idx = [0] * len(self.val_id)
@@ -156,7 +156,7 @@ class wm_args:
                                 'moving the towel from left to right']*repeat_num
 
         elif self.task_type == "tissue":
-            self.val_dataset_dir = f'dataset_example/droid_new_setup_full/{self.task_type}'
+            self.val_dataset_dir = f'sample_data/droid_new_setup_full/{self.task_type}'
             repeat_num = 4
             self.val_id = ['0000', '0001', '0002', '0003', '0004']*repeat_num
             self.start_idx = [0] * len(self.val_id)
@@ -165,7 +165,7 @@ class wm_args:
 
         elif self.task_type == "close_laptop":
 
-            self.val_dataset_dir = f'dataset_example/droid_new_setup_full/{self.task_type}'
+            self.val_dataset_dir = f'sample_data/droid_new_setup_full/{self.task_type}'
             repeat_num = 4
             self.val_id = ['0000', '0001', '0002', '0003', '0004']*repeat_num
             self.start_idx = [0] * len(self.val_id)
@@ -173,7 +173,7 @@ class wm_args:
             self.policy_skip_step = 3
 
         elif self.task_type == "stack":
-            self.val_dataset_dir = f'dataset_example/droid_new_setup_full/{self.task_type}'
+            self.val_dataset_dir = f'sample_data/droid_new_setup_full/{self.task_type}'
             repeat_num = 4
             self.val_id = ['0000', '0001', '0002', '0003', '0004']*repeat_num
             self.start_idx = [10] * len(self.val_id)
@@ -184,7 +184,7 @@ class wm_args:
                                 "stack the green block on the red block",]*repeat_num
         
         elif self.task_type == 'drawer':
-            self.val_dataset_dir = 'dataset_example/droid_new_setup_eval/drawer'
+            self.val_dataset_dir = 'sample_data/droid_new_setup_eval/drawer'
             repeat_num = 4
             self.val_id = ['0000', '0001', '0002', '0003', '0004']*repeat_num
             self.start_idx = [10]*len(self.val_id)

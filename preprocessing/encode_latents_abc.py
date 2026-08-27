@@ -6,7 +6,7 @@ GPU (boost nodes, which are offline). Stage one leaves 256x192 mp4s on disk, and
 script turns them into the latents training reads. The mp4s stay: evaluation and the
 tracking/region metrics all score real pixels.
 
-  accelerate launch dataset_example/encode_latents_abc.py \
+  accelerate launch preprocessing/encode_latents_abc.py \
       --data_path $ROOT/data/abc_mcap --svd_path <stable-video-diffusion-img2vid> --fp16
 """
 import os

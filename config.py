@@ -23,7 +23,7 @@ class wm_args:
 
     # dataset parameters
     # raw data
-    dataset_root_path = "dataset_example"
+    dataset_root_path = "preprocessing"
     dataset_names = 'abc_subset'
     # meta info
     dataset_meta_info_path = 'dataset_meta_info' #'/cephfs/cjyyj/code/video_evaluation/exp_cfg'#'dataset_meta_info'
@@ -123,7 +123,7 @@ class wm_args:
 
         # Configure per-task eval sets
         if self.task_type == "abc_replay":
-            self.val_dataset_dir = "dataset_example/abc_subset"
+            self.val_dataset_dir = "preprocessing/abc_subset"
             self.val_id = []      # filled from the val split below
             self.start_idx = []
             self.instruction = []
@@ -136,14 +136,14 @@ class wm_args:
                 self.instruction.append("")
 
         elif self.task_type == "replay":
-            self.val_dataset_dir = "dataset_example/droid_subset"
+            self.val_dataset_dir = "sample_data/droid_subset"
             self.val_id = ["899", "18599","199",]
             self.start_idx = [8, 14, 8] * len(self.val_id)
             self.instruction = [""] * len(self.val_id)
             self.task_name = "Rollouts_replay"
 
         elif self.task_type == "keyboard":
-            self.val_dataset_dir = "dataset_example/droid_subset"
+            self.val_dataset_dir = "sample_data/droid_subset"
             self.val_id = ["1799"]
             self.start_idx = [23] * len(self.val_id)
             self.instruction = [""] * len(self.val_id)
@@ -159,7 +159,7 @@ class wm_args:
 
         elif self.task_type == "pickplace":
             self.interact_num = 15
-            # self.val_dataset_dir = "dataset_example/droid_new_setup"
+            # self.val_dataset_dir = "sample_data/droid_new_setup"
             # self.val_id = ['0001','0002','0003']
             # self.start_idx = [0] * len(self.val_id)
             # self.instruction = [
@@ -177,18 +177,18 @@ class wm_args:
 
         elif self.task_type == "towel_fold":
             self.interact_num = 15
-            self.val_dataset_dir = "dataset_example/droid_new_setup"
+            self.val_dataset_dir = "sample_data/droid_new_setup"
             self.val_id =['0004','0005']
             self.start_idx = [0] * len(self.val_id)
             self.instruction = ["fold the towel"] * len(self.val_id)
 
-            self.val_dataset_dir = 'dataset_example/droid_new_setup_eval/towel_fold'
+            self.val_dataset_dir = 'sample_data/droid_new_setup_eval/towel_fold'
             self.val_id = ['000018', '000044', '000120', '000228', '000255', '000336', '000403', '000427', '000453', '000643', '000739', '000803', '000833', '000902', '235555', '235713', '235826', '235933']
             self.start_idx = [0]*len(self.val_id)
             self.instruction = ['fold the towel']*len(self.val_id)
 
         elif self.task_type == "wipe_table":
-            # self.val_dataset_dir = "dataset_example/droid_new_setup"
+            # self.val_dataset_dir = "sample_data/droid_new_setup"
             # self.val_id = ['0006','0007']
             # self.start_idx = [0] * len(self.val_id)
             # self.instruction = [
@@ -202,7 +202,7 @@ class wm_args:
 
         elif self.task_type == "tissue":
             # self.interact_num = 10
-            # self.val_dataset_dir = "dataset_example/droid_new_setup"
+            # self.val_dataset_dir = "sample_data/droid_new_setup"
             # self.val_id = ['0008','0009']
             # self.start_idx = [0] * len(self.val_id)
             # self.instruction = ["pull one tissue out of the box"] * len(self.val_id)
@@ -227,25 +227,25 @@ class wm_args:
             self.policy_skip_step = 3
 
         elif self.task_type == "close_laptop":
-            self.val_dataset_dir = "dataset_example/droid_new_setup"
+            self.val_dataset_dir = "sample_data/droid_new_setup"
             self.val_id = ['0010','0011']
             self.start_idx = [0] * len(self.val_id)
             self.instruction = ["close the laptop"] * len(self.val_id)
             self.policy_skip_step = 3
 
-            self.val_dataset_dir = "dataset_example/droid_new_setup_eval/laptop"
+            self.val_dataset_dir = "sample_data/droid_new_setup_eval/laptop"
             self.val_id = ['135749','135849','135931','175856','175930','180035']
             self.start_idx = [0] * len(self.val_id)
             self.instruction = ["close the laptop"] * len(self.val_id)
             self.policy_skip_step = 3
 
         elif self.task_type == "stack":
-            self.val_dataset_dir = "dataset_example/droid_new_setup"
+            self.val_dataset_dir = "sample_data/droid_new_setup"
             self.val_id = ['0012','0013']
             self.start_idx = [5] * len(self.val_id)
             self.instruction = ["stack the blue block on the red block"] * len(self.val_id)
 
-            self.val_dataset_dir = "dataset_example/droid_new_setup_eval/stack"
+            self.val_dataset_dir = "sample_data/droid_new_setup_eval/stack"
             self.val_id = ['163907','164016','164350','232817','233512','234632','234823']
             self.start_idx = [10] * len(self.val_id)
             self.instruction = ["stack the blue block on the red block","stack the blue block on the red block","stack the blue block on the red block","stack the blue block on the red block","stack the green block on the red block","stack the blue block on the green block","stack the blue block on the green block"]

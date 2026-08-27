@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
     from argparse import ArgumentParser
     parser = ArgumentParser()
-    parser.add_argument('--droid_output_path', type=str, default='dataset_example/droid_subset')
+    parser.add_argument('--droid_output_path', type=str, default='sample_data/droid_subset')
     # dataset_name
     parser.add_argument('--dataset_name', type=str, default='droid_subset')
     # Where the index lands. It defaults into the repo, which is fine for a local run, but

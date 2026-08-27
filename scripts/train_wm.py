@@ -378,7 +378,7 @@ if __name__ == "__main__":
 
     main(args)
 
-    # CUDA_VISIBLE_DEVICES=0,1 WANDB_MODE=offline accelerate launch --main_process_port 29501 train_wm.py --dataset_root_path dataset_example --dataset_meta_info_path dataset_meta_info
+    # CUDA_VISIBLE_DEVICES=0,1 WANDB_MODE=offline accelerate launch --main_process_port 29501 train_wm.py --dataset_root_path preprocessing --dataset_meta_info_path dataset_meta_info
     # CUDA_VISIBLE_DEVICES=0 accelerate launch --main_process_port 29506 unit_test2.py
 
     # args = Args()

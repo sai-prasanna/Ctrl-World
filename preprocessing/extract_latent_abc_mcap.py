@@ -22,9 +22,9 @@ MCAP differences that drive the code below:
 Raw episodes are deleted after extraction unless --keep_mcap: the pilot subset alone is
 ~1.6 TB, which must not land on a filesystem.
 
-  python dataset_example/extract_latent_abc_mcap.py \
+  python preprocessing/extract_latent_abc_mcap.py \
       --task fold_and_stack_the_t_shirts --num_episodes 50 \
-      --output_path dataset_example/abc_mcap_pilot --svd_path <stable-video-diffusion-img2vid>
+      --output_path preprocessing/abc_mcap_pilot --svd_path <stable-video-diffusion-img2vid>
 """
 import collections
 import io
@@ -290,7 +290,7 @@ def dump_episode_files(path):
     derived listing of ~100k paths - regenerate it rather than copying it between
     machines, so it cannot drift from the release.
 
-      python dataset_example/extract_latent_abc_mcap.py --dump_episode_files $ROOT/abc_mcap_files.json
+      python preprocessing/extract_latent_abc_mcap.py --dump_episode_files $ROOT/abc_mcap_files.json
     """
     files = list_repo_episodes()
     tmp = path + ".tmp"  # same atomic write as everything else this pipeline produces
@@ -313,7 +313,7 @@ def parse_tasks(spec):
     """Task slugs from a --tasks value, which may be a list file read with `cat`.
 
     Splits on commas and whitespace and drops `#` comments, so the selection can live in
-    a committed file that explains itself (dataset_example/rigid_tasks.txt) rather than
+    a committed file that explains itself (preprocessing/rigid_tasks.txt) rather than
     an opaque comma-joined line.
     """
     if not spec:
@@ -531,7 +531,7 @@ def main():
                         "because it is the one stage that needs the Hub's file index")
     p.add_argument("--split", default="train", choices=["train", "val"])
     p.add_argument("--num_episodes", type=int, default=0, help="0 = all")
-    p.add_argument("--output_path", default="dataset_example/abc_mcap_pilot")
+    p.add_argument("--output_path", default="preprocessing/abc_mcap_pilot")
     p.add_argument("--svd_path", default=None,
                    help="stable-video-diffusion checkpoint; omit with --skip_latent")
     p.add_argument("--skip_latent", action="store_true",

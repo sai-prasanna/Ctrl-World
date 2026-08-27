@@ -2,17 +2,18 @@
 wandb*
 swanlog*
 output*
-dataset_example/merge.py
+preprocessing/merge.py
 predictions*
 synthetic_traj_old*
 old_files*
 video_models_logs*
 model_ckpt*
 synthetic_traj/Rollout*
-dataset_example/droid_subset/annotation/val_old*
-dataset_example/droid_new_setup_eval*
+sample_data/droid_subset/annotation/val_old*
+sample_data/droid_new_setup_eval*
 .vscode
-process.pydataset_meta_info/abc_smoke/
+process.py
+dataset_meta_info/abc_smoke/
 
 # cluster run metadata (provenance lives in the pushed refs)
 .cluster-runs/
