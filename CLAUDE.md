@@ -149,7 +149,34 @@ with a prestaged venv, `HF_HOME`, and `HF_HUB_OFFLINE=1`. Compute nodes have **n
 anything that downloads (HF data, LPIPS/Inception/I3D weights) must run on a login
 node first. `scripts/eval_leonardo.sh` encodes that split: `setup`, `clips`, and
 `tracker_setup` are login-node commands; `run` and `noisefloor` run inside a job.
-The `cluster` skill handles submission and log fetching.
+The `cluster` skill handles submission and log fetching, and is the only sanctioned way to
+start a job: it snapshots the working tree at a commit and checks that SHA out on the login
+node, so nothing depends on hand-editing `$ROOT/repo`.
+
+### Running the entry points either way
+
+Every `*.sbatch` file runs unchanged in three contexts: `sbatch <file>` from a checkout,
+`cluster submit`, and `bash <file>` on a machine with no Slurm. Two conventions make that
+work, so preserve them when you add an entry point.
+
+Each file locates itself with `BASH_SOURCE` and `cd`s there instead of naming `$ROOT/repo`,
+because `cluster submit` stages the run in `$WORK/runs/<project>/<runid>/code`. The
+training chain re-submits its own resolved path, which keeps every link on one commit.
+
+Anything that outlives a run lives outside the code snapshot, under overridable paths:
+
+| Variable | Default | Holds |
+|---|---|---|
+| `CTRLWORLD_ROOT` | `$WORK/sraman00/ctrlworld` | venv, `HF_HOME`, everything below |
+| `CTRLWORLD_DATA` | `$ROOT/data` | extracted videos, annotations, latents |
+| `CTRLWORLD_META` | `$ROOT/dataset_meta_info` | generated `stat.json` and `*_sample.json` |
+
+Set `CTRLWORLD_ROOT` to reproduce the pipeline anywhere else. The generated index has to sit
+outside the repo whichever way you run: `train_sample.json` is around 490 MB, and a
+`cluster submit` checkout is discarded when the job ends. Pass `--meta_root` to
+`create_meta_info.py` to put it there. Checkpoints go to `$ROOT/outputs/<tag>` for the same
+reason — a relative `outputs/` is empty in a fresh checkout, so `--resume` would silently
+retrain from scratch. `scripts/train_wm.py --run_dir` sets that home.
 
 ## Style
 

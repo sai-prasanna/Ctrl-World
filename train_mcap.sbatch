@@ -12,7 +12,13 @@
 # 30k steps on the 256x192 re-extraction. The 24 h wall clock does not cover 30k steps,
 # so the job resubmits itself from the newest checkpoint until it gets there.
 set -x
-ROOT=$WORK/sraman00/ctrlworld
+# $ROOT holds everything that outlives a run: the venv, the HF cache, the data, the
+# generated index and the outputs. It defaults to the Leonardo layout but is overridable,
+# so the same file reproduces the run on another machine or from a `cluster submit`
+# checkout: CTRLWORLD_ROOT=/path/to/scratch sbatch|bash <this file>.
+ROOT=${CTRLWORLD_ROOT:-$WORK/sraman00/ctrlworld}
+DATA=${CTRLWORLD_DATA:-$ROOT/data}
+META=${CTRLWORLD_META:-$ROOT/dataset_meta_info}
 # Resolve this file's own location instead of a fixed checkout. `cluster submit` drops each
 # run in $WORK/runs/Ctrl-World/<runid>/code, so the chain must re-submit whichever copy it
 # was started from; that also keeps every link of the chain on the same commit.
@@ -31,7 +37,6 @@ TAG=0003_abc_mcap
 # ~490 MB and has no business in a git ref.
 RUN_DIR=$ROOT/outputs/$TAG
 OUT=$RUN_DIR/model
-META=$ROOT/dataset_meta_info
 MAX_STEPS=${MAX_STEPS:-30000}
 
 # 256x192 is 1.33x the tokens of the 192x192 run, so per-device batch drops 4 -> 2 and
@@ -56,7 +61,7 @@ sbatch --dependency=afterany:$SLURM_JOB_ID --export=ALL,MAX_STEPS=$MAX_STEPS "$S
 $ROOT/venv/bin/accelerate launch --num_processes 4 --mixed_precision fp16 --dynamo_backend no \
   scripts/train_wm.py \
   --svd_model_path $SVD --clip_model_path $CLIP \
-  --dataset_root_path $ROOT/data --dataset_meta_info_path $META \
+  --dataset_root_path $DATA --dataset_meta_info_path $META \
   --dataset_names abc_mcap \
   --train_batch_size 2 --gradient_accumulation_steps 8 --num_workers 8 \
   --max_train_steps $MAX_STEPS --checkpointing_steps 5000 \

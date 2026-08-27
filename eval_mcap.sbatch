@@ -17,7 +17,13 @@
 #SBATCH -t 08:00:00
 #SBATCH -J abc_eval
 #SBATCH -o /leonardo_work/AIFAC_S07_034/sraman00/ctrlworld/logs_eval-%j.out
-ROOT=$WORK/sraman00/ctrlworld
+# $ROOT holds everything that outlives a run: the venv, the HF cache, the data, the
+# generated index and the outputs. It defaults to the Leonardo layout but is overridable,
+# so the same file reproduces the run on another machine or from a `cluster submit`
+# checkout: CTRLWORLD_ROOT=/path/to/scratch sbatch|bash <this file>.
+ROOT=${CTRLWORLD_ROOT:-$WORK/sraman00/ctrlworld}
+DATA=${CTRLWORLD_DATA:-$ROOT/data}
+META=${CTRLWORLD_META:-$ROOT/dataset_meta_info}
 # Run from wherever this file was checked out; see train_mcap.sbatch for why.
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export HF_HOME=$ROOT/hf HF_HUB_OFFLINE=1
@@ -30,7 +36,6 @@ STEP=${STEP:?set STEP, e.g. --export=ALL,STEP=10000}
 # Checkpoints and generated metadata live outside the code snapshot, so a fresh checkout
 # scores the same lineage the training chain wrote.
 RUN_DIR=$ROOT/outputs/0003_abc_mcap
-META=$ROOT/dataset_meta_info
 CKPT=$RUN_DIR/model/checkpoint-${STEP}.pt
 OUT=$RUN_DIR/eval/metrics_step${STEP}.json
 mkdir -p $(dirname $OUT)
@@ -44,7 +49,7 @@ srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK --cpu-bind=none \
   $ROOT/venv/bin/python scripts/eval_video_metrics.py \
     --ckpt_path $CKPT \
     --clips dataset_meta_info/abc_mcap/eval_clips_v1.json \
-    --val_dataset_dir $ROOT/data/abc_mcap \
+    --val_dataset_dir $DATA/abc_mcap \
     --data_stat_path $META/abc_mcap/stat.json \
     --svd_model_path $SVD --clip_model_path $CLIP \
     --batch_size ${BATCH_SIZE:-4} \

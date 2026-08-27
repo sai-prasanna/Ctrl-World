@@ -12,7 +12,13 @@
 #SBATCH -t 00:29:00
 #SBATCH -J abc_rollout
 #SBATCH -o /leonardo_work/AIFAC_S07_034/sraman00/ctrlworld/logs_rollout-%j.out
-ROOT=$WORK/sraman00/ctrlworld
+# $ROOT holds everything that outlives a run: the venv, the HF cache, the data, the
+# generated index and the outputs. It defaults to the Leonardo layout but is overridable,
+# so the same file reproduces the run on another machine or from a `cluster submit`
+# checkout: CTRLWORLD_ROOT=/path/to/scratch sbatch|bash <this file>.
+ROOT=${CTRLWORLD_ROOT:-$WORK/sraman00/ctrlworld}
+DATA=${CTRLWORLD_DATA:-$ROOT/data}
+META=${CTRLWORLD_META:-$ROOT/dataset_meta_info}
 # Run from wherever this file was checked out; see train_mcap.sbatch for why.
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export HF_HOME=$ROOT/hf HF_HUB_OFFLINE=1
@@ -32,6 +38,6 @@ srun --cpu-bind=none $ROOT/venv/bin/python scripts/rollout_replay_traj.py \
   --task_type abc_replay \
   --ckpt_path $CKPT \
   --svd_model_path $SVD --clip_model_path $CLIP \
-  --val_dataset_dir $ROOT/data/abc_mcap \
+  --val_dataset_dir $DATA/abc_mcap \
   --val_id $IDS \
   --save_dir $RUN_DIR/rollout

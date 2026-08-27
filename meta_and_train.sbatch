@@ -12,8 +12,16 @@
 #SBATCH -t 04:00:00
 #SBATCH -J abc_meta
 #SBATCH -o /leonardo_work/AIFAC_S07_034/sraman00/ctrlworld/logs_meta-%j.out
-ROOT=$WORK/sraman00/ctrlworld
-cd $ROOT/repo
+# $ROOT holds everything that outlives a run: the venv, the HF cache, the data, the
+# generated index and the outputs. It defaults to the Leonardo layout but is overridable,
+# so the same file reproduces the run on another machine or from a `cluster submit`
+# checkout: CTRLWORLD_ROOT=/path/to/scratch sbatch|bash <this file>.
+ROOT=${CTRLWORLD_ROOT:-$WORK/sraman00/ctrlworld}
+DATA=${CTRLWORLD_DATA:-$ROOT/data}
+META=${CTRLWORLD_META:-$ROOT/dataset_meta_info}
+# Run from wherever this file was checked out; see train_mcap.sbatch for why.
+SCRIPT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")
+cd "$(dirname "$SCRIPT")"
 export HF_HOME=$ROOT/hf HF_HUB_OFFLINE=1
 export PATH=$ROOT/venv/bin:$PATH
 export PYTHONUNBUFFERED=1
@@ -21,16 +29,18 @@ export PYTHONUNBUFFERED=1
 # The state vector is the same 14-D bimanual joint+gripper reading as abc_rigid in the
 # same units, so its p01/p99 carry over; recomputing them would resample the same
 # distribution over fewer episodes.
-mkdir -p dataset_meta_info/abc_mcap
-cp dataset_meta_info/abc_rigid/stat.json dataset_meta_info/abc_mcap/stat.json
+# The index is written to $META, outside the checkout: train_sample.json is hundreds of MB
+# and a `cluster submit` code dir does not survive the run.
+mkdir -p $META/abc_mcap
+cp dataset_meta_info/abc_rigid/stat.json $META/abc_mcap/stat.json
 $ROOT/venv/bin/python dataset_meta_info/create_meta_info.py \
-  --droid_output_path $ROOT/data/abc_mcap --dataset_name abc_mcap
+  --droid_output_path $DATA/abc_mcap --dataset_name abc_mcap --meta_root $META
 
 # Submitting training bounces off the per-user GPU job limit while another run holds a
 # slot, so a refusal is expected rather than an error.
 # Bounded by the 4 h wall above rather than by patience: 36 tries at 5 min is 3 h.
 for attempt in $(seq 1 36); do
-  if sbatch $ROOT/train_mcap.sbatch; then exit 0; fi
+  if sbatch "$(dirname "$SCRIPT")/train_mcap.sbatch"; then exit 0; fi
   echo "training submit refused (attempt $attempt); retrying in 5 min"
   sleep 300
 done

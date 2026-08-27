@@ -68,6 +68,10 @@ if __name__ == "__main__":
     parser.add_argument('--droid_output_path', type=str, default='dataset_example/droid_subset')
     # dataset_name
     parser.add_argument('--dataset_name', type=str, default='droid_subset')
+    # Where the index lands. It defaults into the repo, which is fine for a local run, but
+    # a `cluster submit` checkout is thrown away after the job, and train_sample.json runs
+    # to hundreds of MB — point this at durable storage there.
+    parser.add_argument('--meta_root', type=str, default='dataset_meta_info')
     parser.add_argument('--write_stat', action='store_true',
                         help='recompute stat.json from the annotations (overwrites)')
     parser.add_argument('--debug', action='store_true')
@@ -102,8 +106,8 @@ if __name__ == "__main__":
             state_99 = np.percentile(state_all, 99, axis=0)
             print('state_01:', state_01)
             print('state_99:', state_99)
-            os.makedirs(f'dataset_meta_info/{dataset_name}', exist_ok=True)
-            with open(f'dataset_meta_info/{dataset_name}/stat.json', 'w') as f:
+            os.makedirs(f'{args.meta_root}/{dataset_name}', exist_ok=True)
+            with open(f'{args.meta_root}/{dataset_name}/stat.json', 'w') as f:
                 json.dump({'state_01': state_01.tolist(), 'state_99': state_99.tolist()}, f, indent=2)
 
         
@@ -114,7 +118,7 @@ if __name__ == "__main__":
         random.shuffle(samples_all)
         print('step_num',data_type,len(samples_all))
         print('traj_num',data_type, len(ann_files_all))
-        os.makedirs(f'dataset_meta_info/{dataset_name}', exist_ok=True)
-        with open(f'dataset_meta_info/{dataset_name}/{data_type}_sample.json', 'w') as f:
+        os.makedirs(f'{args.meta_root}/{dataset_name}', exist_ok=True)
+        with open(f'{args.meta_root}/{dataset_name}/{data_type}_sample.json', 'w') as f:
             json.dump(samples_all, f)
         

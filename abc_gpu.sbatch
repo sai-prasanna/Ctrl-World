@@ -21,7 +21,11 @@
 #SBATCH -t 08:00:00
 #SBATCH -J abc_gpu
 #SBATCH -o /leonardo_work/AIFAC_S07_034/sraman00/ctrlworld/logs_abcgpu-%A_%a.out
-ROOT=$WORK/sraman00/ctrlworld
+# $ROOT holds everything that outlives a run: the venv, the HF cache, the data, the
+# generated index and the outputs. It defaults to the Leonardo layout but is overridable,
+# so the same file reproduces the run on another machine or from a `cluster submit`
+# checkout: CTRLWORLD_ROOT=/path/to/scratch sbatch|bash <this file>.
+ROOT=${CTRLWORLD_ROOT:-$WORK/sraman00/ctrlworld}
 cd $ROOT/repo
 export HF_HOME=$ROOT/hf HF_HUB_OFFLINE=1
 export PATH=$ROOT/venv/bin:$PATH
