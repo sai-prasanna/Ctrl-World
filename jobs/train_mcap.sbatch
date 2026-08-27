@@ -9,8 +9,8 @@
 #SBATCH --time=24:00:00
 #SBATCH --output=%x-%j.out
 
-# 30k steps on the 256x192 re-extraction. The 24 h wall clock does not cover 30k steps,
-# so the job resubmits itself from the newest checkpoint until it gets there.
+# 100k steps on the 256x192 re-extraction, the paper's budget. No wall clock covers that,
+# so a standalone job resubmits itself from the newest checkpoint until it gets there.
 set -x
 # $ROOT holds everything that outlives a run: the venv, the HF cache, the data, the
 # generated index and the outputs. It defaults to the Leonardo layout but is overridable,
@@ -59,10 +59,10 @@ TAG=0003_abc_mcap
 # exactly this.
 OUT=outputs/$TAG/model
 RUN_DIR=${CLUSTER_OUTPUT_DIR:-outputs/$TAG}
-MAX_STEPS=${MAX_STEPS:-30000}
+MAX_STEPS=${MAX_STEPS:-100000}
 
-# 256x192 is 1.33x the tokens of the 192x192 run, so per-device batch drops 4 -> 2 and
-# grad_accum rises 4 -> 8, keeping the paper effective batch of 64.
+# 256x192 is 1.33x the tokens of the 192x192 run, so the per-device batch is 2. The
+# accumulation is derived from the process count below, to hold the effective batch at 64.
 
 LAST_AT_START=$(ls -1 $OUT 2>/dev/null | grep -o "checkpoint-[0-9]\+" | grep -o "[0-9]\+" \
   | sort -n | tail -1)
@@ -78,16 +78,41 @@ if [ -n "$LAST_AT_START" ] && [ "$LAST_AT_START" -ge "$MAX_STEPS" ]; then
   echo "already at step $LAST_AT_START of $MAX_STEPS; nothing to resume"
   exit 0
 fi
-sbatch --dependency=afterany:$SLURM_JOB_ID --export=ALL,MAX_STEPS=$MAX_STEPS "$SCRIPT"
+# Chain only when this file carries its own directives. `cluster submit` writes its own
+# wrapper, so a re-submit here would silently drop back to the 1-node header above.
+if [ -z "$CLUSTER_RUNID" ]; then
+  sbatch --dependency=afterany:$SLURM_JOB_ID --export=ALL,MAX_STEPS=$MAX_STEPS "$SCRIPT"
+fi
 
-$ROOT/venv/bin/accelerate launch --num_processes 4 --mixed_precision fp16 --dynamo_backend no \
+# The allocation decides the topology. One task holds one node and its 4 GPUs, so the
+# process count is nodes x 4, and srun starts one accelerate per node with its own rank.
+NNODES=${SLURM_NNODES:-1}
+GPUS_PER_NODE=${GPUS_PER_NODE:-4}
+NPROC=$((NNODES * GPUS_PER_NODE))
+MASTER=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -1)
+
+# The effective batch stays at the paper's 64 on every topology: 2 x accum x NPROC. More
+# GPUs therefore buy less accumulation, not a larger batch.
+ACCUM=$((64 / (2 * NPROC)))
+[ "$ACCUM" -lt 1 ] && { echo "NPROC=$NPROC is too large for an effective batch of 64"; exit 1; }
+echo "topology: $NNODES nodes, $NPROC processes, accum $ACCUM, master $MASTER"
+
+# SLURM_PROCID is quoted so each srun task expands its own rank. Unquoted, the submitting
+# shell would expand it once and give every node rank 0, and the job would hang at rendezvous.
+srun --ntasks=$NNODES --ntasks-per-node=1 --cpu-bind=none bash -c "
+  $ROOT/venv/bin/accelerate launch \
+  --num_machines $NNODES --num_processes $NPROC \
+  --machine_rank \$SLURM_PROCID \
+  --main_process_ip $MASTER --main_process_port ${MASTER_PORT:-29501} \
+  --mixed_precision fp16 --dynamo_backend no \
   scripts/train_wm.py \
   --svd_model_path $SVD --clip_model_path $CLIP \
   --dataset_root_path $DATA --dataset_meta_info_path $META \
   --dataset_names abc_mcap \
-  --train_batch_size 2 --gradient_accumulation_steps 8 --num_workers 8 \
+  --train_batch_size 2 --gradient_accumulation_steps $ACCUM --num_workers 8 \
   --max_train_steps $MAX_STEPS --checkpointing_steps 5000 \
   --validation_steps 2500 --video_num 4 \
   --tag $TAG --run_dir $RUN_DIR --output_dir $OUT \
-  --resume  # --resume is a no-op on the first job: it just finds nothing to resume
+  --resume
+"  # --resume is a no-op on the first job: it just finds nothing to resume
 
