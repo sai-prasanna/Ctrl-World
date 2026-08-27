@@ -20,12 +20,13 @@
 # $ROOT holds everything that outlives a run: the venv, the HF cache, the data, the
 # generated index and the outputs. It defaults to the Leonardo layout but is overridable,
 # so the same file reproduces the run on another machine or from a `cluster submit`
-# checkout: CTRLWORLD_ROOT=/path/to/scratch sbatch|bash <this file>.
-ROOT=${CTRLWORLD_ROOT:-$WORK/sraman00/ctrlworld}
+# checkout: CTRLWORLD_ROOT=/path/to/scratch sbatch|bash <this file>. A submitted run needs
+# no argument -- `cluster submit` exports CLUSTER_SHARED_DIR for exactly this.
+ROOT=${CTRLWORLD_ROOT:-${CLUSTER_SHARED_DIR:-$WORK/sraman00/ctrlworld}}
 DATA=${CTRLWORLD_DATA:-$ROOT/data}
 META=${CTRLWORLD_META:-$ROOT/dataset_meta_info}
 # Run from wherever this file was checked out; see train_mcap.sbatch for why.
-cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export HF_HOME=$ROOT/hf HF_HUB_OFFLINE=1
 export PATH=$ROOT/venv/bin:$PATH
 export PYTHONUNBUFFERED=1
@@ -53,7 +54,16 @@ CLIP=$HF_HOME/hub/models--openai--clip-vit-base-patch32/snapshots/3d74acf9a28c67
 STEP=${STEP:?set STEP, e.g. --export=ALL,STEP=10000}
 RUN_DIR=outputs/0003_abc_mcap
 CKPT=$RUN_DIR/model/checkpoint-${STEP}.pt
-OUT=$RUN_DIR/eval/metrics_step${STEP}.json
+# HIST names an alternative history pattern, so a comparison run does not overwrite the
+# default result. HIST_NAME becomes part of the file name.
+HIST=${HIST:-}
+if [ -n "$HIST" ]; then
+  OUT=$RUN_DIR/eval/metrics_step${STEP}_hist_${HIST_NAME:-alt}.json
+  HIST_ARG="--history_idx $HIST"
+else
+  OUT=$RUN_DIR/eval/metrics_step${STEP}.json
+  HIST_ARG=""
+fi
 mkdir -p $(dirname $OUT)
 
 # FVD is skipped rather than silently faked when the I3D backbone is missing.
@@ -68,6 +78,13 @@ srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK --cpu-bind=none \
     --val_dataset_dir $DATA/abc_mcap \
     --data_stat_path $META/abc_mcap/stat.json \
     --svd_model_path $SVD --clip_model_path $CLIP \
-    --batch_size ${BATCH_SIZE:-4} \
+    --batch_size ${BATCH_SIZE:-4} $HIST_ARG \
     --fid $I3D \
     --out $OUT
+
+# The canonical copy lives in the durable tag-keyed tree, because eval JSONs are tracked
+# and docs/experiments.md quotes them. `cluster fetch` only reaches inside the run dir,
+# so leave a copy there too when this is a submitted run -- it is a few KB.
+if [ -n "$CLUSTER_OUTPUT_DIR" ]; then
+  cp "$OUT" "$CLUSTER_OUTPUT_DIR/"
+fi

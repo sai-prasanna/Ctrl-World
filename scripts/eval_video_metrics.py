@@ -78,6 +78,11 @@ from models.ctrl_world import CrtlWorld  # noqa: E402
 # 0.8 s here; matching that would mean the skip=2 pairing, which this training run does
 # not exclusively draw. The [0,0,-12,-9,-6,-3] in config.py is read only by the
 # policy-in-the-loop scripts. Pinned here so the number is part of the eval record.
+# Indexes into the rollout's history buffer, not frame numbers: the buffer gains one entry
+# per round and each round advances pred_step - 1 = 4 frames, so a stride of 1 is 4 frames.
+# The default is the uniform spacing the training sampler produces (skip_his = 4 * skip with
+# skip = 1). config.py's [0, 0, -12, -9, -6, -3] is the authors' policy-in-the-loop setting,
+# available through --history_idx for comparison.
 HISTORY_IDX = [-6, -5, -4, -3, -2, -1]
 
 VIEW_NAMES = ['top', 'left_wrist', 'right_wrist']
@@ -122,6 +127,9 @@ def parse_args():
     p.add_argument('--dump_frames', type=str, default=None,
                    help='also write lossless per-clip frames (npz) to this directory, '
                         'so clipeval can be re-run offline without a GPU rollout')
+    p.add_argument('--history_idx', type=str, default=None,
+                   help='comma-separated history buffer indexes; defaults to the uniform '
+                        '"-6,-5,-4,-3,-2,-1". The authors use "0,0,-12,-9,-6,-3".')
     p.add_argument('--bootstrap', type=int, default=1000)
     p.add_argument('--seed', type=int, default=0)
     return p.parse_args()
@@ -331,6 +339,10 @@ def dump_clip(out_dir, clip, gt, pred, view_names):
 
 def main():
     args = parse_args()
+    if args.history_idx is not None:
+        global HISTORY_IDX
+        HISTORY_IDX = [int(x) for x in args.history_idx.split(',')]
+        print(f'history_idx {HISTORY_IDX}')
     from config import merge_args, wm_args
 
     with open(args.clips) as f:
