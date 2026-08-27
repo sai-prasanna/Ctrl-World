@@ -3,15 +3,16 @@
 # Only login nodes have a route to the Hub (a boost node cannot even resolve
 # huggingface.co), so the network stage runs here and does no decoding at all.
 #
-# Normally started detached through launch_download.sh rather than run directly.
-# Run --dump_episode_files once before the first shard; it is the other stage that
-# needs the Hub, and every later stage reads its output offline:
+# launch_download.sh starts this detached; call it directly only to debug a shard.
+# Run --dump_episode_files once before the first shard. It is the other stage that needs
+# the Hub, and every later stage reads its output offline:
 #
 #   python preprocessing/extract_latent_abc_mcap.py \
 #     --dump_episode_files $CTRLWORLD_ROOT/abc_mcap_files.json
 #
-# Run from wherever this file was checked out, not from a fixed $ROOT/repo, so the same
-# file works from a checkout, from `cluster submit`, and on a machine with no Slurm.
+# Resolve the repo root from this file's own location instead of a fixed $ROOT/repo, so
+# the same file runs from a checkout, from `cluster submit`, and on a machine with no
+# Slurm.
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 # $ROOT holds everything that outlives a run: the venv, the HF cache, the data, the
 # generated index and the outputs. It defaults to the Leonardo layout but is overridable,
@@ -26,8 +27,9 @@ export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_TH
 # --workers low and let xet supply the parallelism.
 export HF_XET_HIGH_PERFORMANCE=1
 unset HF_HUB_OFFLINE
-# The task selection is committed beside the code because it is a scientific choice;
-# the episode index is a derived Hub listing, so it lives under $ROOT and is regenerated.
+# The repo tracks the task selection beside the code, because it records a research
+# decision. The episode index only lists the release, so it lives under $ROOT instead and
+# you regenerate it.
 TASKS=${CTRLWORLD_TASKS:-preprocessing/rigid_tasks.txt}
 exec $ROOT/venv/bin/python preprocessing/extract_latent_abc_mcap.py \
   --episode_files ${CTRLWORLD_EPISODE_FILES:-$ROOT/abc_mcap_files.json} \

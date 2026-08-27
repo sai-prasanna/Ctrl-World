@@ -285,10 +285,10 @@ def list_episodes(task, split, limit):
 def dump_episode_files(path):
     """Write the episode index --episode_files reads, and report the task histogram.
 
-    The listing needs the Hub, so this runs on a login node once, before any shard
-    starts; every later stage reads the dump offline. It is not committed because it is a
-    derived listing of ~100k paths - regenerate it rather than copying it between
-    machines, so it cannot drift from the release.
+    The listing needs the Hub, so run this on a login node once, before any shard starts;
+    every later stage reads the dump offline. The repo does not track the output, because
+    it only lists ~100k paths that the release already defines - regenerate it rather than
+    copying it between machines, so it cannot drift.
 
       python preprocessing/extract_latent_abc_mcap.py --dump_episode_files $ROOT/abc_mcap_files.json
     """
@@ -312,9 +312,9 @@ def dump_episode_files(path):
 def parse_tasks(spec):
     """Task slugs from a --tasks value, which may be a list file read with `cat`.
 
-    Splits on commas and whitespace and drops `#` comments, so the selection can live in
-    a committed file that explains itself (preprocessing/rigid_tasks.txt) rather than
-    an opaque comma-joined line.
+    Splitting on whitespace as well as commas, and dropping `#` comments, lets the
+    selection live in a tracked file that explains itself (preprocessing/rigid_tasks.txt)
+    rather than in an opaque comma-joined line.
     """
     if not spec:
         return set()
@@ -329,10 +329,10 @@ def load_episode_files(args):
             files = json.load(f)
         keep = parse_tasks(args.tasks)
         if keep:
-            # A misspelt slug would otherwise silently shrink the corpus and only show up
-            # as a short run hours later, so say so up front. One slug missing is a warning
-            # rather than a failure: a task renamed in the release must not block the other
-            # ten, and both halves of the split would have to abort together.
+            # A misspelt slug would otherwise shrink the corpus silently and surface
+            # only as a short run hours later, so report it up front. A single missing
+            # slug warns rather than fails: a task renamed in the release must not block
+            # the other ten, and both halves of the split would have to abort together.
             missing = keep - {f.split("/")[2] for f in files}
             if missing:
                 print(f"WARNING: no episodes for task(s): {sorted(missing)}", flush=True)
@@ -437,12 +437,12 @@ def process_episode(rel, args, vae=None):
     except Exception as e:  # noqa: BLE001 - one bad episode must not kill the run
         # Roughly one episode in seven fails to decode, so releasing the blob here and
         # not only on the happy path is what keeps the cache from growing without bound.
-        # The cause was never characterised: the rate is measured, but the failures were
-        # only ever printed per episode, never aggregated. Suspects, in the order worth
-        # checking, are the stereo rig's h265 streams, packets that are length-prefixed
-        # rather than Annex-B, and episodes whose camera topics stop early. Aggregate the
-        # statuses from a decode sweep before assuming the loss is uniform across tasks --
-        # if it is not, the corpus is skewed and not merely smaller.
+        # Nothing explains that rate: this prints failures per episode and never
+        # aggregates them. Check three candidates first -- the stereo rig's h265 streams,
+        # packets that arrive length-prefixed rather than in Annex-B, and episodes whose
+        # camera topics stop early. Aggregate the statuses from a decode sweep before
+        # treating the loss as uniform across tasks; if it is not, the corpus is skewed
+        # rather than merely smaller.
         drop_blob(local, args)
         return f"{traj_id}: FAILED {type(e).__name__}: {e}"
 

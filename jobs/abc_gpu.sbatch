@@ -34,9 +34,10 @@ export PYTHONUNBUFFERED=1
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
 SVD=$HF_HOME/hub/models--stabilityai--stable-video-diffusion-img2vid/snapshots/9cf024d5bfa8f56622af86c884f26a52f6676f2e
 DATA=${CTRLWORLD_DATA:-$ROOT/data}/abc_mcap
-# The task selection is committed beside the code because it is a scientific choice; the
-# episode index is a derived Hub listing, so it lives under $ROOT. Generate it once on a
-# login node with --dump_episode_files before the first download shard starts.
+# The repo tracks the task selection beside the code, because it records a research
+# decision. The episode index only lists the release, so it lives under $ROOT instead;
+# generate it once on a login node with --dump_episode_files, before the first download
+# shard starts.
 TASKS=${CTRLWORLD_TASKS:-preprocessing/rigid_tasks.txt}
 EPISODE_FILES=${CTRLWORLD_EPISODE_FILES:-$ROOT/abc_mcap_files.json}
 SHARD=${SLURM_ARRAY_TASK_ID:-0}
