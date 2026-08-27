@@ -1,0 +1,23 @@
+# The rigid-object half of ABC-130k: the task selection abc_mcap trains on.
+#
+# Rigid pick-and-place was chosen over the deformable tasks (see abc_subset, which is
+# 60% t-shirt folding) because cloth state is not recoverable from a 14-D joint vector,
+# so a world model conditioned on joints alone cannot be scored fairly on it.
+#
+# Slugs are the `data/{split}/{task}/` directory names in XDOF/ABC-130k, which are the
+# LeRobot task strings with spaces replaced by underscores. Derived from the 11 tasks in
+# dataset_example/abc_rigid/episode_list.json.gz (15477 episodes on the mirror), so both
+# generations of the port cover the same tasks and their stat.json carries over.
+#
+# Read by --tasks, which splits on commas and whitespace and ignores these lines.
+put_the_plastic_bottles_in_the_bin
+put_the_screwdriver_in_the_bin
+put_the_trash_bags_into_the_trash_bin
+sort_the_eating_utensils_into_containers
+sort_the_hair-cutting_tools
+sort_the_legos_into_containers_by_color
+sort_the_pills_into_containers
+sort_the_screws_and_nuts_into_containers
+sort_the_stationery_into_containers
+sort_the_tools_into_containers
+throw_the_plastic_bottles_in_the_bin

@@ -26,6 +26,7 @@ Raw episodes are deleted after extraction unless --keep_mcap: the pilot subset a
       --task fold_and_stack_the_t_shirts --num_episodes 50 \
       --output_path dataset_example/abc_mcap_pilot --svd_path <stable-video-diffusion-img2vid>
 """
+import collections
 import io
 import json
 import math
@@ -262,13 +263,63 @@ def to_tensor(frames, size):
     return torch.nn.functional.interpolate(x, size=size, mode="bilinear", align_corners=False)
 
 
-def list_episodes(task, split, limit):
+def list_repo_episodes():
+    """Every repo-relative episode.mcap path in the release, sorted.
+
+    One listing call covers the whole repo; filtering it locally is cheaper than a call
+    per task and is what makes the dump reusable across task selections.
+    """
     from huggingface_hub import HfApi
-    prefix = f"data/{split}/{task}/"
     files = [f for f in HfApi().list_repo_files(REPO_ID, repo_type="dataset")
-             if f.startswith(prefix) and f.endswith("/episode.mcap")]
+             if f.startswith("data/") and f.endswith("/episode.mcap")]
     files.sort()
+    return files
+
+
+def list_episodes(task, split, limit):
+    prefix = f"data/{split}/{task}/"
+    files = [f for f in list_repo_episodes() if f.startswith(prefix)]
     return files[:limit] if limit else files
+
+
+def dump_episode_files(path):
+    """Write the episode index --episode_files reads, and report the task histogram.
+
+    The listing needs the Hub, so this runs on a login node once, before any shard
+    starts; every later stage reads the dump offline. It is not committed because it is a
+    derived listing of ~100k paths - regenerate it rather than copying it between
+    machines, so it cannot drift from the release.
+
+      python dataset_example/extract_latent_abc_mcap.py --dump_episode_files $ROOT/abc_mcap_files.json
+    """
+    files = list_repo_episodes()
+    tmp = path + ".tmp"  # same atomic write as everything else this pipeline produces
+    with open(tmp, "w") as f:
+        json.dump(files, f)
+    os.replace(tmp, path)
+
+    tasks = {}
+    for rel in files:
+        parts = rel.split("/")
+        tasks.setdefault(parts[2], collections.Counter())[parts[1]] += 1
+    for task in sorted(tasks):
+        counts = tasks[task]
+        print(f"  {sum(counts.values()):>6}  {task}  "
+              f"({', '.join(f'{k}={v}' for k, v in sorted(counts.items()))})")
+    print(f"{len(files)} episodes across {len(tasks)} tasks -> {path}", flush=True)
+
+
+def parse_tasks(spec):
+    """Task slugs from a --tasks value, which may be a list file read with `cat`.
+
+    Splits on commas and whitespace and drops `#` comments, so the selection can live in
+    a committed file that explains itself (dataset_example/rigid_tasks.txt) rather than
+    an opaque comma-joined line.
+    """
+    if not spec:
+        return set()
+    lines = [ln.split("#", 1)[0] for ln in spec.splitlines()]
+    return {t for ln in lines for part in ln.split(",") for t in part.split() if t}
 
 
 def load_episode_files(args):
@@ -276,9 +327,17 @@ def load_episode_files(args):
     if args.episode_files:
         with open(args.episode_files) as f:
             files = json.load(f)
-        if args.tasks:
-            keep = set(args.tasks.split(","))
+        keep = parse_tasks(args.tasks)
+        if keep:
+            # A misspelt slug would otherwise silently shrink the corpus and only show up
+            # as a short run hours later, so say so up front. One slug missing is a warning
+            # rather than a failure: a task renamed in the release must not block the other
+            # ten, and both halves of the split would have to abort together.
+            missing = keep - {f.split("/")[2] for f in files}
+            if missing:
+                print(f"WARNING: no episodes for task(s): {sorted(missing)}", flush=True)
             files = [f for f in files if f.split("/")[2] in keep]
+            assert files, f"task filter {sorted(keep)} matched no episodes"
         if args.split:
             files = [f for f in files if f.split("/")[1] == args.split]
     else:
@@ -378,6 +437,12 @@ def process_episode(rel, args, vae=None):
     except Exception as e:  # noqa: BLE001 - one bad episode must not kill the run
         # Roughly one episode in seven fails to decode, so releasing the blob here and
         # not only on the happy path is what keeps the cache from growing without bound.
+        # The cause was never characterised: the rate is measured, but the failures were
+        # only ever printed per episode, never aggregated. Suspects, in the order worth
+        # checking, are the stereo rig's h265 streams, packets that are length-prefixed
+        # rather than Annex-B, and episodes whose camera topics stop early. Aggregate the
+        # statuses from a decode sweep before assuming the loss is uniform across tasks --
+        # if it is not, the corpus is skewed and not merely smaller.
         drop_blob(local, args)
         return f"{traj_id}: FAILED {type(e).__name__}: {e}"
 
@@ -457,9 +522,13 @@ def main():
     p = ArgumentParser()
     p.add_argument("--task", default="fold_and_stack_the_t_shirts")
     p.add_argument("--tasks", default=None,
-                   help="comma-separated task slugs to keep from --episode_files")
+                   help="task slugs to keep from --episode_files, separated by commas or "
+                        "whitespace; pass a list file with --tasks \"$(cat rigid_tasks.txt)\"")
     p.add_argument("--episode_files", default=None,
-                   help="json list of repo-relative episode.mcap paths (see list_episodes)")
+                   help="json list of repo-relative episode.mcap paths (see --dump_episode_files)")
+    p.add_argument("--dump_episode_files", default=None,
+                   help="list the whole release to this json and exit; login node only, "
+                        "because it is the one stage that needs the Hub's file index")
     p.add_argument("--split", default="train", choices=["train", "val"])
     p.add_argument("--num_episodes", type=int, default=0, help="0 = all")
     p.add_argument("--output_path", default="dataset_example/abc_mcap_pilot")
@@ -497,6 +566,9 @@ def main():
     p.add_argument("--workers", type=int, default=1,
                    help="processes per shard; each episode is one download + one h264 decode")
     args = p.parse_args()
+    if args.dump_episode_files:
+        dump_episode_files(args.dump_episode_files)
+        return
     assert not (args.download_only and args.decode_cached), \
         "--download_only and --decode_cached are the two halves of the split; pick one"
     if args.download_only:
