@@ -18,7 +18,8 @@
 #SBATCH -J abc_eval
 #SBATCH -o /leonardo_work/AIFAC_S07_034/sraman00/ctrlworld/logs_eval-%j.out
 ROOT=$WORK/sraman00/ctrlworld
-cd $ROOT/repo
+# Run from wherever this file was checked out; see train_mcap.sbatch for why.
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export HF_HOME=$ROOT/hf HF_HUB_OFFLINE=1
 export PATH=$ROOT/venv/bin:$PATH
 export PYTHONUNBUFFERED=1
@@ -26,8 +27,12 @@ export TORCH_HOME=$ROOT/torchhome
 SVD=$HF_HOME/hub/models--stabilityai--stable-video-diffusion-img2vid/snapshots/9cf024d5bfa8f56622af86c884f26a52f6676f2e
 CLIP=$HF_HOME/hub/models--openai--clip-vit-base-patch32/snapshots/3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268
 STEP=${STEP:?set STEP, e.g. --export=ALL,STEP=10000}
-CKPT=$ROOT/repo/outputs/0003_abc_mcap/model/checkpoint-${STEP}.pt
-OUT=$ROOT/repo/outputs/0003_abc_mcap/eval/metrics_step${STEP}.json
+# Checkpoints and generated metadata live outside the code snapshot, so a fresh checkout
+# scores the same lineage the training chain wrote.
+RUN_DIR=$ROOT/outputs/0003_abc_mcap
+META=$ROOT/dataset_meta_info
+CKPT=$RUN_DIR/model/checkpoint-${STEP}.pt
+OUT=$RUN_DIR/eval/metrics_step${STEP}.json
 mkdir -p $(dirname $OUT)
 
 # FVD is skipped rather than silently faked when the I3D backbone is missing.
@@ -40,7 +45,7 @@ srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK --cpu-bind=none \
     --ckpt_path $CKPT \
     --clips dataset_meta_info/abc_mcap/eval_clips_v1.json \
     --val_dataset_dir $ROOT/data/abc_mcap \
-    --data_stat_path dataset_meta_info/abc_mcap/stat.json \
+    --data_stat_path $META/abc_mcap/stat.json \
     --svd_model_path $SVD --clip_model_path $CLIP \
     --batch_size ${BATCH_SIZE:-4} \
     --fid $I3D \

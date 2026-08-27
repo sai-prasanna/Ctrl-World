@@ -13,7 +13,11 @@
 # so the job resubmits itself from the newest checkpoint until it gets there.
 set -x
 ROOT=$WORK/sraman00/ctrlworld
-cd $ROOT/repo
+# Resolve this file's own location instead of a fixed checkout. `cluster submit` drops each
+# run in $WORK/runs/Ctrl-World/<runid>/code, so the chain must re-submit whichever copy it
+# was started from; that also keeps every link of the chain on the same commit.
+SCRIPT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")
+cd "$(dirname "$SCRIPT")"
 export HF_HOME=$ROOT/hf HF_HUB_OFFLINE=1
 export PATH=$ROOT/venv/bin:$PATH
 export WANDB_MODE=offline SWANLAB_DISABLED=1 PYTHONUNBUFFERED=1
@@ -22,7 +26,12 @@ export OMP_NUM_THREADS=8
 SVD=$HF_HOME/hub/models--stabilityai--stable-video-diffusion-img2vid/snapshots/9cf024d5bfa8f56622af86c884f26a52f6676f2e
 CLIP=$HF_HOME/hub/models--openai--clip-vit-base-patch32/snapshots/3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268
 TAG=0003_abc_mcap
-OUT=$ROOT/repo/outputs/$TAG/model
+# Artifacts and generated metadata live outside the code snapshot: checkpoints so --resume
+# still finds the lineage from a fresh checkout, metadata because train_sample.json is
+# ~490 MB and has no business in a git ref.
+RUN_DIR=$ROOT/outputs/$TAG
+OUT=$RUN_DIR/model
+META=$ROOT/dataset_meta_info
 MAX_STEPS=${MAX_STEPS:-30000}
 
 # 256x192 is 1.33x the tokens of the 192x192 run, so per-device batch drops 4 -> 2 and
@@ -42,16 +51,16 @@ if [ -n "$LAST_AT_START" ] && [ "$LAST_AT_START" -ge "$MAX_STEPS" ]; then
   echo "already at step $LAST_AT_START of $MAX_STEPS; nothing to resume"
   exit 0
 fi
-sbatch --dependency=afterany:$SLURM_JOB_ID --export=ALL,MAX_STEPS=$MAX_STEPS \
-  $ROOT/train_mcap.sbatch
+sbatch --dependency=afterany:$SLURM_JOB_ID --export=ALL,MAX_STEPS=$MAX_STEPS "$SCRIPT"
 
 $ROOT/venv/bin/accelerate launch --num_processes 4 --mixed_precision fp16 --dynamo_backend no \
   scripts/train_wm.py \
   --svd_model_path $SVD --clip_model_path $CLIP \
-  --dataset_root_path $ROOT/data --dataset_meta_info_path dataset_meta_info \
+  --dataset_root_path $ROOT/data --dataset_meta_info_path $META \
   --dataset_names abc_mcap \
   --train_batch_size 2 --gradient_accumulation_steps 8 --num_workers 8 \
-  --max_train_steps $MAX_STEPS --checkpointing_steps 2500 \
+  --max_train_steps $MAX_STEPS --checkpointing_steps 5000 \
   --validation_steps 2500 --video_num 4 \
-  --tag $TAG --resume  # --resume is a no-op on the first job: it just finds nothing to resume
+  --tag $TAG --run_dir $RUN_DIR \
+  --resume  # --resume is a no-op on the first job: it just finds nothing to resume
 

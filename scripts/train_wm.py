@@ -351,6 +351,8 @@ if __name__ == "__main__":
     parser.add_argument('--video_num', type=int, default=None)
     parser.add_argument('--num_workers', type=int, default=None)
     parser.add_argument('--output_dir', type=str, default=None)
+    parser.add_argument('--run_dir', type=str, default=None,
+                        help='absolute home for model/, samples/ and rollout/; see --tag')
     parser.add_argument('--tag', type=str, default=None)
     parser.add_argument('--lr_scheduler', type=str, default=None,
                         help="constant, constant_with_warmup, cosine, linear, ...")
@@ -363,11 +365,16 @@ if __name__ == "__main__":
     args = merge_args(args, args_new)
     if args_new.dataset_names is not None and args_new.dataset_cfgs is None:
         args.dataset_cfgs = args_new.dataset_names
-    if args_new.tag is not None and args_new.output_dir is None:
-        args.run_dir = f"outputs/{args.tag}"
-        args.output_dir = f"{args.run_dir}/model"
+    # cluster submit checks each run out to a fresh $WORK/runs/<project>/<runid>/code, so a
+    # relative outputs/ is empty there and --resume finds no checkpoints. --run_dir names a
+    # stable absolute home for the run's artifacts, independent of where the code landed.
+    if args_new.run_dir is not None or args_new.tag is not None:
+        args.run_dir = args_new.run_dir or f"outputs/{args.tag}"
         args.sample_dir = f"{args.run_dir}/samples"
         args.save_dir = f"{args.run_dir}/rollout"
+        # an explicit --output_dir still wins, so the checkpoint dir can be moved alone
+        if args_new.output_dir is None:
+            args.output_dir = f"{args.run_dir}/model"
 
     main(args)
 

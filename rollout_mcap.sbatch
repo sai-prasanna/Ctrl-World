@@ -13,7 +13,8 @@
 #SBATCH -J abc_rollout
 #SBATCH -o /leonardo_work/AIFAC_S07_034/sraman00/ctrlworld/logs_rollout-%j.out
 ROOT=$WORK/sraman00/ctrlworld
-cd $ROOT/repo
+# Run from wherever this file was checked out; see train_mcap.sbatch for why.
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export HF_HOME=$ROOT/hf HF_HUB_OFFLINE=1
 export PATH=$ROOT/venv/bin:$PATH
 export PYTHONUNBUFFERED=1 OMP_NUM_THREADS=8
@@ -21,7 +22,8 @@ export PYTHONUNBUFFERED=1 OMP_NUM_THREADS=8
 # exist here; every entry script has to name them explicitly.
 SVD=$HF_HOME/hub/models--stabilityai--stable-video-diffusion-img2vid/snapshots/9cf024d5bfa8f56622af86c884f26a52f6676f2e
 CLIP=$HF_HOME/hub/models--openai--clip-vit-base-patch32/snapshots/3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268
-CKPT=${CKPT:-$ROOT/repo/outputs/0003_abc_mcap/model/checkpoint-5000.pt}
+RUN_DIR=$ROOT/outputs/0003_abc_mcap
+CKPT=${CKPT:-$RUN_DIR/model/checkpoint-30000.pt}
 IDS=${IDS:-00ce9827-879c-4bed-82ef-8bfd07302d60,016f2a41-e549-4b00-b786-c5b0842bcaa2,02eb2789-4234-4d4c-984e-08872ed00c1d}
 echo "rollout ckpt=$CKPT"
 # The val_dataset_dir override points at the mcap data; config.py's abc_replay entry still
@@ -31,4 +33,5 @@ srun --cpu-bind=none $ROOT/venv/bin/python scripts/rollout_replay_traj.py \
   --ckpt_path $CKPT \
   --svd_model_path $SVD --clip_model_path $CLIP \
   --val_dataset_dir $ROOT/data/abc_mcap \
-  --val_id $IDS
+  --val_id $IDS \
+  --save_dir $RUN_DIR/rollout
