@@ -39,12 +39,11 @@ sbatch --array=0-3 --export=ALL,NSHARD=4 jobs/abc_gpu.sbatch                    
 sbatch jobs/meta_and_train.sbatch                                                # index, train
 ```
 
-Two things about that pipeline change results silently, so know them before touching it.
-`preprocessing/rigid_tasks.txt` is the task selection and is committed because it is a
-scientific choice; `abc_mcap_files.json` is a derived Hub listing and is regenerated, never
-copied. And the MCAP path exists because the LeRobot mirror letterboxes the 4:3 cameras
-into 224x224, encoding a quarter of every latent black — `fov_crop` is what makes rigs of
-different field of view comparable, so check it before trusting cross-episode geometry.
+Two facts about that pipeline change results silently. `preprocessing/rigid_tasks.txt`
+records the task selection, a research decision, so the repo tracks it;
+`abc_mcap_files.json` only lists the release, so regenerate it rather than copy it. And
+`fov_crop` is what makes camera rigs of different field of view comparable — read it
+before trusting cross-episode geometry.
 
 Rollouts:
 
