@@ -1,139 +1,100 @@
-# Build the ABC-130k training set
+# Extract ABC-130k incrementally
 
-Four stages turn the ABC-130k release into the latents that `scripts/train_wm.py` reads.
-This page covers the MCAP path, which produces the `abc_mcap` dataset. For the LeRobot
-mirror path it replaces, see the MCAP source section.
+The rigid subset of ABC-130k is far larger than the scratch space it has to pass through,
+so the pipeline never holds the whole release on disk. A downloader and a decoder run on
+different machines, coupled through a bounded cache: the downloader stages MCAP blobs, the
+decoder consumes and deletes them, and each blob lives on disk only between the two.
 
-| Stage | Runs on | Reads | Writes |
-|---|---|---|---|
-| Index | Login node | Hub file listing | `abc_mcap_files.json` |
-| Download | Login node | Listing and `rigid_tasks.txt` | MCAP blobs in `mcap_cache` |
-| Process | Boost node | MCAP blobs | `videos/`, `annotation/`, `latent_videos/` |
-| Meta | Serial node | Annotations | `stat.json`, `train_sample.json` |
+Everything below is `preprocessing/extract_latent_abc_mcap.py`, which is both halves. The
+`--download_only` and `--decode_cached` flags pick which one a process runs.
 
-Two machines split the work because neither can do both halves. Pulling from the Hub needs
-a network, which only login nodes have. The decode and VAE passes need cores and a GPU,
-which only the offline boost nodes have.
+## The producer and consumer
 
-## Run the pipeline
-
-1. On a login node, list the release. Do this once per release:
-
-   ```bash
-   python preprocessing/extract_latent_abc_mcap.py \
-     --dump_episode_files $CTRLWORLD_ROOT/abc_mcap_files.json
-   ```
-
-   The command prints a per-task train and validation histogram.
-
-2. On a login node, start one download shard per stride. Each shard detaches from your
-   SSH session:
-
-   ```bash
-   jobs/launch_download.sh SHARD NUM_SHARDS WORKERS SPLIT
-   ```
-
-3. Decode and encode the staged blobs on a boost node:
-
-   ```bash
-   sbatch --array=0-3 --export=ALL,NSHARD=4 jobs/abc_gpu.sbatch
-   ```
-
-   Start this while downloads still run. The job sweeps the episode list repeatedly, so
-   `not staged` is an expected status rather than an error.
-
-4. Build the index and start training:
-
-   ```bash
-   sbatch jobs/meta_and_train.sbatch
-   ```
-
-## Task selection and the episode index
-
-The pipeline reads two inputs that the stages don't produce, and they differ in kind.
-
-`preprocessing/rigid_tasks.txt` holds the task selection: 11 rigid pick-and-place tasks.
-Rigid tasks beat the deformable half of ABC here because a 14-D joint vector doesn't
-capture cloth state, so a world model conditioned on joints alone can't be scored fairly on
-folding. That reasoning makes the file a research decision, so the repository tracks it and
-the file carries its own explanation.
-
-`abc_mcap_files.json` holds a listing of every `episode.mcap` in the release. The
-repository doesn't track it. Regenerate it with `--dump_episode_files` instead of copying
-it between machines, so it can't drift from the release.
-
-To point either at a different file, set `CTRLWORLD_TASKS` or `CTRLWORLD_EPISODE_FILES`.
-
-The `--tasks` flag splits on commas and whitespace and ignores `#` comments, so a list file
-can explain itself. A slug that matches no episode logs a warning instead of failing,
-because a task renamed upstream must not block the other ten, and both halves of the split
-would have to abort together. An empty selection is still an error.
-
-To see what ABC contains before selecting, run the mirror-path selector:
-
-```bash
-python preprocessing/select_abc_episodes.py --dry_run
+```
+login node                    $WORK                    boost node
+download_login.sh   ──────>   mcap_cache/   ──────>    abc_gpu.sbatch
+--download_only               (bounded)                --decode_cached
+                                                            │
+                                                            v
+                                              videos/, annotation/, latent_videos/
 ```
 
-It prints the task histogram over the whole dataset and reads only the metadata, not the
-video. By default it samples whole files rather than scattered episodes: LeRobot v3 packs
-about 20 episodes per MP4, so shuffling files makes each download roughly 15 times more
-useful while still spreading across recording stations.
+Two nodes, because neither can do both halves. Only login nodes reach the Hub; a boost
+node cannot resolve `huggingface.co`. Only boost nodes have the cores and the GPU.
 
-## The MCAP source
+### The cache bounds itself
 
-The LeRobot mirror, `lerobot/abc_130k_v3_train`, letterboxes the 4:3 cameras into 224x224,
-which encodes a quarter of every latent as black. `preprocessing/extract_latent_abc_mcap.py`
-reads the original release, `XDOF/ABC-130k`, which ships one MCAP file per episode. It
-writes 256x192 with no padding, so the same token budget carries more of the scene.
+Before each episode, `download_episode` counts the staged
+blobs and blocks while that count is at or above `--max_staged` (default 400), polling
+every 30 seconds and giving up after an hour. Staging outruns decoding by a wide margin,
+so without that check `$WORK` fills with blobs nothing has consumed. `count_staged` counts
+blob files rather than summing their bytes, because a `du` over the cache on Lustre costs
+more than the download it paces.
 
-The release mixes camera rigs that differ in resolution and field of view: 848x480 at
-88.6 by 58.0 degrees against 1920x1200 at 103.3 by 76.6. The `fov_crop` function frames
-every view to a common horizontal field of view before the resize. Without it, the model
-can identify the rig instead of learning dynamics. Read `fov_crop` before you trust
-cross-episode geometry.
+### The decoder deletes what it consumes
 
-The MCAP annotations also carry the commanded `action`, which the mirror omits. Nothing
-reads it yet, so conditioning on it remains an option.
+`drop_blob` removes the blob after each episode,
+on the failure path as well as the success path. About one episode in seven fails to
+decode, so releasing only on success would leak roughly that fraction of the corpus into
+the cache.
 
-## Pipeline invariants
+### The decoder starts before the downloader finishes
 
-Preserve these when you change any stage.
+The decoder walks the episode list up to
+`--sweeps` times (default 200), waiting `--sweep_wait` seconds between passes, and stops
+early once a pass finds nothing left to stage. An episode the downloader has not reached
+returns `not staged`, which is an expected status and not an error. Set `--deadline` below
+the Slurm wall clock so the job exits between episodes rather than mid-write.
 
-### The annotation commits a trajectory
+## Resume and sharding
 
-Each stage writes its annotation last and atomically, so every resume check reduces to
-whether the annotation exists. Rerunning a stage skips finished work, and a killed job
-can't leave a partial trajectory that later looks complete.
+Every stage writes its annotation last, to a temporary file that it renames into place.
+That makes the annotation the commit marker for a trajectory: the resume check for every
+stage is whether the annotation exists, so rerunning any stage skips finished work, and a
+job killed by the wall clock cannot leave a partial trajectory that later looks complete.
 
-### Both halves shard identically
+Both halves shard by a stride over the same list, and `load_episode_files` shuffles that
+list with a fixed seed before striding. So shard *i* of the download matches shard *i* of
+the decode, every requeue agrees on the order, and a run cut short is a uniform sample
+across tasks instead of the alphabetically first episodes.
 
-Download and decode each take a stride over the same seeded shuffle of the episode list,
-so shard *i* of one matches shard *i* of the other. The seed keeps a run that a wall clock
-cuts short a uniform sample across tasks rather than the alphabetically first episodes.
+Start the shards like this, one download per shard on a login node and one array task per
+shard on a boost node:
 
-### Downloads pace themselves against the decoders
+```bash
+jobs/launch_download.sh SHARD NUM_SHARDS WORKERS SPLIT
+sbatch --array=0-3 --export=ALL,NSHARD=4 jobs/abc_gpu.sbatch
+```
 
-Staging stops once `--max_staged` undecoded blobs wait in the cache, which keeps `$WORK`
-from filling while the decoders lag.
+`abc_gpu.sbatch` runs the decode pass and then, on the same allocation, the VAE pass in
+`preprocessing/encode_latents_abc.py`, which uses the GPUs the decode left idle. That pass
+skips any trajectory whose `.pt` already exists, so overlapping shards cost nothing.
 
-### Downloads need Xet
+## Before the first shard
 
-`HF_XET_HIGH_PERFORMANCE=1` is worth roughly 20 times the throughput, and disabling it once
-made the download stage the bottleneck for the whole pipeline. Keep `--workers` low and let
-Xet supply the parallelism, because a login node caps each user at 2048 processes.
+Two inputs exist outside the loop. Generate the episode index once per release, on a login
+node, because it is the only other stage that needs the Hub:
 
-### The encoder keeps the MP4s
+```bash
+python preprocessing/extract_latent_abc_mcap.py \
+  --dump_episode_files $CTRLWORLD_ROOT/abc_mcap_files.json
+```
 
-Evaluation and the region metrics score real pixels, not latents, so the videos stay on
-disk after the VAE pass.
+The task selection lives in `preprocessing/rigid_tasks.txt`, which explains its own
+contents. Override either path with `CTRLWORLD_EPISODE_FILES` or `CTRLWORLD_TASKS`.
 
-## Known gap: unexplained decode failures
+When the shards finish, `jobs/meta_and_train.sbatch` builds the index and starts training.
 
-About one episode in seven fails to decode. The pipeline measures that rate but not its
-cause, because it prints failures per episode and never aggregates them. Three candidates
-are worth checking first: the stereo rig's H.265 streams, packets that arrive
-length-prefixed rather than in Annex B format, and episodes whose camera topics stop early.
+## Reading the episodes
 
-Aggregate the statuses from a decode sweep before you treat the loss as uniform across
-tasks. If it isn't uniform, the corpus is skewed rather than merely smaller.
+`read_episode` is where the release's quirks live, and it is worth reading before you trust
+the extracted geometry. Video arrives as per-frame packets on three camera topics, in H.264
+on the mono rig and H.265 on the stereo one, so it reads the codec from the stream. The
+14-D state comes from four topics whose clocks differ from the camera clocks by tens of
+milliseconds, so it matches states to frame timestamps by nearest neighbour rather than by
+index. The rigs also differ in field of view, so `fov_crop` frames every view to a common
+one; without it the model can identify the rig instead of learning dynamics.
+
+Downloads need `HF_XET_HIGH_PERFORMANCE=1`, worth roughly 20 times the throughput. Keep
+`--workers` low and let Xet supply the parallelism, because a login node caps each user at
+2048 processes.
