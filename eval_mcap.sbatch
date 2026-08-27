@@ -30,12 +30,28 @@ export HF_HOME=$ROOT/hf HF_HUB_OFFLINE=1
 export PATH=$ROOT/venv/bin:$PATH
 export PYTHONUNBUFFERED=1
 export TORCH_HOME=$ROOT/torchhome
+
+# Keep the artifacts under the repository path, but on durable storage. `cluster submit`
+# deletes the checkout when the job stops, so a real outputs/ there loses the checkpoints,
+# and --resume then retrains from the SVD weights without a word. A link keeps every path
+# in the code unchanged.
+#
+# A checkout always has a real outputs/, because the eval JSONs are tracked. So copy what
+# is there into the durable tree first, then replace the directory with the link. cp -n
+# never overwrites, so the durable copy always wins. This is idempotent, and it also
+# migrates a persistent checkout on its first run.
+mkdir -p $ROOT/outputs
+if [ ! -L outputs ]; then
+  if [ -d outputs ]; then
+    cp -rn outputs/. $ROOT/outputs/ || exit 1
+    rm -rf outputs
+  fi
+  ln -s $ROOT/outputs outputs
+fi
 SVD=$HF_HOME/hub/models--stabilityai--stable-video-diffusion-img2vid/snapshots/9cf024d5bfa8f56622af86c884f26a52f6676f2e
 CLIP=$HF_HOME/hub/models--openai--clip-vit-base-patch32/snapshots/3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268
 STEP=${STEP:?set STEP, e.g. --export=ALL,STEP=10000}
-# Checkpoints and generated metadata live outside the code snapshot, so a fresh checkout
-# scores the same lineage the training chain wrote.
-RUN_DIR=$ROOT/outputs/0003_abc_mcap
+RUN_DIR=outputs/0003_abc_mcap
 CKPT=$RUN_DIR/model/checkpoint-${STEP}.pt
 OUT=$RUN_DIR/eval/metrics_step${STEP}.json
 mkdir -p $(dirname $OUT)

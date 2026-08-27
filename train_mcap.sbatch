@@ -29,13 +29,28 @@ export PATH=$ROOT/venv/bin:$PATH
 export WANDB_MODE=offline SWANLAB_DISABLED=1 PYTHONUNBUFFERED=1
 export OMP_NUM_THREADS=8
 
+# Keep the artifacts under the repository path, but on durable storage. `cluster submit`
+# deletes the checkout when the job stops, so a real outputs/ there loses the checkpoints,
+# and --resume then retrains from the SVD weights without a word. A link keeps every path
+# in the code unchanged.
+#
+# A checkout always has a real outputs/, because the eval JSONs are tracked. So copy what
+# is there into the durable tree first, then replace the directory with the link. cp -n
+# never overwrites, so the durable copy always wins. This is idempotent, and it also
+# migrates a persistent checkout on its first run.
+mkdir -p $ROOT/outputs
+if [ ! -L outputs ]; then
+  if [ -d outputs ]; then
+    cp -rn outputs/. $ROOT/outputs/ || exit 1
+    rm -rf outputs
+  fi
+  ln -s $ROOT/outputs outputs
+fi
+
 SVD=$HF_HOME/hub/models--stabilityai--stable-video-diffusion-img2vid/snapshots/9cf024d5bfa8f56622af86c884f26a52f6676f2e
 CLIP=$HF_HOME/hub/models--openai--clip-vit-base-patch32/snapshots/3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268
 TAG=0003_abc_mcap
-# Artifacts and generated metadata live outside the code snapshot: checkpoints so --resume
-# still finds the lineage from a fresh checkout, metadata because train_sample.json is
-# ~490 MB and has no business in a git ref.
-RUN_DIR=$ROOT/outputs/$TAG
+RUN_DIR=outputs/$TAG
 OUT=$RUN_DIR/model
 MAX_STEPS=${MAX_STEPS:-30000}
 
@@ -66,6 +81,6 @@ $ROOT/venv/bin/accelerate launch --num_processes 4 --mixed_precision fp16 --dyna
   --train_batch_size 2 --gradient_accumulation_steps 8 --num_workers 8 \
   --max_train_steps $MAX_STEPS --checkpointing_steps 5000 \
   --validation_steps 2500 --video_num 4 \
-  --tag $TAG --run_dir $RUN_DIR \
+  --tag $TAG \
   --resume  # --resume is a no-op on the first job: it just finds nothing to resume
 
