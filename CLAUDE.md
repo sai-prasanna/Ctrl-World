@@ -30,60 +30,21 @@ WANDB_MODE=offline accelerate launch --main_process_port 29501 scripts/train_wm.
   --dataset_names abc_subset
 ```
 
-Data prep for ABC (see readme.md section 4 for the full flow):
+Data prep for ABC — see `docs/data-pipeline.md` for the flow and its invariants:
 
 ```bash
-python preprocessing/select_abc_episodes.py --dry_run          # inspect tasks/hours
-python preprocessing/select_abc_episodes.py --task_regex ... --max_hours 350 --output_path preprocessing/abc_subset
-accelerate launch preprocessing/extract_latent_abc.py --episode_list ... --output_path ... --svd_path ...
-python dataset_meta_info/create_meta_info.py --droid_output_path preprocessing/abc_subset --dataset_name abc_subset
+python preprocessing/extract_latent_abc_mcap.py --dump_episode_files <out.json>  # login node
+jobs/launch_download.sh <shard> <num_shards> <workers> [split]                   # login node
+sbatch --array=0-3 --export=ALL,NSHARD=4 jobs/abc_gpu.sbatch                     # decode, encode
+sbatch jobs/meta_and_train.sbatch                                                # index, train
 ```
 
-`preprocessing/extract_latent.py` is the DROID equivalent of `extract_latent_abc.py`.
-
-The LeRobot mirror those scripts read (`lerobot/abc_130k_v3_train`) letterboxes the 4:3
-cameras into 224x224, so a quarter of every latent is encoded black. `extract_latent_abc_mcap.py`
-reads the original release (`XDOF/ABC-130k`, one MCAP per episode) instead and writes
-256x192 with no padding. The release mixes camera rigs of different resolution and field
-of view, so `fov_crop` frames them to a common view before the resize; check it before
-trusting cross-episode geometry.
-
-It runs in two stages because no single machine can do both halves: pulling from the Hub
-needs a network, which only login nodes have, and the decode and VAE passes need cores and
-a GPU, which only the offline boost nodes have.
-
-```bash
-python preprocessing/extract_latent_abc_mcap.py \
-  --dump_episode_files $CTRLWORLD_ROOT/abc_mcap_files.json   # login node, once per release
-jobs/launch_download.sh <shard> <num_shards> <workers> [split]   # login node, once per shard
-sbatch --array=0-3 --export=ALL,NSHARD=4 jobs/abc_gpu.sbatch      # boost: decode, then encode
-sbatch jobs/meta_and_train.sbatch                                  # index, then start training
-```
-
-Two inputs sit outside that chain, and the split between them is deliberate.
-`preprocessing/rigid_tasks.txt` is the *task selection* — the 11 rigid pick-and-place
-tasks, chosen over the deformable ones because cloth state is not recoverable from a 14-D
-joint vector — so it is a scientific choice and is committed. `abc_mcap_files.json` is a
-derived listing of every `episode.mcap` in the release; regenerate it with
-`--dump_episode_files` rather than copying it between machines. Both are overridable with
-`CTRLWORLD_TASKS` and `CTRLWORLD_EPISODE_FILES`. `--tasks` splits on commas and whitespace
-and ignores `#` comments, so the list file explains itself; a slug that matches nothing
-warns, and only an empty selection fails.
-
-The download shards stage MCAP blobs into `mcap_cache` and stop once `--max_staged` blobs
-are waiting, so `$WORK` cannot fill while the decoders lag. `jobs/abc_gpu.sbatch` decodes those
-blobs to `videos/` and `annotation/` and then VAE-encodes `latent_videos/` on the same
-allocation; it sweeps the episode list repeatedly, so it can start while downloads are
-still arriving and `not staged` is a normal status rather than an error. Both halves shard
-by a stride over the same sorted list, so shard *i* of one matches shard *i* of the other.
-
-Everything is keyed on the annotation, written last and atomically, so it doubles as the
-resume marker: rerunning any stage skips what is already done. The mp4s stay on disk for
-evaluation. Unlike the mirror, the annotations also carry the commanded `action`.
-
-Downloads run with xet enabled (`HF_XET_HIGH_PERFORMANCE=1`): it is worth about 20x, and
-disabling it was once the pipeline's real bottleneck. Keep `--workers` low there and let
-xet supply the parallelism, because a login node caps a user at 2048 processes.
+Two things about that pipeline change results silently, so know them before touching it.
+`preprocessing/rigid_tasks.txt` is the task selection and is committed because it is a
+scientific choice; `abc_mcap_files.json` is a derived Hub listing and is regenerated, never
+copied. And the MCAP path exists because the LeRobot mirror letterboxes the 4:3 cameras
+into 224x224, encoding a quarter of every latent black — `fov_crop` is what makes rigs of
+different field of view comparable, so check it before trusting cross-episode geometry.
 
 Rollouts:
 
@@ -156,11 +117,9 @@ from the eval JSON); `docs/evaluation.md` is the protocol and the reasoning. Upd
 
 ## Cluster (Leonardo)
 
-All Slurm entry points live in `jobs/`, one per pipeline stage: `launch_download.sh` and
-`download_login.sh` stage blobs on a login node, `abc_gpu.sbatch` decodes and encodes,
-`meta_and_train.sbatch` indexes and starts training, `train_mcap.sbatch` /
-`rollout_mcap.sbatch` / `eval_mcap.sbatch` are the live `abc_mcap` generation, and
-`train.sbatch` / `rollout.sbatch` the superseded `abc_rigid` one. `$ROOT=$WORK/sraman00/ctrlworld`
+All Slurm entry points live in `jobs/`, one per pipeline stage; the `_mcap` ones are the
+live `abc_mcap` generation and `train.sbatch` / `rollout.sbatch` the superseded
+`abc_rigid` one. `$ROOT=$WORK/sraman00/ctrlworld`
 with a prestaged venv, `HF_HOME`, and `HF_HUB_OFFLINE=1`. Compute nodes have **no internet** —
 anything that downloads (HF data, LPIPS/Inception/I3D weights) must run on a login
 node first. `scripts/eval_leonardo.sh` encodes that split: `setup`, `clips`, and
@@ -175,17 +134,14 @@ Every `*.sbatch` file runs unchanged in three contexts: `sbatch <file>` from a c
 `cluster submit`, and `bash <file>` on a machine with no Slurm. Two conventions make that
 work, so preserve them when you add an entry point.
 
-Keep the `#SBATCH` headers even though `cluster submit` writes its own sbatch and runs the
-file as a `bash` payload, which makes them dead for the *first* job. They are still what
-the chain reads: `train_mcap.sbatch` resubmits itself and `meta_and_train.sbatch` submits
-`train_mcap.sbatch`, both with a plain `sbatch`, so every link after the first takes its
-account, partition, GPUs and wall clock from the headers. A 30k-step run spans three
-chained jobs, so that is the normal path.
-
 Each file locates itself with `BASH_SOURCE` and `cd`s to the repo root — `jobs/..`, not its
 own directory — instead of naming `$ROOT/repo`, because `cluster submit` stages the run in
-`$WORK/runs/<project>/<runid>/code`. The
-training chain re-submits its own resolved path, which keeps every link on one commit.
+`$WORK/runs/<project>/<runid>/code`. The training chain re-submits its own resolved path,
+which keeps every link on one commit.
+
+Keep the `#SBATCH` headers even though `cluster submit` writes its own sbatch, which makes
+them dead for the *first* job. The chain resubmits with a plain `sbatch`, so every link
+after the first takes its resources from them.
 
 Anything that outlives a run lives outside the code snapshot, under overridable paths:
 
