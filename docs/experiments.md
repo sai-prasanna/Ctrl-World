@@ -19,6 +19,18 @@ not a prediction. Free-running: after the first round the model conditions only 
 own output. Ground truth is the raw mp4 frames at the 5 Hz latent rate, with no VAE
 round-trip, so the reported error includes the autoencoder's own reconstruction loss.
 
+![Checkpoint evaluation metrics across training steps](../experiments/0002_abc_rigid/checkpoint_metrics.svg)
+
+The graph plots the five evaluation metrics for the third-view and wrist-view groups.
+Shaded regions show 95% bootstrap confidence intervals when the metric record includes
+them. To update the graph after adding metric records, run:
+
+```bash
+python3 experiments/0002_abc_rigid/plot_checkpoint_metrics.py \
+    --inputs outputs/0002_abc_rigid/eval/metrics_step*.json \
+    --out experiments/0002_abc_rigid/checkpoint_metrics.svg
+```
+
 Views are scored in two groups. `third_view` is the single `top` camera; `wrist_view`
 pools `left_wrist` and `right_wrist`. All three are denoised jointly as one latent
 stacked vertically, then split per camera before the VAE decode.
