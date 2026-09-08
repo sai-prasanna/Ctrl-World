@@ -6,11 +6,13 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=32
 #SBATCH --gres=gpu:4
+#SBATCH --mem=480G
 #SBATCH --time=24:00:00
 #SBATCH --output=%x-%j.out
 
-# 100k steps on the 256x192 re-extraction, the paper's budget. No wall clock covers that,
-# so a standalone job resubmits itself from the newest checkpoint until it gets there.
+# 200k steps on the 256x192 re-extraction, extending the paper's 100k budget. No wall clock
+# covers that, so a standalone job resubmits itself from the newest checkpoint until it
+# gets there.
 set -x
 # $ROOT holds everything that outlives a run: the venv, the HF cache, the data, the
 # generated index and the outputs. It defaults to the Leonardo layout but is overridable,
@@ -23,7 +25,19 @@ META=${CTRLWORLD_META:-$ROOT/dataset_meta_info}
 # Resolve this file's own location instead of a fixed checkout. `cluster submit` drops each
 # run in $WORK/runs/Ctrl-World/<runid>/code, so the chain must re-submit whichever copy it
 # was started from; that also keeps every link of the chain on the same commit.
-SCRIPT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")
+#
+# BASH_SOURCE alone cannot say where that copy is: Slurm runs a *duplicate* of this file
+# from /var/spool/slurmd, so only `bash <this file>` -- how `cluster submit`'s wrapper
+# starts it -- sees the real path. Under `sbatch` it resolves to the spool, and the cd below
+# then lands outside the repo. That is what broke the chain on 2026-09-01: link two ran from
+# /var/spool/slurmd, found no outputs/ to resume from, and died. So resolve once, verify the
+# answer holds a checkout, and hand it down the chain in CTRLWORLD_SCRIPT.
+SELF=jobs/train_mcap.sbatch
+SCRIPT=${CTRLWORLD_SCRIPT:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")}
+[ -f "$(dirname "$SCRIPT")/../scripts/train_wm.py" ] || SCRIPT=${SLURM_SUBMIT_DIR:-$PWD}/$SELF
+[ -f "$(dirname "$SCRIPT")/../scripts/train_wm.py" ] || {
+  echo "no checkout at $(dirname "$SCRIPT")/..; pass CTRLWORLD_SCRIPT=<repo>/$SELF"; exit 1; }
+export CTRLWORLD_SCRIPT=$SCRIPT
 cd "$(dirname "$SCRIPT")/.."
 export HF_HOME=$ROOT/hf HF_HUB_OFFLINE=1
 export PATH=$ROOT/venv/bin:$PATH
@@ -59,7 +73,7 @@ TAG=0003_abc_mcap
 # exactly this.
 OUT=outputs/$TAG/model
 RUN_DIR=${CLUSTER_OUTPUT_DIR:-outputs/$TAG}
-MAX_STEPS=${MAX_STEPS:-100000}
+MAX_STEPS=${MAX_STEPS:-200000}
 
 # 256x192 is 1.33x the tokens of the 192x192 run, so the per-device batch is 2. The
 # accumulation is derived from the process count below, to hold the effective batch at 64.
@@ -80,8 +94,20 @@ if [ -n "$LAST_AT_START" ] && [ "$LAST_AT_START" -ge "$MAX_STEPS" ]; then
 fi
 # Chain only when this file carries its own directives. `cluster submit` writes its own
 # wrapper, so a re-submit here would silently drop back to the 1-node header above.
+#
+# --export=ALL copies this job's environment, SLURM_MEM_PER_* included, and the successor's
+# own allocation sets its own; srun then refuses to start ("SLURM_MEM_PER_CPU,
+# SLURM_MEM_PER_GPU, and SLURM_MEM_PER_NODE are mutually exclusive"). Drop the parent's in a
+# subshell so the successor sees only what Slurm gives it.
+#
+# The successor writes into the run dir `cluster logs` reads, so one runid covers the whole
+# chain. Only the header's %x-%j.out in the checkout is left when there is no run dir.
+LOGS=${CLUSTER_RUN_DIR:+$CLUSTER_RUN_DIR/logs}
 if [ -z "$CLUSTER_RUNID" ]; then
-  sbatch --dependency=afterany:$SLURM_JOB_ID --export=ALL,MAX_STEPS=$MAX_STEPS "$SCRIPT"
+  ( unset SLURM_MEM_PER_CPU SLURM_MEM_PER_GPU SLURM_MEM_PER_NODE
+    sbatch --dependency=afterany:$SLURM_JOB_ID \
+      ${LOGS:+--output=$LOGS/job-%j.out --error=$LOGS/job-%j.err} \
+      --export=ALL,MAX_STEPS=$MAX_STEPS,CTRLWORLD_SCRIPT=$SCRIPT "$SCRIPT" )
 fi
 
 # The allocation decides the topology. One task holds one node and its 4 GPUs, so the
@@ -110,7 +136,7 @@ srun --ntasks=$NNODES --ntasks-per-node=1 --cpu-bind=none bash -c "
   --dataset_root_path $DATA --dataset_meta_info_path $META \
   --dataset_names abc_mcap \
   --train_batch_size 2 --gradient_accumulation_steps $ACCUM --num_workers 8 \
-  --max_train_steps $MAX_STEPS --checkpointing_steps 5000 \
+  --max_train_steps $MAX_STEPS --checkpointing_steps 2500 \
   --validation_steps 2500 --video_num 4 \
   --tag $TAG --run_dir $RUN_DIR --output_dir $OUT \
   --resume
