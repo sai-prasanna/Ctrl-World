@@ -147,3 +147,19 @@ python scripts/selftest_eval_metrics.py   # 18 checks, CPU only
   which the current oracle baseline confounds.
 - **No CIs on FID/FVD**, as the distribution-metrics section explains. Read those two
   columns as directional rather than as evidence on their own.
+
+
+## 140k uncertainty feasibility pilot
+
+On September 9, 2026, a frozen-checkpoint pilot compared parameter variance,
+paired action-effect variance, VAE residuals, and two-seed variance on two
+preselected ABC clips. Median correlations with RGB error after controlling for
+predicted motion and edges were 0.174, 0.185, 0.042 (latent VAE), 0.106 (RGB VAE),
+and 0.346 (seed variance), respectively. These are error correlations, not
+independently annotated hallucination-detection results.
+
+The small parameter-curvature fit remained close to its prior and did not pass a
+strong derivative-convergence check. It is not validated as an epistemic estimator.
+See the [uncertainty pilot report](../experiments/epistemic_140k/report.md) and
+[exact result record](../experiments/epistemic_140k/pilot_summary.json) for heatmaps,
+settings, limitations, and provenance.

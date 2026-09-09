@@ -1,0 +1,104 @@
+{
+  "warning": "Descriptive pilot correlations with RGB error, not hallucination labels. Frames are correlated; no significance or calibration claim.",
+  "n_clips": 2,
+  "summary": {
+    "Action-effect_variance": {
+      "n_view_frames": 48,
+      "median_rho_error": 0.6273846004436924,
+      "median_partial_rho_motion_edges": 0.18470729563945784,
+      "by_view": {
+        "0": 0.39106056436096415,
+        "1": 0.10126045123441088,
+        "2": 0.05431711683224476
+      }
+    },
+    "Parameter_variance": {
+      "n_view_frames": 48,
+      "median_rho_error": 0.5950456084918696,
+      "median_partial_rho_motion_edges": 0.17446008445190148,
+      "by_view": {
+        "0": 0.424627866659543,
+        "1": 0.08889792130868596,
+        "2": 0.12827984973730466
+      }
+    },
+    "Seed_variance_(N=2)": {
+      "n_view_frames": 48,
+      "median_rho_error": 0.7976654648937054,
+      "median_partial_rho_motion_edges": 0.34622809124385673,
+      "by_view": {
+        "0": 0.47930050448540856,
+        "1": 0.22725266523683518,
+        "2": 0.36776593529627805
+      }
+    },
+    "VAE_RGB_residual": {
+      "n_view_frames": 48,
+      "median_rho_error": 0.6668981229326425,
+      "median_partial_rho_motion_edges": 0.10604143563676062,
+      "by_view": {
+        "0": 0.30408654747821473,
+        "1": 0.07542587335846303,
+        "2": 0.06800473625938935
+      }
+    },
+    "VAE_latent_residual": {
+      "n_view_frames": 48,
+      "median_rho_error": 0.19720303008275364,
+      "median_partial_rho_motion_edges": 0.04195837422475479,
+      "by_view": {
+        "0": 0.04073501766091399,
+        "1": 0.0658690904529824,
+        "2": 0.018884156099155128
+      }
+    }
+  },
+  "runid": "20260909-0349-abc-140k-epistemic-pilot-68a2fbdc",
+  "job_id": "56865211",
+  "code_sha": "68a2fbdc4b8f6e93872acec3f0a132b6ed3261e1",
+  "checkpoint_sha256": "e762bc76329f28a3087f11f8fcbe9e8fb077adc5becc9ca16bd82d26e601cddc",
+  "elapsed_seconds": 1939.4449315071106,
+  "peak_cuda_GiB": 15.947546482086182,
+  "fit": {
+    "noise_variance": 0.13396958447992802,
+    "covariance_eigenvalues": [
+      0.986033260959108,
+      0.9924078697600742,
+      0.9926050629966664,
+      0.9938987585425484
+    ],
+    "fit_fd_relative_error": [
+      0.1428392231464386
+    ]
+  },
+  "diagnostics": [
+    {
+      "repeat_max_abs": 0.0,
+      "rollout_fd_relative_error": 0.21178671717643738
+    },
+    {}
+  ],
+  "settings": {
+    "ckpt_path": "/leonardo_work/AIFAC_S07_034/sraman00/ctrlworld/outputs/0003_abc_mcap/model/checkpoint-140000.pt",
+    "svd_model_path": "/leonardo_work/AIFAC_S07_034/sraman00/ctrlworld/hf/hub/models--stabilityai--stable-video-diffusion-img2vid/snapshots/9cf024d5bfa8f56622af86c884f26a52f6676f2e",
+    "clip_model_path": "/leonardo_work/AIFAC_S07_034/sraman00/ctrlworld/hf/hub/models--openai--clip-vit-base-patch32/snapshots/3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+    "val_dataset_dir": "/leonardo_work/AIFAC_S07_034/sraman00/ctrlworld/data/abc_mcap",
+    "data_stat_path": "/leonardo_work/AIFAC_S07_034/sraman00/ctrlworld/dataset_meta_info/abc_mcap/stat.json",
+    "dataset_root_path": "/leonardo_work/AIFAC_S07_034/sraman00/ctrlworld/data",
+    "dataset_meta_info_path": "/leonardo_work/AIFAC_S07_034/sraman00/ctrlworld/dataset_meta_info",
+    "out": "/leonardo_work/AIFAC_S07_034/sraman00/runs/Ctrl-World/20260909-0349-abc-140k-epistemic-pilot-68a2fbdc/output",
+    "clips": "dataset_meta_info/abc_mcap/eval_clips_v1.json",
+    "rank": 4,
+    "fit_clips": 16,
+    "noise_clips": 8,
+    "limit": 2,
+    "rounds": 2,
+    "steps": 25,
+    "seed": 1729,
+    "relative_scale": 0.02,
+    "fd_step": 0.1,
+    "history_idx": "-6,-5,-4,-3,-2,-1"
+  },
+  "scheduler_state": "COMPLETED",
+  "scheduler_elapsed_seconds": 2125
+}
