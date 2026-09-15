@@ -1,0 +1,70 @@
+{
+ "video": "outputs/0001_abc_overfit/rollout/time_20260819_111559_traj_33499_8_5_fold_and_stack_the_long_sleeve.mp4",
+ "frame": 0,
+ "views": {
+  "top": {
+   "boxes": {
+    "arm": [
+     [
+      0,
+      75,
+      72,
+      160
+     ],
+     [
+      140,
+      92,
+      190,
+      160
+     ]
+    ],
+    "object": [
+     [
+      26,
+      99,
+      70,
+      123
+     ]
+    ]
+   },
+   "unscored": [],
+   "arm_px": 3635,
+   "object_px": 733
+  },
+  "left_wrist": {
+   "boxes": {
+    "arm": [
+     [
+      136,
+      136,
+      192,
+      168
+     ]
+    ],
+    "object": [
+     [
+      0,
+      100,
+      58,
+      168
+     ]
+    ]
+   },
+   "unscored": [],
+   "arm_px": 969,
+   "object_px": 2704
+  },
+  "right_wrist": {
+   "boxes": {
+    "arm": null,
+    "object": null
+   },
+   "unscored": [
+    "arm",
+    "object"
+   ],
+   "arm_px": 0,
+   "object_px": 0
+  }
+ }
+}

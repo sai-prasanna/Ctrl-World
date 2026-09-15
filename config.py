@@ -62,7 +62,11 @@ class wm_args:
     shuffle = True
     num_train_epochs = 100
     max_train_steps = 100000   # paper: "train for 100k steps"; repo default was 500000
-    checkpointing_steps = 20000
+    # Two cadences. checkpointing_steps overwrites one rolling pair, so a job killed at
+    # the 24 h wall loses at most this much work; milestone_steps is what is kept, and
+    # at 21.5 GB a pair that is the binding constraint on disk.
+    checkpointing_steps = 1000
+    milestone_steps = 10000
     validation_steps = 2500
     max_grad_norm = 1.0
     # for val

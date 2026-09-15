@@ -6,6 +6,17 @@ the record cannot drift from the prose. Protocol, deviations from the paper, and
 reasoning behind each metric live in [evaluation.md](evaluation.md); this file is the
 results log.
 
+## 100k checkpoint caveat
+
+Qualitative review of the 100k-step checkpoint finds substantial inconsistencies in the
+generated videos. The wrist cameras show the most visible failures, including unstable
+appearance and motion across successive frames. The three views also do not remain
+consistently aligned: the same scene or action can evolve differently in the top and wrist
+views. As a result, aggregate per-view metrics do not fully describe the checkpoint's
+quality. Future evaluations should report temporal consistency within each camera and
+cross-view consistency across the three cameras, with particular attention to the wrist
+views.
+
 ## 0002_abc_rigid — SVD world model on ABC-130k (`abc_rigid`)
 
 Branch `abc-130k`. 4x A100 x batch 4 x grad-accum 4 = effective batch 64, matching the
@@ -18,6 +29,18 @@ frames and the next round overlaps by one, so a clip is 49 frames (9.8 s at 5 Hz
 not a prediction. Free-running: after the first round the model conditions only on its
 own output. Ground truth is the raw mp4 frames at the 5 Hz latent rate, with no VAE
 round-trip, so the reported error includes the autoencoder's own reconstruction loss.
+
+![Checkpoint evaluation metrics across training steps](../experiments/0002_abc_rigid/checkpoint_metrics.svg)
+
+The graph plots the five evaluation metrics for the third-view and wrist-view groups.
+Shaded regions show 95% bootstrap confidence intervals when the metric record includes
+them. To update the graph after adding metric records, run:
+
+```bash
+python3 experiments/0002_abc_rigid/plot_checkpoint_metrics.py \
+    --inputs outputs/0002_abc_rigid/eval/metrics_step*.json \
+    --out experiments/0002_abc_rigid/checkpoint_metrics.svg
+```
 
 Views are scored in two groups. `third_view` is the single `top` camera; `wrist_view`
 pools `left_wrist` and `right_wrist`. All three are denoised jointly as one latent

@@ -1,0 +1,57 @@
+{
+ "video": "outputs/0002_abc_rigid/rollout/time_20260820_135243_traj_101599_8_5_sort_the_legos_into_containers.mp4",
+ "frame": 0,
+ "views": {
+  "top": {
+   "boxes": {
+    "arm": [
+     [
+      5,
+      62,
+      62,
+      162
+     ],
+     [
+      122,
+      68,
+      182,
+      162
+     ]
+    ],
+    "object": [
+     [
+      82,
+      103,
+      114,
+      124
+     ]
+    ]
+   },
+   "unscored": [],
+   "arm_px": 3287,
+   "object_px": 280
+  },
+  "left_wrist": {
+   "boxes": {
+    "arm": [],
+    "object": null
+   },
+   "unscored": [
+    "object"
+   ],
+   "arm_px": 0,
+   "object_px": 0
+  },
+  "right_wrist": {
+   "boxes": {
+    "arm": [],
+    "object": null
+   },
+   "unscored": [
+    "object"
+   ],
+   "arm_px": 0,
+   "object_px": 0
+  }
+ }
+}
