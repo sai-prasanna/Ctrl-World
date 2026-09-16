@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "abc130k"
+version = "0.1.0"
+description = "Extract the original ABC-130k MCAP release to mp4 + annotation JSON"
+requires-python = ">=3.9"
+# Deliberately short. No torch, no diffusers, no world-model code: this package resizes
+# frames through libswscale so it can be dropped into a checkout of any model.
+dependencies = [
+    "numpy",
+    "av",
+    "mcap",
+    "mcap-protobuf-support",
+    "huggingface_hub",
+]
+
+[project.scripts]
+abc130k-extract = "abc130k.extract:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+abc130k = ["tasks/*.txt"]

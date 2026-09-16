@@ -6,7 +6,7 @@
 #
 # Each slug names a `data/{split}/{task}/` directory in XDOF/ABC-130k, which is the
 # LeRobot task string with spaces replaced by underscores. These come from the 11 tasks in
-# preprocessing/abc_rigid/episode_list.json.gz (15477 episodes on the mirror), so both
+# sample_data/abc_rigid/episode_list.json.gz (15477 episodes on the mirror), so both
 # generations of the port cover the same tasks and share a stat.json.
 #
 # The --tasks flag reads this file, splitting on commas and whitespace and ignoring

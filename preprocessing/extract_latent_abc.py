@@ -12,8 +12,8 @@ By default the raw files are STREAMED from the Hub with HTTP range requests
 Pass --raw_path to read from a local copy of the repo instead.
 
   accelerate launch preprocessing/extract_latent_abc.py \
-      --episode_list preprocessing/abc_subset/episode_list.json \
-      --output_path preprocessing/abc_subset \
+      --episode_list sample_data/abc_subset/episode_list.json \
+      --output_path sample_data/abc_subset \
       --svd_path <stable-video-diffusion-img2vid>
 """
 import json
@@ -218,8 +218,8 @@ class EncodeLatentDataset(Dataset):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('--episode_list', type=str, default='preprocessing/abc_subset')
-    parser.add_argument('--output_path', type=str, default='preprocessing/abc_subset')
+    parser.add_argument('--episode_list', type=str, default='sample_data/abc_subset')
+    parser.add_argument('--output_path', type=str, default='sample_data/abc_subset')
     parser.add_argument('--raw_path', type=str, default=None,
                         help='local copy of the HF repo; omit to stream from the Hub')
     parser.add_argument('--repo_id', type=str, default=REPO_ID)

@@ -182,6 +182,9 @@ separate selector + extractor; everything downstream (`create_meta_info.py`,
 | conditioning   | 7-D cartesian+grip | 14-D bimanual joints+grippers             |
 | rate           | 15 Hz, `down_sample=3` | 30 Hz, `down_sample=6`                |
 
+> This section describes the LeRobot mirror, which ships 224x224 av1. To extract the
+> original MCAP release at its native resolution instead, see `abc130k/README.md`.
+
 **(a) Pick a coherent task subset.** ABC has 201 tasks / 3541 h; the selector reads only
 `meta/` (no video download) and cuts to a target budget:
 
@@ -192,7 +195,7 @@ python preprocessing/select_abc_episodes.py --dry_run
 # ~350 h of garment folding/rolling (matches DROID's training volume)
 python preprocessing/select_abc_episodes.py \
   --task_regex '^(fold and stack the (t-shirts|long sleeve shirts|shorts|skirts|tank tops|towels|trousers|mixed laundry pile)|fold the inside-out t-shirt|roll the (socks|towels|t-shirts|underwear|ties))$' \
-  --max_hours 350 --output_path preprocessing/abc_subset
+  --max_hours 350 --output_path sample_data/abc_subset
 ```
 This writes `episode_list.json.gz` and `dataset_meta_info/abc_subset/stat.json`
 (14-D `state_01`/`state_99`, derived from the dataset's own per-episode q01/q99).
@@ -209,8 +212,8 @@ then add `--raw_path $WORK/abc_raw` below. Both steps are resumable.
 
 ```bash
 accelerate launch preprocessing/extract_latent_abc.py \
-  --episode_list preprocessing/abc_subset \
-  --output_path preprocessing/abc_subset \
+  --episode_list sample_data/abc_subset \
+  --output_path sample_data/abc_subset \
   --svd_path ${path to svd}
 ```
 Output is ~175 GB of latents for 350 h. Re-running skips episodes already extracted.
@@ -222,9 +225,9 @@ Output is ~175 GB of latents for 350 h. Re-running skips episodes already extrac
 
 **(c) Meta info and training** are the standard commands:
 ```bash
-python dataset_meta_info/create_meta_info.py --droid_output_path preprocessing/abc_subset --dataset_name abc_subset
+python dataset_meta_info/create_meta_info.py --droid_output_path sample_data/abc_subset --dataset_name abc_subset
 accelerate launch --main_process_port 29501 scripts/train_wm.py \
-  --dataset_root_path preprocessing --dataset_meta_info_path dataset_meta_info --dataset_names abc_subset
+  --dataset_root_path sample_data --dataset_meta_info_path dataset_meta_info --dataset_names abc_subset
 ```
 `config.py` already defaults to `abc_subset` (`action_dim=14`, `width=192`,
 `down_sample=6`, `ckpt_path=None` to train from the SVD init).

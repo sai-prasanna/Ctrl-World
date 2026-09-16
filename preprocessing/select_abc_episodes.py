@@ -10,7 +10,7 @@ Usage:
   # 2. pick a task family and cut it
   python preprocessing/select_abc_episodes.py \
       --tasks "fold and stack the t-shirts" "fold and stack the shorts" \
-      --max_episodes 12000 --output_path preprocessing/abc_subset
+      --max_episodes 12000 --output_path sample_data/abc_subset
   # 3. pre-stage the referenced raw files (needed when compute nodes are offline)
   python preprocessing/select_abc_episodes.py --download --raw_path $WORK/abc_raw
 """
@@ -187,7 +187,7 @@ def load_episode_list(path):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo_id", default="lerobot/abc_130k_v3_train")
-    ap.add_argument("--output_path", default="preprocessing/abc_subset")
+    ap.add_argument("--output_path", default="sample_data/abc_subset")
     ap.add_argument("--dataset_meta_info_path", default="dataset_meta_info")
     ap.add_argument("--dataset_name", default="abc_subset")
     ap.add_argument("--tasks", nargs="*", default=None,

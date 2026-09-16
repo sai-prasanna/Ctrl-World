@@ -38,7 +38,11 @@ DATA=${CTRLWORLD_DATA:-$ROOT/data}/abc_mcap
 # decision. The episode index only lists the release, so it lives under $ROOT instead;
 # generate it once on a login node with --dump_episode_files, before the first download
 # shard starts.
-TASKS=${CTRLWORLD_TASKS:-preprocessing/rigid_tasks.txt}
+TASKS=${CTRLWORLD_TASKS:-abc130k/src/abc130k/tasks/rigid.txt}
+# abc130k is a self-contained package rather than a script beside the repo, so it goes on
+# the path from the checkout this file resolved. An editable install would pin one path,
+# which `cluster submit` discards when the run ends.
+export PYTHONPATH="$PWD/abc130k/src${PYTHONPATH:+:$PYTHONPATH}"
 EPISODE_FILES=${CTRLWORLD_EPISODE_FILES:-$ROOT/abc_mcap_files.json}
 SHARD=${SLURM_ARRAY_TASK_ID:-0}
 NSHARD=${NSHARD:-4}
@@ -50,9 +54,9 @@ echo "shard $SHARD/$NSHARD split=$SPLIT on $(hostname), alloc=$SLURM_CPUS_PER_TA
 # node, so a pool started from here would pile every worker onto that core.
 # Stop sweeping half an hour before the wall clock so the job exits between episodes.
 srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK --cpu-bind=none \
-  $ROOT/venv/bin/python preprocessing/extract_latent_abc_mcap.py \
+  $ROOT/venv/bin/python -m abc130k.extract \
     --episode_files "$EPISODE_FILES" --tasks "$(cat "$TASKS")" \
-    --split $SPLIT --skip_latent --decode_cached \
+    --split $SPLIT --decode_cached \
     --output_path $DATA --cache_dir $ROOT/mcap_cache \
     --deadline $(( 7 * 3600 + 1800 )) --sweep_wait 60 \
     --shard $SHARD --num_shards $NSHARD --workers ${WORKERS:-30}
@@ -60,6 +64,6 @@ srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK --cpu-bind=none \
 # Encoding needs the GPUs the decode pass left idle. It skips any trajectory whose .pt
 # already exists, so a requeued job resumes and overlapping shards cost nothing.
 $ROOT/venv/bin/accelerate launch --num_processes 4 --mixed_precision no \
-  preprocessing/encode_latents_abc.py \
+  preprocessing/encode_svd.py \
     --data_path $DATA --svd_path $SVD --fp16 \
     --shard $SHARD --num_shards $NSHARD

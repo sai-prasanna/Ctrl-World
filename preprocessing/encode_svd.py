@@ -1,39 +1,38 @@
-"""VAE-encode the mp4s written by extract_latent_abc_mcap.py --skip_latent.
+"""VAE-encode the mp4s written by `python -m abc130k.extract` into SVD latents.
 
-The extraction is split in two because the two halves need different machines: pulling
-MCAP from the Hub needs a network (Leonardo login/serial nodes) and the VAE pass needs a
-GPU (boost nodes, which are offline). Stage one leaves 256x192 mp4s on disk, and this
-script turns them into the latents training reads. The mp4s stay: evaluation and the
-tracking/region metrics all score real pixels.
+This is the model-specific half of the extraction, and the reason it is a separate file in
+a separate directory: `abc130k` produces mp4 + annotation and knows nothing about any
+model, while everything below is Stable Video Diffusion's latent space, which is what
+Ctrl-World trains on. Another world model reads the same mp4s and writes its own latents
+beside them.
 
-  accelerate launch preprocessing/encode_latents_abc.py \
+Splitting it also matches the machines. Pulling MCAP from the Hub needs a network
+(Leonardo login/serial nodes) and the VAE pass needs a GPU (boost nodes, which are
+offline), so the two halves cannot run on the same node. The mp4s stay on disk either way:
+evaluation and the tracking metrics all score real pixels.
+
+  accelerate launch preprocessing/encode_svd.py \
       --data_path $ROOT/data/abc_mcap --svd_path <stable-video-diffusion-img2vid> --fp16
 """
+import json
 import os
 from argparse import ArgumentParser
 
-import av
-import numpy as np
 import torch
+from abc130k import read_mp4
 from accelerate import Accelerator
 from diffusers.models import AutoencoderKLTemporalDecoder
 from torch.utils.data import Dataset
 
 
-def decode_mp4(path):
-    container = av.open(path)
-    try:
-        stream = container.streams.video[0]
-        stream.thread_type = "AUTO"
-        frames = [f.to_ndarray(format="rgb24") for f in container.decode(stream)]
-    finally:
-        container.close()
-    x = torch.from_numpy(np.stack(frames)).permute(0, 3, 1, 2).float() / 255.0 * 2 - 1
-    return x
+def load_clip(path):
+    """One view's mp4 as the [-1, 1] float tensor the SVD VAE expects."""
+    x = torch.from_numpy(read_mp4(path)).permute(0, 3, 1, 2).float()
+    return x / 255.0 * 2 - 1
 
 
 class Trajectories(Dataset):
-    """One item == one trajectory (its three views)."""
+    """One item == one trajectory (all of its views)."""
 
     def __init__(self, data_path, splits=("train", "val"), shard=0, num_shards=1):
         self.data_path = data_path
@@ -41,7 +40,7 @@ class Trajectories(Dataset):
         for split in splits:
             # Drive off the annotations, not the video directories: extraction writes the
             # annotation last and atomically, so a trajectory with one is the only kind
-            # guaranteed to have all three mp4s complete.
+            # guaranteed to have all its mp4s complete.
             ann_root = f"{data_path}/annotation/{split}"
             if not os.path.isdir(ann_root):
                 continue
@@ -62,6 +61,17 @@ class Trajectories(Dataset):
 
     def __getitem__(self, idx):
         return idx
+
+
+def views_of(data_path, split, traj_id):
+    """How many views this trajectory has, read from its annotation.
+
+    The count used to be hardcoded at three. It comes from the annotation now so that a
+    run extracted with a different camera set encodes correctly instead of silently
+    dropping views or raising on a missing file.
+    """
+    with open(f"{data_path}/annotation/{split}/{traj_id}.json") as f:
+        return len(json.load(f)["videos"])
 
 
 def main():
@@ -88,11 +98,11 @@ def main():
         split, traj_id = ds.items[int(idx)]
         out_dir = f"{args.data_path}/latent_videos/{split}/{traj_id}"
         try:
-            for video_id in range(3):
+            for video_id in range(views_of(args.data_path, split, traj_id)):
                 dst = f"{out_dir}/{video_id}.pt"
                 if os.path.exists(dst):
                     continue
-                x = decode_mp4(f"{args.data_path}/videos/{split}/{traj_id}/{video_id}.mp4")
+                x = load_clip(f"{args.data_path}/videos/{split}/{traj_id}/{video_id}.mp4")
                 x = x.to(device=accelerator.device, dtype=dtype)
                 with torch.no_grad():
                     lat = torch.cat([

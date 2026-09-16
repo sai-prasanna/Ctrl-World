@@ -15,6 +15,9 @@ pandas
 pyarrow
 huggingface_hub
 av
+# the original MCAP release, which abc130k reads; `pip install ./abc130k` pulls these too
+mcap
+mcap-protobuf-support
 lpips
 torchvision
 # point tracking for clipeval; install on a login node, Leonardo compute nodes have no network

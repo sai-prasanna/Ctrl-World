@@ -26,24 +26,25 @@ Training (per-device batch; effective batch = devices x batch x grad_accum, pape
 
 ```bash
 WANDB_MODE=offline accelerate launch --main_process_port 29501 scripts/train_wm.py \
-  --dataset_root_path preprocessing --dataset_meta_info_path dataset_meta_info \
+  --dataset_root_path sample_data --dataset_meta_info_path dataset_meta_info \
   --dataset_names abc_subset
 ```
 
-Data prep for ABC — see `docs/data-pipeline.md` for the flow and its invariants:
+Data prep for ABC — `abc130k/README.md` for the extractor, `docs/data-pipeline.md` for
+what Leonardo adds:
 
 ```bash
-python preprocessing/extract_latent_abc_mcap.py --dump_episode_files <out.json>  # login node
-jobs/launch_download.sh <shard> <num_shards> <workers> [split]                   # login node
-sbatch --array=0-3 --export=ALL,NSHARD=4 jobs/abc_gpu.sbatch                     # decode, encode
-sbatch jobs/meta_and_train.sbatch                                                # index, train
+python -m abc130k.extract --dump_episode_files <out.json>         # login node
+jobs/launch_download.sh <shard> <num_shards> <workers> [split]    # login node
+sbatch --array=0-3 --export=ALL,NSHARD=4 jobs/abc_gpu.sbatch      # decode, encode
+sbatch jobs/meta_and_train.sbatch                                 # index, train
 ```
 
-Two facts about that pipeline change results silently. `preprocessing/rigid_tasks.txt`
-records the task selection, a research decision, so the repo tracks it;
-`abc_mcap_files.json` only lists the release, so regenerate it rather than copy it. And
-`fov_crop` is what makes camera rigs of different field of view comparable — read it
-before trusting cross-episode geometry.
+Two facts about that pipeline change results silently.
+`abc130k/src/abc130k/tasks/rigid.txt` records the task selection, a research decision, so
+the repo tracks it; `abc_mcap_files.json` only lists the release, so regenerate it rather
+than copy it. And `fov_crop` is what makes camera rigs of different field of view
+comparable — read it before trusting cross-episode geometry.
 
 Rollouts:
 
@@ -66,6 +67,16 @@ test-like entry point; run it after touching anything in `clipeval/`.
 
 ## Architecture
 
+- `abc130k/` — standalone package, numpy and PyAV only, that turns the original ABC-130k
+  MCAP release into mp4 + annotation JSON. It holds no model and no tensor library, so it
+  can be copied into another model's checkout; `preprocessing/encode_svd.py` is the half
+  that knows this repo trains Ctrl-World, and turns those mp4s into SVD latents. Keep that
+  boundary. The job scripts add `abc130k/src` to `PYTHONPATH` from their own checkout
+  rather than installing it, because `cluster submit` discards the checkout.
+- `preprocessing/` — upstream's DROID extractor plus the superseded LeRobot-mirror path
+  for ABC (`extract_latent_abc.py`, `select_abc_episodes.py`). The mirror ships 224x224
+  av1 with the wide cameras letterboxed into a square; `abc130k` reads the original
+  release instead.
 - `models/ctrl_world.py` — `CrtlWorld` wraps the UNet, the CLIP text/image encoders, and
   `Action_encoder2`, which turns an action chunk (+ optional instruction) into the
   cross-attention conditioning. `frame_level_cond` controls whether conditioning is per

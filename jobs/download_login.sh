@@ -7,8 +7,7 @@
 # Run --dump_episode_files once before the first shard. It is the other stage that needs
 # the Hub, and every later stage reads its output offline:
 #
-#   python preprocessing/extract_latent_abc_mcap.py \
-#     --dump_episode_files $CTRLWORLD_ROOT/abc_mcap_files.json
+#   python -m abc130k.extract --dump_episode_files $CTRLWORLD_ROOT/abc_mcap_files.json
 #
 # Resolve the repo root from this file's own location instead of a fixed $ROOT/repo, so
 # the same file runs from a checkout, from `cluster submit`, and on a machine with no
@@ -30,11 +29,15 @@ unset HF_HUB_OFFLINE
 # The repo tracks the task selection beside the code, because it records a research
 # decision. The episode index only lists the release, so it lives under $ROOT instead and
 # you regenerate it.
-TASKS=${CTRLWORLD_TASKS:-preprocessing/rigid_tasks.txt}
-exec $ROOT/venv/bin/python preprocessing/extract_latent_abc_mcap.py \
+TASKS=${CTRLWORLD_TASKS:-abc130k/src/abc130k/tasks/rigid.txt}
+# abc130k is a self-contained package rather than a script beside the repo, so it goes on
+# the path from the checkout this file resolved. An editable install would pin one path,
+# which `cluster submit` discards when the run ends.
+export PYTHONPATH="$PWD/abc130k/src${PYTHONPATH:+:$PYTHONPATH}"
+exec $ROOT/venv/bin/python -m abc130k.extract \
   --episode_files ${CTRLWORLD_EPISODE_FILES:-$ROOT/abc_mcap_files.json} \
   --tasks "$(cat "$TASKS")" \
-  --split ${SPLIT:-train} --skip_latent --download_only \
+  --split ${SPLIT:-train} --download_only \
   --output_path ${CTRLWORLD_DATA:-$ROOT/data}/abc_mcap --cache_dir $ROOT/mcap_cache \
   --max_staged ${MAX_STAGED:-400} \
   --shard ${SHARD:-0} --num_shards ${NSHARD:-1} --workers ${WORKERS:-8}

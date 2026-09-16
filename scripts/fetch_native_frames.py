@@ -30,7 +30,7 @@ sys.path.insert(0, os.path.join(_ROOT, 'preprocessing'))
 VIEW_KEYS = {'top': 'observation.images.top',
              'left_wrist': 'observation.images.left_wrist',
              'right_wrist': 'observation.images.right_wrist'}
-EPISODE_LIST = 'preprocessing/abc_rigid/episode_list.json.gz'
+EPISODE_LIST = 'sample_data/abc_rigid/episode_list.json.gz'
 NATIVE = 224
 RGB_SKIP = 6                      # 30 Hz source -> the 5 Hz the dataset is stored at
 

@@ -23,7 +23,7 @@ class wm_args:
 
     # dataset parameters
     # raw data
-    dataset_root_path = "preprocessing"
+    dataset_root_path = "sample_data"
     dataset_names = 'abc_subset'
     # meta info
     dataset_meta_info_path = 'dataset_meta_info' #'/cephfs/cjyyj/code/video_evaluation/exp_cfg'#'dataset_meta_info'
@@ -127,7 +127,7 @@ class wm_args:
 
         # Configure per-task eval sets
         if self.task_type == "abc_replay":
-            self.val_dataset_dir = "preprocessing/abc_subset"
+            self.val_dataset_dir = "sample_data/abc_subset"
             self.val_id = []      # filled from the val split below
             self.start_idx = []
             self.instruction = []
