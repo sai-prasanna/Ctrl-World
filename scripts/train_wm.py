@@ -31,32 +31,63 @@ import re
 
 
 def latest_checkpoint(output_dir):
-    """Highest-numbered checkpoint-<step>.pt in output_dir, or None."""
+    """Newest resumable checkpoint in output_dir as (step, path), or None.
+
+    checkpoint-last.pt is normally ahead of every milestone, and its step comes from
+    checkpoint-last.step rather than its name: reading it back out of the trainstate
+    would mean unpickling twelve gigabytes of optimizer state to learn one integer.
+    """
     if not os.path.isdir(output_dir):
         return None
-    steps = []
+    best = None
     for f in os.listdir(output_dir):
         m = re.fullmatch(r"checkpoint-(\d+)\.pt", f)
-        if m:
-            steps.append(int(m.group(1)))
-    if not steps:
-        return None
-    step = max(steps)
-    return step, os.path.join(output_dir, f"checkpoint-{step}.pt")
+        if m and (best is None or int(m.group(1)) > best[0]):
+            best = (int(m.group(1)), os.path.join(output_dir, f))
+    rolling = os.path.join(output_dir, "checkpoint-last.pt")
+    step_file = os.path.join(output_dir, "checkpoint-last.step")
+    # The step file is written after both .pt files, so it never names a half-saved pair.
+    if os.path.exists(rolling) and os.path.exists(step_file):
+        step = int(open(step_file).read().strip())
+        if best is None or step > best[0]:
+            best = (step, rolling)
+    return best
+
+
+def _atomic_save(obj, path):
+    """torch.save through a temp file. The rolling checkpoint overwrites one path every
+    few thousand steps, so a job killed at the wall mid-write would otherwise destroy the
+    very thing that makes the wall survivable."""
+    tmp = f"{path}.tmp"
+    torch.save(obj, tmp)
+    os.replace(tmp, path)
 
 
 def save_checkpoint(accelerator, model, optimizer, lr_scheduler, global_step, args, logger,
-                    final=False):
-    """Weights go to checkpoint-<step>.pt (bare state_dict, what the rollout scripts load);
-    optimizer/scheduler/step go alongside in trainstate-<step>.pt so a run can resume."""
+                    final=False, tag=None):
+    """Weights go to checkpoint-<tag>.pt (bare state_dict, what the rollout scripts load);
+    optimizer/scheduler/step go alongside in trainstate-<tag>.pt so a run can resume.
+
+    tag is the step for a milestone and "last" for the rolling save. Milestones are what
+    evaluation and docs/experiments.md name, so they are never overwritten; the rolling
+    pair is, which is what bounds the cost of a 24 h timeout to checkpointing_steps
+    instead of the milestone interval. A pair is 21.5 GB, so keeping one of each is also
+    what keeps the run inside its disk quota.
+    """
     os.makedirs(args.output_dir, exist_ok=True)
-    ckpt = os.path.join(args.output_dir, f"checkpoint-{global_step}.pt")
-    torch.save(accelerator.unwrap_model(model).state_dict(), ckpt)
-    torch.save({"optimizer": optimizer.state_dict(),
-                "lr_scheduler": lr_scheduler.state_dict(),
-                "global_step": global_step},
-               os.path.join(args.output_dir, f"trainstate-{global_step}.pt"))
-    logger.info(f"Saved {'final ' if final else ''}checkpoint to {ckpt}")
+    tag = str(global_step) if tag is None else tag
+    ckpt = os.path.join(args.output_dir, f"checkpoint-{tag}.pt")
+    _atomic_save(accelerator.unwrap_model(model).state_dict(), ckpt)
+    _atomic_save({"optimizer": optimizer.state_dict(),
+                  "lr_scheduler": lr_scheduler.state_dict(),
+                  "global_step": global_step},
+                 os.path.join(args.output_dir, f"trainstate-{tag}.pt"))
+    if tag == "last":
+        step_file = os.path.join(args.output_dir, "checkpoint-last.step")
+        with open(f"{step_file}.tmp", "w") as fh:
+            fh.write(f"{global_step}\n")
+        os.replace(f"{step_file}.tmp", step_file)
+    logger.info(f"Saved {'final ' if final else ''}checkpoint to {ckpt} at step {global_step}")
 
 
 def resume_training_state(args, optimizer, lr_scheduler, logger):
@@ -64,12 +95,12 @@ def resume_training_state(args, optimizer, lr_scheduler, logger):
     Returns the step to continue from (0 for a fresh run)."""
     if not getattr(args, "resume", False) or args.ckpt_path is None:
         return 0
-    m = re.search(r"checkpoint-(\d+)\.pt$", str(args.ckpt_path))
+    m = re.search(r"checkpoint-(\d+|last)\.pt$", str(args.ckpt_path))
     if not m:
         logger.info(f"resume: {args.ckpt_path} is not a checkpoint-<step>.pt, starting at step 0")
         return 0
-    step = int(m.group(1))
-    state_path = os.path.join(os.path.dirname(args.ckpt_path), f"trainstate-{step}.pt")
+    # The step comes from the trainstate below, not the tag, because "last" has none.
+    state_path = os.path.join(os.path.dirname(args.ckpt_path), f"trainstate-{m.group(1)}.pt")
     if not os.path.exists(state_path):
         logger.info(f"resume: no {state_path}; keeping weights but restarting optimizer at step 0")
         return 0
@@ -171,7 +202,8 @@ def main(args):
     logger.info(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_batch_size}")
     logger.info(f"  Gradient Accumulation steps = {args.gradient_accumulation_steps}")
     logger.info(f"  Total optimization steps = {args.max_train_steps}")
-    logger.info(f"  checkpointing_steps = {args.checkpointing_steps}")
+    logger.info(f"  checkpointing_steps = {args.checkpointing_steps} (rolling)")
+    logger.info(f"  milestone_steps = {args.milestone_steps} (kept)")
     logger.info(f"  validation_steps = {args.validation_steps}")
     global_step = resume_training_state(args, optimizer, lr_scheduler, logger)
     forward_step=0
@@ -204,8 +236,12 @@ def main(args):
                     accelerator.log({"train_loss": train_loss/100,
                                      "lr": lr_scheduler.get_last_lr()[0]}, step=global_step)
                     train_loss = 0.0
-                # save ckpt every checkpointing_steps
+                # Two cadences: the rolling save bounds what a timeout costs, the
+                # milestone is the one that is kept and evaluated.
                 if global_step % args.checkpointing_steps == 0 and accelerator.is_main_process:
+                    save_checkpoint(accelerator, model, optimizer, lr_scheduler,
+                                    global_step, args, logger, tag="last")
+                if global_step % args.milestone_steps == 0 and accelerator.is_main_process:
                     save_checkpoint(accelerator, model, optimizer, lr_scheduler,
                                     global_step, args, logger)
                 # generate video every validation_steps
@@ -346,7 +382,10 @@ if __name__ == "__main__":
     parser.add_argument('--gradient_accumulation_steps', type=int, default=None)
     parser.add_argument('--learning_rate', type=float, default=None)
     parser.add_argument('--max_train_steps', type=int, default=None)
-    parser.add_argument('--checkpointing_steps', type=int, default=None)
+    parser.add_argument('--checkpointing_steps', type=int, default=None,
+                        help='rolling save interval; overwrites checkpoint-last.pt')
+    parser.add_argument('--milestone_steps', type=int, default=None,
+                        help='interval for kept checkpoint-<step>.pt milestones')
     parser.add_argument('--validation_steps', type=int, default=None)
     parser.add_argument('--video_num', type=int, default=None)
     parser.add_argument('--num_workers', type=int, default=None)

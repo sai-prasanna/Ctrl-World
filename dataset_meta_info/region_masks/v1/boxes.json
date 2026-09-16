@@ -1,0 +1,24 @@
+{
+  "_convention": "arm means the whole visible robot in that view, links and gripper together, not the gripper alone. The first pass boxed grippers only on 33499 and whole arms on 101599, which scored a segmenter that found whole arms at IoU 0.18 for being right.",
+  "_comment": "Hand-drawn boxes on frame 0 of each saved rollout, in that view's own 192x192 pixels. [] means the region is genuinely absent; null means the annotator could not identify it and the region is dropped from scoring. The screwdriver clips are mostly null: at 192x192 a screwdriver on a white table is not something a human can point to with confidence, and a guessed reference is worse than no reference.",
+  "time_20260819_111559_traj_33499_8_5_fold_and_stack_the_long_sleeve": {
+    "top": {"arm": [[0, 75, 72, 160], [140, 92, 190, 160]], "object": [[26, 99, 70, 123]]},
+    "left_wrist": {"arm": [[136, 136, 192, 168]], "object": [[0, 100, 58, 168]]},
+    "right_wrist": {"arm": null, "object": null}
+  },
+  "time_20260820_134231_traj_100499_8_5_put_the_screwdriver_in_the_bin": {
+    "top": {"arm": [[35, 78, 78, 132], [122, 56, 175, 142]], "object": null},
+    "left_wrist": {"arm": [[0, 120, 70, 168], [105, 118, 192, 168]], "object": null},
+    "right_wrist": {"arm": [[0, 118, 60, 168], [150, 110, 192, 168]], "object": null}
+  },
+  "time_20260820_135242_traj_102499_8_5_put_the_screwdriver_in_the_bin": {
+    "top": {"arm": [[36, 86, 76, 134], [120, 80, 158, 122]], "object": null},
+    "left_wrist": {"arm": [[0, 120, 66, 168], [112, 118, 192, 168]], "object": null},
+    "right_wrist": {"arm": [[82, 78, 108, 146]], "object": [[84, 110, 101, 138]]}
+  },
+  "time_20260820_135243_traj_101599_8_5_sort_the_legos_into_containers": {
+    "top": {"arm": [[5, 62, 62, 162], [122, 68, 182, 162]], "object": [[82, 103, 114, 124]]},
+    "left_wrist": {"arm": [], "object": null},
+    "right_wrist": {"arm": [], "object": null}
+  }
+}
