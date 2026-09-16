@@ -103,6 +103,35 @@ To regenerate the list, run `scripts/eval_leonardo.sh clips` on a login node and
 the result. Keep old versions rather than overwriting them, so earlier numbers stay
 readable.
 
+### The split holds out episodes, not scenes
+
+The validation split is upstream's own and is disjoint by episode, but an episode is not a
+scene. `scripts/analyze_split_overlap.py` approximates scene identity with the one signal
+the annotations record — the robot's starting joint configuration, in the normalized space
+the model trains in — and finds the two splits heavily overlapped:
+
+| Measure | Value |
+|---|---|
+| Validation tasks absent from training | 0 of 11 |
+| Median distance, val episode to nearest train episode | 0.079 |
+| Median distance, val episode to nearest other val episode | 0.209 |
+| Val episodes closer to a train episode than to any other val episode | 209 of 224 |
+| Val episodes with a train neighbor within 0.05 | 97 of 224 |
+
+A validation episode is about 2.6 times closer to some training episode than to its own
+nearest neighbor inside the split. Every number in [experiments.md](experiments.md)
+therefore measures within-scene generalization: the same station, task, and object layout
+as training, on a different take. Read those numbers as an upper bound on novel-scene
+performance, and do not quote them as evidence the model generalizes to a new rig.
+
+Fixing this needs a held-out scene set, which the ABC-130k annotations do not currently
+support without new metadata. To reproduce the measurement:
+
+```bash
+python3 scripts/analyze_split_overlap.py --data_root <data/abc_mcap> \
+    --stat <dataset_meta_info/abc_mcap/stat.json> --workers 8 --out <report.json>
+```
+
 ## Reading the results
 
 The output JSON reports each metric per camera (`top`, `left_wrist`, `right_wrist`) and

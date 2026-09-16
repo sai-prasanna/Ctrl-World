@@ -37,10 +37,9 @@ export TORCH_HOME=$ROOT/torchhome
 # and --resume then retrains from the SVD weights without a word. A link keeps every path
 # in the code unchanged.
 #
-# A checkout always has a real outputs/, because the eval JSONs are tracked. So copy what
-# is there into the durable tree first, then replace the directory with the link. cp -n
-# never overwrites, so the durable copy always wins. This is idempotent, and it also
-# migrates a persistent checkout on its first run.
+# Copy whatever a checkout already has into the durable tree first, then replace the
+# directory with the link. cp -n never overwrites, so the durable copy always wins. This
+# is idempotent, and it also migrates a persistent checkout on its first run.
 mkdir -p $ROOT/outputs
 if [ ! -L outputs ]; then
   if [ -d outputs ]; then
@@ -66,6 +65,19 @@ else
 fi
 mkdir -p $(dirname $OUT)
 
+# DUMP_FRAMES saves every clip's ground truth and prediction losslessly, for the
+# qualitative failures the aggregate metrics cannot show: wrist instability and views
+# that drift out of agreement. The dump is gigabytes, so it lands beside the metrics in
+# the durable tree rather than in $CLUSTER_OUTPUT_DIR, which `cluster fetch` pulls back
+# whole. The run prints the total size.
+DUMP_ARG=""
+if [ -n "${DUMP_FRAMES:-}" ]; then
+  DUMP_DIR=${OUT%.json}_frames
+  mkdir -p $DUMP_DIR
+  DUMP_ARG="--dump_frames $DUMP_DIR"
+  echo "dumping frames to $DUMP_DIR"
+fi
+
 # FVD is skipped rather than silently faked when the I3D backbone is missing.
 I3D=""
 [ -f "$ROOT/i3d_torchscript.pt" ] && I3D="--i3d_ckpt $ROOT/i3d_torchscript.pt"
@@ -78,13 +90,13 @@ srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK --cpu-bind=none \
     --val_dataset_dir $DATA/abc_mcap \
     --data_stat_path $META/abc_mcap/stat.json \
     --svd_model_path $SVD --clip_model_path $CLIP \
-    --batch_size ${BATCH_SIZE:-4} $HIST_ARG \
+    --batch_size ${BATCH_SIZE:-4} $HIST_ARG $DUMP_ARG \
     --fid $I3D \
     --out $OUT
 
-# The canonical copy lives in the durable tag-keyed tree, because eval JSONs are tracked
-# and docs/experiments.md quotes them. `cluster fetch` only reaches inside the run dir,
-# so leave a copy there too when this is a submitted run -- it is a few KB.
+# The canonical copy lives in the durable tag-keyed tree, which outlives the checkout.
+# `cluster fetch` only reaches inside the run dir, so leave a copy there too when this is
+# a submitted run -- it is a few KB, and it is what you commit to experiments/<tag>/eval/.
 if [ -n "$CLUSTER_OUTPUT_DIR" ]; then
   cp "$OUT" "$CLUSTER_OUTPUT_DIR/"
 fi

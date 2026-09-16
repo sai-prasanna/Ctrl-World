@@ -49,10 +49,9 @@ export OMP_NUM_THREADS=8
 # and --resume then retrains from the SVD weights without a word. A link keeps every path
 # in the code unchanged.
 #
-# A checkout always has a real outputs/, because the eval JSONs are tracked. So copy what
-# is there into the durable tree first, then replace the directory with the link. cp -n
-# never overwrites, so the durable copy always wins. This is idempotent, and it also
-# migrates a persistent checkout on its first run.
+# Copy whatever a checkout already has into the durable tree first, then replace the
+# directory with the link. cp -n never overwrites, so the durable copy always wins. This
+# is idempotent, and it also migrates a persistent checkout on its first run.
 mkdir -p $ROOT/outputs
 if [ ! -L outputs ]; then
   if [ -d outputs ]; then

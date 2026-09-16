@@ -80,10 +80,9 @@ test-like entry point; run it after touching anything in `clipeval/`.
 - All camera views are stacked vertically into **one** latent and denoised jointly, then
   split per camera before the VAE decode. Adding/removing a view changes latent height.
 - `clipeval/` — model-independent scoring package. `Scorer` is an accumulator because
-  FID/FVD are corpus-level. `pixel` (PSNR/SSIM/LPIPS), `distribution` (FID/FVD),
-  `regions`
-  (mask-based, WoW-World-Eval style). Each optional `add()` input unlocks more metrics;
-  `results()` reports what was skipped instead of failing.
+  FID/FVD are corpus-level. `pixel` (PSNR/SSIM/LPIPS) and `distribution` (FID/FVD). Each
+  optional `add()` input unlocks more metrics; `results()` reports what was skipped
+  instead of failing.
 - `scripts/eval_video_metrics.py` owns the rollout and checkpoint loading; `clipeval` knows
   nothing about Ctrl-World. Keep that boundary.
 
@@ -107,8 +106,10 @@ that pairs with the consecutive frames a rollout predicts.
 
 Everything a run produces goes to `outputs/{exp_id}_{exp_name}/` — `model/`, `samples/`,
 `rollout/`, `figures/`, `eval/`. Set `exp_id`/`exp_name` in `config.py` or pass
-`--tag <exp_id>_<exp_name>`. `outputs/` is gitignored, except eval JSON, which is
-force-added so `docs/experiments.md` cannot drift from the numbers it quotes.
+`--tag <exp_id>_<exp_name>`. All of `outputs/` is gitignored, so nothing there survives a
+fresh checkout. What the repo keeps lives in `experiments/<tag>/`: the eval JSON under
+`eval/`, and the figures built from it. Copy a metrics JSON there once you quote it, so
+`docs/experiments.md` cannot drift from its numbers.
 
 `docs/experiments.md` is the results log (one section per evaluated run, numbers copied
 from the eval JSON); `docs/evaluation.md` is the protocol and the reasoning. Update
@@ -159,8 +160,10 @@ retrain from scratch. `scripts/train_wm.py --run_dir` sets that home.
 
 ## Style
 
-`plans/` holds design docs for in-progress work — read the relevant one before extending a
-half-built subsystem (`clipeval-package.md`, `object-region-metrics.md`). Docs and prose in
+`plans/` holds design docs — read the relevant one before extending a half-built
+subsystem (`clipeval-package.md`). `object-region-metrics.md` is a record rather than a
+plan: it holds the Gate 1 finding that killed the mask-based region metrics, and the
+tooling it describes is deleted. Docs and prose in
 this repo follow the Google developer documentation style guide (`google-dev-style` skill).
 Comments here explain *why* a value or deviation exists, often citing the paper; match that
 density rather than annotating mechanics.
