@@ -1,0 +1,77 @@
+{
+ "video": "outputs/0002_abc_rigid/rollout/time_20260820_135242_traj_102499_8_5_put_the_screwdriver_in_the_bin.mp4",
+ "frame": 0,
+ "views": {
+  "top": {
+   "boxes": {
+    "arm": [
+     [
+      36,
+      86,
+      76,
+      134
+     ],
+     [
+      120,
+      80,
+      158,
+      122
+     ]
+    ],
+    "object": null
+   },
+   "unscored": [
+    "object"
+   ],
+   "arm_px": 1936,
+   "object_px": 0
+  },
+  "left_wrist": {
+   "boxes": {
+    "arm": [
+     [
+      0,
+      120,
+      66,
+      168
+     ],
+     [
+      112,
+      118,
+      192,
+      168
+     ]
+    ],
+    "object": null
+   },
+   "unscored": [
+    "object"
+   ],
+   "arm_px": 2147,
+   "object_px": 0
+  },
+  "right_wrist": {
+   "boxes": {
+    "arm": [
+     [
+      82,
+      78,
+      108,
+      146
+     ]
+    ],
+    "object": [
+     [
+      84,
+      110,
+      101,
+      138
+     ]
+    ]
+   },
+   "unscored": [],
+   "arm_px": 1197,
+   "object_px": 10
+  }
+ }
+}
