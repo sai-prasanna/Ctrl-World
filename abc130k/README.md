@@ -146,6 +146,79 @@ it, on the failure path as well as the success path, so the cache holds nothing 
 About one episode in seven fails to decode, and releasing only on success would leak
 roughly that fraction of the corpus into the cache.
 
+## Read an extraction as a benchmark source
+
+`bench_source.AnnotationSource` reads the layout this package writes — episode list,
+states, and frame windows in seconds — for a benchmark that scores a world model on it:
+
+```python
+from abc130k.bench_source import AnnotationSource
+
+source = AnnotationSource("data/abc_mcap")
+episode = source.load(source.list_episodes("val")[0])
+frames = source.frames(episode, "top", 0.0, 2.0)     # (10, 192, 256, 3) uint8
+```
+
+It also registers as the `abc_mcap_annotation` entry point in the `wmbench.sources` group,
+so `wmbench rollout --source abc_mcap_annotation --source-arg root=data/abc_mcap` finds the
+data. Declaring the entry point costs nothing when `wmbench` isn't installed: an entry
+point is metadata, not an import.
+
+The source declares what the data is, so a consumer doesn't have to guess. ABC-130k's three
+cameras, 30 Hz control rate, and 14-D bimanual joint state are properties of the recording
+and don't change with the extraction. The 5 Hz, 256x192 frames with `fov_crop` already
+applied are properties of this copy, and carry the id `ctrlworld_fovcrop_v1`; a benchmark
+that reads it can refuse a model that expects another geometry rather than reporting the
+mismatch as model error.
+
+The three small records in that module — `DatasetProfile`, `SourceProvenance`, `Episode` —
+are field-for-field copies of the ones `wmbench` declares, duplicated rather than imported.
+That's what keeps this package at numpy and PyAV and lets it be copied into another model's
+checkout. Their field names and method semantics are the contract, so change one here only
+together with `wmbench`.
+
+## Export to LeRobot v3
+
+`lerobot_export.py` writes an extraction back out as a LeRobot v3 dataset, so a policy or
+a world model that reads that format can use the corpus without decoding MCAP again. It
+re-encodes the same cropped frames and copies the same states, one dataset per task slug:
+
+```bash
+pip install ./abc130k[lerobot]
+abc130k-lerobot-export --root data/abc_mcap --out data/lerobot/abc_mcap --split val
+```
+
+`lerobot` is an optional dependency, imported inside the export function. Every other
+stage of this package, and `import abc130k` itself, keeps working in an environment that
+has numpy and PyAV and nothing else.
+
+One dataset per task, not one dataset filtered by task. A run over four tasks composes four
+roots at load time, which is cheaper than filtering, and it's the only way to add a task
+without rewriting the others. LeRobot v3 packs many episodes into one video file, so a
+per-task split also keeps a file from spanning tasks.
+
+Three facts that change what the exported pixels mean go into `meta/info.json` under a
+`wmbench` key, because the format has nowhere else to put them:
+
+`preprocess_id`
+: The pixels are pre-processed. `fov_crop` brought two camera rigs of different field of
+  view to a common one before the resize, and a crop can't be undone. A consumer that
+  reads this id can refuse a model expecting raw geometry, instead of scoring it against
+  frames it was never shown.
+
+`episode_ids`
+: LeRobot addresses episodes by row number. Everything else here addresses them by the
+  release's UUID, so the mapping travels with the dataset; without it, a clip list drawn
+  against the extraction can't be joined to the export.
+
+`source`
+: The writer's commit, the stored frame rate, and the encoder settings. The export
+  defaults to CRF 18, matching the extraction, rather than LeRobot's default of 30, which
+  would make the copy lossier than the mp4 files it came from.
+
+A finished dataset is a resume marker, the same as an annotation: a task whose output
+directory already holds `meta/info.json` is skipped. Pass `--overwrite` to redo one.
+
 ## Task selection
 
 `tasks/rigid.txt` records which tasks the corpus covers. That's a research decision rather

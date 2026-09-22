@@ -7,6 +7,7 @@ bilinear is not the same kernel, so a re-extraction is not bit-identical to a co
 produced by the old path. Re-extract a dataset whole rather than topping one up.
 """
 import os
+from fractions import Fraction
 
 import av
 import numpy as np
@@ -60,7 +61,10 @@ def write_mp4(path, frames, fps, crf=18):
     # scratch file deliberately does not end in .mp4.
     container = av.open(tmp, mode="w", format="mp4")
     try:
-        stream = container.add_stream("libx264", rate=fps)
+        # PyAV 15 requires an int or Fraction rate; 30 Hz / rgb_skip 6 is a float 5.0
+        # today, but a rig at 29.97 Hz would arrive as a non-integer fraction, which
+        # `limit_denominator` records exactly rather than truncating.
+        stream = container.add_stream("libx264", rate=Fraction(fps).limit_denominator(1000))
         stream.height, stream.width = frames.shape[1:3]
         stream.pix_fmt = "yuv420p"
         stream.thread_count = 2
@@ -93,3 +97,30 @@ def read_mp4(path):
         return np.stack([f.to_ndarray(format="rgb24") for f in container.decode(stream)])
     finally:
         container.close()
+
+
+def read_frames(path, start, stop):
+    """Decode frames [start, stop) of an mp4, as a (stop - start, H, W, 3) uint8 array.
+
+    Decoded from the beginning rather than seeked to. h264 is inter-coded, so a seek
+    lands on the preceding keyframe and everything up to `start` has to be decoded
+    anyway; at this package's clip lengths the keyframe interval is most of the episode,
+    so a seek would save almost nothing and would have to reconstruct frame numbers from
+    presentation timestamps to stay exact. Only the kept frames are converted to RGB,
+    which is where the time goes.
+    """
+    container = av.open(path)
+    try:
+        stream = container.streams.video[0]
+        stream.thread_type = "AUTO"
+        out = []
+        for i, frame in enumerate(container.decode(stream)):
+            if i >= stop:
+                break
+            if i >= start:
+                out.append(frame.to_ndarray(format="rgb24"))
+    finally:
+        container.close()
+    if not out:
+        raise ValueError(f"{path} has no frames in [{start}, {stop})")
+    return np.stack(out)

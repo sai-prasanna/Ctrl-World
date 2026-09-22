@@ -17,8 +17,28 @@ dependencies = [
     "huggingface_hub",
 ]
 
+# The LeRobot v3 writer, which is the one thing here that needs a tensor library. An
+# extra rather than a dependency: `import abc130k` and every extraction stage must keep
+# working in an environment that has numpy and PyAV and nothing else, which is what lets
+# this package be copied into any model's checkout. `lerobot_export` imports lerobot
+# inside its export function for the same reason.
+#
+# The `dataset` extra, not bare lerobot: lerobot 0.6.1 pins PyAV below 16 for its video
+# writer, and installing it without that constraint leaves a newer PyAV in place whose
+# `av.option` module is gone, so the first import fails.
+[project.optional-dependencies]
+lerobot = ["lerobot[dataset]==0.6.1"]
+
 [project.scripts]
 abc130k-extract = "abc130k.extract:main"
+abc130k-lerobot-export = "abc130k.lerobot_export:main"
+
+# Lets `wmbench rollout --source abc_mcap_annotation --source-arg root=$DATA/abc_mcap`
+# find the extracted data without wmbench knowing this package exists. Declaring the
+# entry point costs nothing when wmbench is not installed: an entry point is metadata,
+# not an import, and `AnnotationSource` satisfies wmbench's protocol structurally.
+[project.entry-points."wmbench.sources"]
+abc_mcap_annotation = "abc130k.bench_source:AnnotationSource"
 
 [tool.setuptools.packages.find]
 where = ["src"]
