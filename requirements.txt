@@ -26,4 +26,4 @@ torchvision
 # scripts/wmbench_leonardo.sh setup builds. The repository is private, so a compute node
 # cannot fetch it: setup mirrors the local checkout to $CTRLWORLD_ROOT/wmbench with rsync
 # (WMBENCH_RSYNC_FROM) and installs it editable. The pin below records which commit.
-wmbench @ git+ssh://git@github.com/sai-prasanna/wmbench@99653d4
+wmbench @ git+ssh://git@github.com/sai-prasanna/wmbench@1548fa9
