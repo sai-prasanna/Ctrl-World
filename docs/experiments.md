@@ -355,17 +355,214 @@ on; step 200000 ran 3:53. Drop `DUMP_FRAMES` to skip the dump. The job writes it
 to `outputs/0003_abc_mcap/eval/` in the durable tree and leaves a copy in the run
 directory for `cluster fetch`.
 
+### wmbench: twenty-two metrics on steps 150000 and 200000
+
+Five metrics cannot separate the last third of training. Between 140000 and 200000 steps
+every clipeval number moves less than the width of its own confidence interval, so the
+question "is 200000 actually better than 150000" has no answer in the pixel and the
+distribution tables. `wmbench` answers it three ways those five cannot: it scores the same
+256 clips with twenty-two metrics, it splits every metric by how much the ground truth
+moves, and it pairs the two runs clip by clip so the difference carries a bootstrap
+interval of its own.
+
+The benchmark splits the work in two, which is what makes a growing metric set affordable.
+`jobs/wmbench_rollout.sbatch` runs the checkpoint in this repository's venv and writes the
+predicted and the real frames to a manifest. `jobs/wmbench_score.sbatch` reads that
+manifest in `venv_bench`, where torch 2.11 and the metric backbones live, and never
+loads a checkpoint. Adding a metric therefore costs a scoring pass, not a rollout.
+Both checkpoints run at the author history, `[0, 0, -12, -9, -6, -3]`, so these numbers sit
+in the same series as the clipeval tables.
+
+#### Step 200000
+
+Brackets are 95% bootstrap confidence intervals over episodes. The ground-truth column is
+the same metric computed on the recorded frames, which is the only scale on which a
+reference-free number means anything: `dynamic_degree` 0.48 is good if the real clip also
+scores 0.48 and bad if the real clip scores 0.90.
+
+| | third_view | ground truth | wrist_view | ground truth |
+|---|---|---|---|---|
+| PSNR (dB) | 22.221 [21.982, 22.401] | | 17.463 [17.218, 17.893] | |
+| copy-frame PSNR | 21.723 [21.284, 22.033] | | 17.891 [17.498, 18.334] | |
+| copy-first-frame PSNR | 17.088 [16.774, 17.295] | | 13.615 [13.353, 13.970] | |
+| SSIM | 0.7273 [0.7159, 0.7382] | | 0.5810 [0.5704, 0.6014] | |
+| LPIPS | 0.1164 [0.1116, 0.1209] | | 0.3666 [0.3493, 0.3793] | |
+| depth AbsRel | 0.1343 [0.1284, 0.1400] | | 0.6571 [0.6154, 0.7217] | |
+| object survival | 0.884 [0.851, 0.915] | | 0.982 [0.929, 1.054] | |
+| object survival, worst round | 0.666 [0.615, 0.716] | | 0.479 [0.447, 0.733] | |
+| FID | 23.81 | | 36.18 | |
+| FVD | 304.0 | | 406.5 | |
+| V-JEPA similarity | 0.844 | | 0.909 | |
+| dynamic degree | 0.476 [0.456, 0.512] | 0.481 | 0.811 [0.796, 0.830] | 0.817 |
+| flow magnitude (px) | 0.677 | 0.677 | 11.33 | 11.88 |
+| subject consistency | 0.945 [0.941, 0.947] | 0.955 | 0.778 [0.769, 0.785] | 0.798 |
+| background consistency | 0.960 [0.959, 0.962] | 0.964 | 0.905 [0.902, 0.908] | 0.899 |
+| motion smoothness | 1.975 [1.954, 2.008] | 1.915 | 2.281 [2.258, 2.309] | 2.175 |
+| imaging quality | 0.653 [0.647, 0.659] | 0.712 | 0.575 [0.568, 0.582] | 0.643 |
+| aesthetic quality | 0.351 [0.342, 0.357] | 0.365 | 0.304 [0.296, 0.310] | 0.345 |
+| photometric consistency | 3.527 [3.172, 3.770] | 3.902 | 0.817 [0.634, 0.931] | 1.187 |
+
+Lower is better for LPIPS, depth AbsRel, FID, FVD, and photometric consistency; higher is
+better for the rest. Object survival is the predicted colored mass over the recorded
+colored mass, so 1.0 is right and both directions are wrong: the wrist views' 0.98 hides a
+worst-round value of 0.479, which is the erasure the aggregate averages away.
+
+Cross-view consistency, the one metric computed over all three cameras at once, is
+−0.0051 [−0.0084, −0.0002]. The three views agree with each other very slightly less than
+the real cameras do. A model that renders every camera from one latent could easily score
+positive here by making the views agree more than reality; this one does not.
+
+Two of the twenty-two metrics report a real gap rather than a small one. Imaging quality
+and aesthetic quality sit 0.06 and 0.04 below the ground truth on the third view and
+0.07 and 0.04 below on the wrists, which is the softness a reference-free quality model
+sees and PSNR cannot. Motion smoothness is worse than the ground truth on both groups: the
+predicted frames are harder to interpolate than the real ones, not smoother.
+
+#### Motion strata
+
+Every metric is also reported in three bins of `gt_tail_flow_px`, the mean of the largest
+5% of ground-truth optical-flow magnitudes in the clip. The bins say what the aggregates
+hide.
+
+| view | bin | clips | tail flow (px) | PSNR | copy-frame PSNR | model − copy |
+|---|---|---|---|---|---|---|
+| top | <15 | 243 | 5.9 | 22.274 | 21.978 | +0.30 |
+| top | 15–30 | 13 | 16.5 | 21.230 | 16.959 | +4.27 |
+| left_wrist | <15 | 58 | 8.1 | 19.661 | 23.513 | −3.85 |
+| left_wrist | 15–30 | 119 | 22.6 | 17.112 | 18.070 | −0.96 |
+| left_wrist | >=30 | 79 | 38.4 | 16.567 | 14.922 | +1.64 |
+| right_wrist | <15 | 45 | 9.4 | 19.532 | 22.980 | −3.45 |
+| right_wrist | 15–30 | 105 | 23.2 | 17.027 | 17.305 | −0.28 |
+| right_wrist | >=30 | 106 | 37.8 | 16.879 | 15.246 | +1.63 |
+
+The wrist views do not trail the copy-frame oracle by 0.43 dB, as the aggregate says. They
+lose to it by 3.5 to 3.9 dB on the clips where the camera barely moves and beat it by
+1.6 dB on the clips where it moves most, and the aggregate is the average of those two
+regimes weighted by how the validation split happens to be composed. The same reading
+explains the third view: 243 of its 256 clips sit below 15 px of tail flow, where the
+oracle is nearly as good as the model, and the 13 clips above it are where the model's
++0.50 dB margin is actually earned.
+
+This bounds the missing per-round baseline that the known-gaps list names. A copy-frame
+oracle is strongest exactly where nothing moves, so any aggregate that pools still and
+moving clips reports the composition of the validation split as much as the quality of the
+model.
+
+#### Step 150000 against step 200000
+
+`wmbench compare` pairs the two runs on all 256 clips and 182 episodes and bootstraps the
+difference over episodes. B minus A, where A is step 150000 and B is step 200000:
+
+| | third_view | verdict | wrist_view | verdict |
+|---|---|---|---|---|
+| PSNR (dB) | +0.079 [+0.016, +0.128] | 200000 better | +0.154 [+0.041, +0.211] | 200000 better |
+| SSIM | +0.0042 [+0.0030, +0.0052] | 200000 better | +0.0011 [−0.0016, +0.0027] | no difference |
+| LPIPS | −0.0018 [−0.0026, −0.0011] | 200000 better | −0.0169 [−0.0196, −0.0111] | 200000 better |
+| depth AbsRel | −0.0022 [−0.0032, −0.0008] | 200000 better | −0.0098 [−0.0247, +0.0093] | no difference |
+| object survival | +0.0105 [−0.0043, +0.0205] | no difference | −0.0249 [−0.0977, +0.0522] | no difference |
+| imaging quality | −0.0019 [−0.0030, −0.0005] | | +0.0148 [+0.0127, +0.0180] | |
+| FID | 23.93 → 23.81 | no interval | 39.34 → 36.00 (left), 42.26 → 36.36 (right) | no interval |
+| FVD | 287.8 → 304.0 | no interval | 417.2 → 403.0 (left), 455.5 → 410.1 (right) | no interval |
+| V-JEPA similarity | 0.855 → 0.844 | no interval | 0.917 → 0.896 (left), 0.920 → 0.922 (right) | no interval |
+
+Step 150000 is worse, and the answer is no longer a matter of reading two overlapping
+intervals. Step 200000 wins the third view on PSNR, SSIM, LPIPS, and depth with intervals
+that exclude zero, and wins 59%, 74%, 69%, and 60% of the paired clips respectively. On
+the wrist views it wins PSNR and LPIPS, ties SSIM and depth, and the right wrist carries
+most of the PSNR margin: +0.229 dB [+0.084, +0.299] against +0.078 dB [−0.048, +0.172] for
+the left. The wrist FID and FVD gap that the distribution-metrics table reads as scatter
+between checkpoints is large — 5.9 FID points and 45 FVD points on the right wrist — and it moves
+the same way as the paired pixel metrics, which is evidence that the 150000 wrist result
+is a worse checkpoint rather than noise.
+
+Nothing in the comparison contradicts that reading except third-view FVD, which is 16
+points worse at 200000 while the third-view FID is flat and every paired third-view metric
+improves. The parity section puts a scale on that: a change which is not the model at all
+moves third-view FVD by 61 points, so 16 is inside the noise.
+
+#### Parity
+
+Two checks stand behind these numbers, because the benchmark replaces both the metric code
+and the rollout code.
+
+The first holds the frames fixed and swaps the metric code. Scoring the frames
+`scripts/eval_video_metrics.py` already dumped for step 200000 reproduces its five
+clipeval numbers on every view: PSNR, SSIM, and both copy-frame baselines agree to
+6e-9 or better, LPIPS to 5.8e-6, FID to 1.8e-3, and FVD to 6.9e-2. The residue is
+float32 accumulation order, not a different measurement.
+
+The second holds the checkpoint fixed and swaps the rollout code. The `wmbench` bridge
+rolls step 200000 over the same clip list at `decode_chunk_size` 4, against the 7 the eval
+script used, and the two agree on per-view PSNR to 0.0012 dB (top), 0.0021 dB (left wrist),
+and 0.0005 dB (right wrist), against the 0.05 dB the M1 check asks for. No single clip
+moves more than 0.076 dB, and the copy-frame baselines are identical to every digit, which
+confirms both runs read the same ground truth.
+
+The distribution metrics do not behave that way. Top-view LPIPS is 0.0025 higher in the
+bridge run on all 256 clips — a uniform shift, not an outlier — and the pooled Fréchet
+estimators amplify it into +1.08 FID and +61.3 FVD, a 25% move on a metric whose
+underlying pixels differ by a thousandth of a decibel. The decode chunk size is the only
+difference between the two runs, and it changes where the video autoencoder's temporal
+chunk boundaries fall across the 49 frames. Treat FID and FVD as sensitive to the decode
+schedule and compare them only between runs that share one.
+
+#### Reproducing the benchmark run
+
+To roll a checkpoint out and score it, from a checkout whose Leonardo environment
+`scripts/wmbench_leonardo.sh setup` has already built on a login node:
+
+```bash
+ROOT=/leonardo_work/AIFAC_S07_034/sraman00/ctrlworld
+
+cluster submit leonardo --gpus 1 --cpus 8 --time 12:00:00 \
+  -n wmb-rollout-200k -m "bridge rollout of checkpoint-200000" \
+  -- env STEP=200000 RUN=step200000 HIST=0,0,-12,-9,-6,-3 \
+       bash jobs/wmbench_rollout.sbatch
+
+cluster submit leonardo --gpus 1 --cpus 8 --time 04:00:00 \
+  -n wmb-score-200k -m "score that rollout with every metric" \
+  -- env MANIFEST=$ROOT/outputs/0003_abc_mcap/wmbench/step200000 \
+       RUN=step200000 VIEW=top bash jobs/wmbench_score.sbatch
+```
+
+`MANIFEST` has to be an absolute path, because `cluster submit` sends the command through
+to the job verbatim and the job's own `$ROOT` is not set when the local shell expands it.
+
+A rollout of 256 clips takes 3.5 to 3.75 hours on one A100 at `BATCH_SIZE=4`; scoring them
+with every metric takes 1.4 hours and writes the scores JSON and a report page beside it.
+The comparison needs no GPU and runs on a login node in 26 seconds:
+
+```bash
+scripts/wmbench_leonardo.sh run compare \
+  --a $ROOT/outputs/0003_abc_mcap/wmbench/scores_step150000.json \
+  --b $ROOT/outputs/0003_abc_mcap/wmbench/scores_step200000.json \
+  --label-a checkpoint-150000 --label-b checkpoint-200000 \
+  --view top --metrics all --bootstrap 2000 \
+  --out compare_150k_vs_200k.json --html compare_150k_vs_200k.html
+```
+
+The scores and the comparison are in `experiments/0003_abc_mcap/eval/wmbench_*.json`. The
+report pages are 20 MB each and stay in `outputs/`, which is gitignored.
+
 ### Known gaps
 
 - **The wrist views scatter between checkpoints.** Step 150000 ties 140000 on wrist PSNR
-  while losing ground on wrist LPIPS, FID, and FVD, and 200000 recovers. Nothing
-  distinguishes the three checkpoints except the scatter itself, so a wrist comparison
-  needs more than two points to mean anything.
-- **FVD disagrees with every other metric** at several points in the series, and has no
-  confidence interval to say whether any of those disagreements are real.
-- **Pixel metrics score appearance, not control accuracy.** Nothing here measures whether
-  the predicted motion is the commanded one. Mask-based region metrics were tried and
-  abandoned; see `plans/object-region-metrics.md`.
+  while losing ground on wrist LPIPS, FID, and FVD, and 200000 recovers. The paired
+  comparison resolves the 150000-to-200000 half of that: step 200000 wins wrist PSNR and
+  LPIPS with intervals that exclude zero. Whether 140000 sits above or below 150000 needs
+  the same treatment, and step 140000 has no `wmbench` rollout.
+- **FID and FVD move with the decode schedule.** The parity section measures it: the same
+  checkpoint on the same clips, decoded in chunks of 4 rather than 7, scores 61 FVD points
+  worse on the third view while its PSNR moves by a thousandth of a decibel. Neither metric
+  carries a confidence interval, so nothing in the number says which part is the model.
+  Compare them only between runs that share a decode schedule.
+- **Nothing measures whether the predicted motion is the commanded one.** Object survival
+  and depth AbsRel score what the rollout keeps and where it puts it, which pixel metrics
+  do not, but both are still comparisons against the recorded frames. `wmbench`'s
+  `action_following` needs instruction variants and `trajectory_accuracy` needs masks, and
+  this run provides neither, so both are reported as skipped. Mask-based region metrics
+  were tried and abandoned; see `plans/object-region-metrics.md`.
 - **No fair per-round baseline.** A baseline repeating the model's own conditioning frame
   would separate "this round predicted no motion" from "the rollout has drifted", which
-  the copy-frame oracle confounds.
+  the copy-frame oracle confounds. The motion strata bound the damage — they show where the
+  oracle is strong and where it is not — but they do not replace the baseline.

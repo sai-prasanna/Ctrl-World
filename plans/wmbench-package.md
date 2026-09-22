@@ -1,7 +1,8 @@
 # Plan: wmbench, a WorldArena-style benchmark for Ctrl-World on ABC-130k
 
-Status: built, 2026-09-22. M0-M6 verified locally; M2's full run and M5/M6 on real data
-wait on Leonardo, M7 waits on sim post-training.
+Status: built, 2026-09-22. M0-M6 verified locally; M1 and M2 also verified on Leonardo
+against the `abc_mcap` checkpoints, M5 and M6 on real data still wait there, and M7 waits
+on sim post-training.
 Owner: sai-prasanna
 Branch: `abc-130k`, plus the sibling repository `~/Desktop/wmbench` (HEAD `a0d4784`)
 
@@ -321,8 +322,8 @@ keeping their `#SBATCH` headers:
 | Milestone | Status |
 |---|---|
 | M0 skeleton, registry, manifest, copied pixel and distribution metrics | Done. `python -m wmbench.selftest` passes 109 checks on CPU. `wmbench rollout --world-model static` on the synthetic source writes a manifest whose scored PSNR equals `psnr_static_first` to the last bit — two code paths sharing nothing but the frames, so an off-by-one in the rollout, the manifest, or the scorer breaks the equality while leaving every number plausible. `scripts/selftest_eval_metrics.py` still passes untouched. |
-| M1 Ctrl-World bridge | Done locally on a DROID checkpoint, 4 clips: predicted latents bit-identical to `scripts/eval_video_metrics.py`, per-view PSNR, SSIM, and LPIPS agreeing to 1.4e-7. The same check on an ABC checkpoint waits on Leonardo. |
-| M2 metrics | Built and checked against cases whose answer is known in advance: a frozen clip scores dynamic_degree 0.0076 and flow 0.029 px, a translating pattern 0.9628 and a raw magnitude of 6.19 px for a 6 px shift, identical frames score subject and background consistency 1.000000, a prediction identical to the truth has cross-view drift 0.00, nDTW of a trajectory against itself is 1, and MMD of a feature set with itself is 0. The parity table below covers the backbone substitutions. The full 256-clip run on `checkpoint-200000.pt`, the fitted bounds, and the `docs/experiments.md` entry wait on Leonardo. |
+| M1 Ctrl-World bridge | Done. Locally on a DROID checkpoint, 4 clips: predicted latents bit-identical to `scripts/eval_video_metrics.py`, per-view PSNR, SSIM, and LPIPS agreeing to 1.4e-7. On Leonardo, `abc_mcap` step 200000 over all 256 clips: per-view PSNR within 0.0021 dB of the eval script's own rollout at a different `decode_chunk_size`, and no clip further than 0.076 dB. Same frames, different metric code: the five clipeval numbers reproduce to 6e-9 on PSNR and SSIM and 5.8e-6 on LPIPS. FID and FVD do not survive the decode-schedule change; see the parity section of `docs/experiments.md`. |
+| M2 metrics | Built and checked against cases whose answer is known in advance: a frozen clip scores dynamic_degree 0.0076 and flow 0.029 px, a translating pattern 0.9628 and a raw magnitude of 6.19 px for a 6 px shift, identical frames score subject and background consistency 1.000000, a prediction identical to the truth has cross-view drift 0.00, nDTW of a trajectory against itself is 1, and MMD of a feature set with itself is 0. The parity table below covers the backbone substitutions. Done on Leonardo: the full 256-clip run on `checkpoint-200000.pt` and `checkpoint-150000.pt`, the paired comparison between them, and the `docs/experiments.md` entry. Twenty-two of the twenty-six registered metrics score; `semantic_alignment` needs a captioner, `action_following` needs instruction variants, and `trajectory_accuracy` and `trajectory_dtw_len` need masks. The fitted bounds are not run. |
 | M3 WorldArena export and world-model server | Export and socket built; `replay()` through the socket reproduces the in-process frames in the selftest's IPC check. Acceptance by WorldArena's `preprocess_datasets.py` is untested. |
 | M4 LeRobot | Writer and reader built. The round trip — export the val split, then score through the LeRobot source and through the annotation source on the same clips — waits on Leonardo, where the data is. |
 | M5 phase A policy loop | Built. Cadence, horizon, and chunk arithmetic covered by the selftest's policy-loop checks against a stub model. A real run of `abc_dit_xl_200k` through the server waits on Leonardo and on the ABC checkpoint being staged. |
