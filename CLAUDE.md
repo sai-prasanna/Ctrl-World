@@ -75,6 +75,7 @@ python3 scripts/wmbench_wm_server.py --ckpt_path <ckpt> --socket <sock> --ready_
 python3 bridges/abc_policy_run.py --socket <sock> --policy abc_dit_xl_200k --out <run_dir>
 scripts/wmbench_leonardo.sh setup|run|check     # setup on a login node, run inside a job
 wmbench report --manifest <dir> --scores <scores.json> --view top --out report.html  # explains every score
+wmbench compare --a <scores_a.json> --b <scores_b.json> --view top                   # two checkpoints, paired CIs
 sbatch jobs/wmbench_{rollout,score,judge,policy,lerobot_export}.sbatch
 ```
 
