@@ -21,3 +21,9 @@ mcap-protobuf-support
 lpips
 torchvision
 # point tracking for clipeval; install on a login node, Leonardo compute nodes have no network
+# The WorldArena-style benchmark. Only the rollout bridge needs it here; its metrics and
+# judge pin a torch this environment cannot hold and live in venv_bench, which
+# scripts/wmbench_leonardo.sh setup builds. The repository is private, so a compute node
+# cannot fetch it: setup mirrors the local checkout to $CTRLWORLD_ROOT/wmbench with rsync
+# (WMBENCH_RSYNC_FROM) and installs it editable. The pin below records which commit.
+wmbench @ git+ssh://git@github.com/sai-prasanna/wmbench@c5b8b04

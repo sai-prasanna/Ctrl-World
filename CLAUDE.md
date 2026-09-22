@@ -65,6 +65,19 @@ python scripts/eval_video_metrics.py --ckpt_path <ckpt> --clips <clips.json> --o
 There is no pytest suite and no linter config. `selftest_eval_metrics.py` is the only
 test-like entry point; run it after touching anything in `clipeval/`.
 
+WorldArena-style benchmark, `plans/wmbench-package.md` for the design and
+`docs/evaluation.md` for the protocol. The rollout runs in `venv`, everything downstream in
+`venv_bench`:
+
+```bash
+python3 scripts/wmbench_rollout_ctrlworld.py --ckpt_path <ckpt> --clips <clips.json> --tag <tag>
+python3 scripts/wmbench_wm_server.py --ckpt_path <ckpt> --socket <sock> --ready_file <ready>
+python3 bridges/abc_policy_run.py --socket <sock> --policy abc_dit_xl_200k --out <run_dir>
+scripts/wmbench_leonardo.sh setup|run|check     # setup on a login node, run inside a job
+wmbench report --manifest <dir> --scores <scores.json> --view top --out report.html  # explains every score
+sbatch jobs/wmbench_{rollout,score,judge,policy,lerobot_export}.sbatch
+```
+
 ## Architecture
 
 - `abc130k/` — standalone package, numpy and PyAV only, that turns the original ABC-130k
@@ -96,6 +109,25 @@ test-like entry point; run it after touching anything in `clipeval/`.
   instead of failing.
 - `scripts/eval_video_metrics.py` owns the rollout and checkpoint loading; `clipeval` knows
   nothing about Ctrl-World. Keep that boundary.
+- `wmbench` — the WorldArena-style benchmark, a separate repository consumed as a pinned
+  dependency (private `github.com/sai-prasanna/wmbench`, checkout at `~/Desktop/wmbench`,
+  pinned by SHA in `requirements.txt`). It defines `WorldModel`, `EpisodeSource`, `Policy`, and `Judge`, and ships the
+  16 metrics, the VLM judge, the manifest, and the policy loop. It imports nothing from
+  here. Same boundary as `clipeval/`, one level up: a metric that knows about Ctrl-World or
+  about ABC belongs on this side of it.
+- `bridges/` — the only code importing both. `ctrlworld_wm.py` is `BatchRollout` turned
+  inside out: the loop moved to `wmbench.core.worldmodel.replay`, and the history buffer,
+  the `m = 3` latent stack, the per-clip seed and the VAE decode stayed. `abc_policy_run.py`
+  runs in `venv_bench` and reaches the model over a socket.
+- `abc130k/src/abc130k/{bench_source,lerobot_export}.py` — the data side. `AnnotationSource`
+  satisfies `EpisodeSource` structurally, so `abc130k` still imports no `wmbench` and no
+  tensor library; its duplicated `DatasetProfile`/`Episode` records are that, not drift.
+  `lerobot_export` writes the same extraction as LeRobot v3, with the crop id, the release
+  UUIDs, and the rate under a `wmbench` key in `meta/info.json`.
+- Two virtual environments, and the socket between them. `venv` (torch 2.7.1, diffusers)
+  runs Ctrl-World; `venv_bench` (torch 2.11+cu128) runs the metrics, the judge, and the ABC
+  policy, which pin a torch the model's environment cannot hold. `wmbench.ipc` is the only
+  crossing: `scripts/wmbench_wm_server.py` serves, `RemoteWorldModel` consumes.
 
 ## Config
 
@@ -135,6 +167,11 @@ with a prestaged venv, `HF_HOME`, and `HF_HUB_OFFLINE=1`. Compute nodes have **n
 anything that downloads (HF data, LPIPS/Inception/I3D weights) must run on a login
 node first. `scripts/eval_leonardo.sh` encodes that split: `setup`, `clips`, and
 `tracker_setup` are login-node commands; `run` and `noisefloor` run inside a job.
+`scripts/wmbench_leonardo.sh` is the same split for `venv_bench` — `setup` builds it and
+pulls sixteen backbones on a login node, `run` exports every weight path inside a job, and
+`check` reports what landed. The `wmbench_*` jobs use `venv_bench` except
+`wmbench_rollout.sbatch`, which needs the model, and `wmbench_policy.sbatch`, which runs
+both at once.
 The `cluster` skill handles submission and log fetching, and is the only sanctioned way to
 start a job: it snapshots the working tree at a commit and checks that SHA out on the login
 node, so nothing depends on hand-editing `$ROOT/repo`.
@@ -158,7 +195,7 @@ Anything that outlives a run lives outside the code snapshot, under overridable 
 
 | Variable | Default | Holds |
 |---|---|---|
-| `CTRLWORLD_ROOT` | `$WORK/sraman00/ctrlworld` | venv, `HF_HOME`, everything below |
+| `CTRLWORLD_ROOT` | `$WORK/sraman00/ctrlworld` | `venv`, `venv_bench`, `HF_HOME`, everything below |
 | `CTRLWORLD_DATA` | `$ROOT/data` | extracted videos, annotations, latents |
 | `CTRLWORLD_META` | `$ROOT/dataset_meta_info` | generated `stat.json` and `*_sample.json` |
 
@@ -172,7 +209,7 @@ retrain from scratch. `scripts/train_wm.py --run_dir` sets that home.
 ## Style
 
 `plans/` holds design docs — read the relevant one before extending a half-built
-subsystem (`clipeval-package.md`). `object-region-metrics.md` is a record rather than a
+subsystem (`clipeval-package.md`, `wmbench-package.md`). `object-region-metrics.md` is a record rather than a
 plan: it holds the Gate 1 finding that killed the mask-based region metrics, and the
 tooling it describes is deleted. Docs and prose in
 this repo follow the Google developer documentation style guide (`google-dev-style` skill).

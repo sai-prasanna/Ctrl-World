@@ -19,6 +19,8 @@ similarity (LPIPS), Fréchet inception distance (FID), and Fréchet video distan
 | `scripts/selftest_eval_metrics.py` | Checks the metrics on synthetic data, on CPU. |
 | `scripts/eval_leonardo.sh` | Wraps both for Leonardo: `setup`, `clips`, and `run`. |
 | `dataset_meta_info/abc_rigid/eval_clips_v1.json` | The committed clip list. |
+| `scripts/wmbench_rollout_ctrlworld.py` | Writes the same rollout as a `wmbench` manifest, for the 16-metric protocol below. |
+| `scripts/wmbench_leonardo.sh` | Wraps the benchmark environment for Leonardo: `setup`, `run`, `check`. |
 
 ## Protocol
 
@@ -183,6 +185,104 @@ approximated.
 `latent_mse` compares predicted and ground-truth latents per round. It costs nothing,
 because both tensors already exist, and it ranks checkpoints without a VAE decode. Use it
 for cheap sweeps and keep the pixel metrics for reported numbers.
+
+## The wmbench protocol
+
+`wmbench` scores the same rollouts against WorldArena's 16 metrics. It is a separate
+repository with no Ctrl-World inside it, so the protocol above gains four things rather
+than changing: a declared frame space, a reference column beside every no-reference metric,
+bounds fitted where the scoring happens, and a vision-language judge.
+`plans/wmbench-package.md` holds the design and the milestone status.
+
+The stages are separate commands, because a rollout belongs on a GPU node and scoring does
+not. `scripts/wmbench_rollout_ctrlworld.py` writes a manifest — `manifest.json` plus one
+lossless npz per clip — and `wmbench score` reads it from the other environment, as often
+as the metric set grows.
+
+### The operating point is applied to ground truth
+
+A world model declares the frame rate, resolution, and crop it works in. Ctrl-World's is
+5 Hz, 256x192, `fov_crop` to 88.6 degrees horizontal field of view, named
+`ctrlworld_fovcrop_v1`, and the harness puts ground truth into that space before any pixel
+metric runs. A source whose pixels already carry a different preprocessing is refused
+instead of compared: a crop cannot be undone, and scoring a model against pixels it was
+never shown reports the difference as model error. Every result file records the operating
+point, and two checkpoints are comparable only at the same one.
+
+### Reference columns and bounds
+
+Most of the 16 metrics are no-reference: they read the prediction alone. A MUSIQ imaging
+quality of 0.42 says nothing until you know what this dataset's own footage scores at
+192-pixel height and 5 Hz, so every such metric is also run on the ground-truth frames of
+the same clip and reported as `<metric>_gt`. Read the pair, not the number.
+
+`wmbench fit-bounds` turns that into a scale. It reads a manifest three ways — the recorded
+footage, the first real frame held for the whole rollout, and each round's conditioning
+frame held for that round — and takes the 1st and 99th percentiles per metric. Zero on the
+normalized scale then means "no better than a frozen frame here" and one means "as good as
+this dataset's own footage", both measured at this geometry. WorldArena's hardcoded table
+cannot be reused: `flow_score` is a pixel count, so halving the frame height halves it.
+Bounds are keyed by dataset and operating point, and belong to the run
+(`experiments/<tag>/eval/`), not to the benchmark. Normalized columns appear only with
+`--norm-bounds`; raw values are always reported.
+
+The anti-static penalty is additive for the same reason. A model that emits a frozen frame
+scores perfect subject consistency, background consistency, and photometric consistency, so
+those three are multiplied by `dynamic_degree` when it falls at or below the threshold
+(0.1213 unless the bounds file sets another). WorldArena does that in place; `wmbench`
+writes `<metric>_penalized` beside the raw column, records whether the gate fired, and
+leaves the raw value readable. Read the `_penalized` column whenever the model might be
+standing still — `photometric_consistency` in particular maxes out on a clip that does not
+move, because flow you cannot invert is flow through a surface that changed.
+
+### What is comparable to the clipeval numbers
+
+PSNR, SSIM, LPIPS, FID, and FVD are the same code, copied from `clipeval/` with its
+headers, over the same clips and the same excluded frames. They are comparable to
+[experiments.md](experiments.md) with one qualification.
+
+The rollout decodes differently. `eval_video_metrics.py` decodes a whole 48-frame rollout
+in chunks of `decode_chunk_size`, 7 by default; the bridge has to return each round's
+frames as it produces them, so it decodes 4 at a time. The Stable Video Diffusion temporal
+decoder mixes across the frames of a chunk, so the chunk a frame lands in changes it: the
+pixels differ by 1 to 2.5 grey levels on average and PSNR by up to 0.05 dB. The predicted
+latents are bit-identical either way, and the manifest records `decode_chunk_size`. Treat a
+difference of that size between a `wmbench` number and a `clipeval` number as the decoder,
+not the checkpoint.
+
+The 16 metrics themselves are comparable only across checkpoints scored by this package.
+Several backbones are substitutions — torchvision RAFT for `raft-things.pth` and SEA-RAFT,
+RIFE for VFIMamba — and the interpolator or flow network is part of the metric's
+definition. `tools/parity_worldarena.py` in the benchmark repository measures the gap on
+real clips; it runs 0.975 to 1.038 of WorldArena's values across the six metrics that can
+be checked, with the flow metrics widest.
+
+### The judge
+
+Three of WorldArena's metrics are Likert scores from a vision-language model: interaction
+quality, perspectivity, and instruction following. `wmbench judge --rubric triad` runs
+Qwen3-VL-8B-Instruct locally over 16 sampled frames, greedy, and gets all three from one
+answer. That is WorldArena's prompt and WorldArena's arrangement: the three scores are
+conditioned on each other through the shared context, so asking for one alone is a
+different measurement. The 8B model in bfloat16 is about 17 GB of weights before
+activations, so plan for a card with 24 GB or more. Scores are not comparable across model
+sizes, any more than a metric is comparable across backbones.
+
+`--rubric success` is the policy track's evaluator. A world model has pixels and no `qpos`,
+so the only thing that can say whether a rollout completed the task is something that looks
+at it. The judge is shown the rollout and its recorded clip as a reference, judges only the
+rollout, and treats uncertainty as failure. The answer is written into the `success` field
+of each world record in ABC's `summary.json`, where `build_summary` reports it like sim
+success, alongside a `judged_success` block naming the model that wrote it.
+
+### Validating the policy track
+
+The policy track is only trustworthy if it orders the obvious cases correctly, so run those
+before reading any number from it. On 16 clips, judged success must come out
+ground-truth-action replay (`--policy echo`) >= `abc_dit_xl_200k` >> random actions. Check
+the judge's own stability first: two runs at temperature 0 on the same frames must agree.
+An ordering that fails here is a finding about the world model or the judge, not a result
+about the policy.
 
 ## Check the metrics without a GPU
 
