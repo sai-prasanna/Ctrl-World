@@ -1,0 +1,170 @@
+<title>Ctrl-World Case Gallery</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono&display=swap">
+<style>
+:root{--bg:#F5F6F3;--panel:#FFFFFF;--ink:#1C211F;--muted:#5F6864;--line:#D9DED9;--faint:#ECEFEA;--acc:#0E6B68;
+ --good:#1F7A4D;--goodbg:#E3F1E8;--bad:#B4552A;--badbg:#F7E7DE;--chip:#1C211F}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#151918;--panel:#1D2321;--ink:#E6EAE7;--muted:#9AA5A0;--line:#2E3634;--faint:#242B29;--acc:#5FC4BE;
+ --good:#7BD3A0;--goodbg:#1E3A2B;--bad:#E07B4C;--badbg:#3E2519;--chip:#E6EAE7}}
+:root[data-theme="dark"]{--bg:#151918;--panel:#1D2321;--ink:#E6EAE7;--muted:#9AA5A0;--line:#2E3634;--faint:#242B29;--acc:#5FC4BE;
+ --good:#7BD3A0;--goodbg:#1E3A2B;--bad:#E07B4C;--badbg:#3E2519;--chip:#E6EAE7}
+body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:15px;line-height:1.45;padding-block:24px 48px;padding-inline:16px}
+.wrap{max-width:1360px;margin:0 auto}
+h1{font-size:26px;font-weight:600;margin:0 0 6px;letter-spacing:-0.01em;text-wrap:balance}
+p{max-width:78ch;margin:0 0 10px}.lead{color:var(--muted)}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 0}
+.tabs button{font:inherit;font-size:13.5px;padding:7px 14px;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--chip);color:var(--bg);border-color:var(--chip)}
+.tabs button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.tabs.sub{margin-top:8px}.tabs.sub button{border-radius:6px;font-size:13px;padding:6px 12px}
+.what{margin:14px 0 6px;color:var(--muted);max-width:90ch}
+.bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:12px 0 14px;font-size:13px;color:var(--muted)}
+.bar label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.bar button{font:inherit;font-size:13px;padding:5px 12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;cursor:pointer}
+.bar button[aria-pressed="true"]{background:var(--acc);color:#fff;border-color:var(--acc)}
+.bar input[type=range]{width:220px;accent-color:var(--acc)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-radius:0}
+.scenes{display:flex;gap:8px;margin:6px 0 10px}
+.scenes img{height:54px;width:auto;border-radius:4px;border:2px solid transparent;cursor:pointer;opacity:.75}
+.scenes img.on{border-color:var(--acc);opacity:1}
+.cases{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:980px){.cases{grid-template-columns:1fr}}
+.case{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px 14px;min-width:0}
+.case h3{margin:0 0 8px;font-size:15px;font-weight:600;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.tag{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 9px;border-radius:999px}
+.tag.good{background:var(--goodbg);color:var(--good)}.tag.bad{background:var(--badbg);color:var(--bad)}
+.tag.neutral{background:var(--faint);color:var(--muted)}
+.cmp{position:relative;width:100%;aspect-ratio:512/456;background:#000;border-radius:6px;overflow:hidden;touch-action:none;cursor:grab}
+.cmp.plain{aspect-ratio:512/384}
+.cmp.grabbing{cursor:grabbing}
+.zoomer{position:absolute;inset:0;transform-origin:0 0;will-change:transform}
+.layer{position:absolute;inset:0}
+.layer video{width:100%;height:100%;display:block;object-fit:fill}
+.layer.left{clip-path:inset(0 50% 0 0)}
+.handle{position:absolute;top:0;bottom:0;width:2px;background:#fff;left:50%;transform:translateX(-1px);pointer-events:none;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.handle i{position:absolute;top:50%;left:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:#fff;color:#111;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:14px;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.lab{position:absolute;top:8px;font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:rgba(0,0,0,.6);color:#fff;pointer-events:none}
+.lab.l{left:8px}.lab.r{right:8px}
+.meta{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13px;margin-top:10px}
+.meta dt{color:var(--muted)}.meta dd{margin:0;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12.5px;overflow-wrap:anywhere}
+.meta dd.big{font-family:"IBM Plex Sans",system-ui;font-size:14px;font-weight:600}
+.meta dd.big.good{color:var(--good)}.meta dd.big.bad{color:var(--bad)}
+.gtrow{margin-top:14px}
+.note{font-size:13px;color:var(--muted);margin-top:16px;max-width:90ch}
+</style>
+<div class="wrap">
+<h1>Ctrl-World case gallery</h1>
+<p class="lead" id="lead"></p>
+<div class="tabs" id="dims" role="tablist" aria-label="Dimension"></div>
+<div class="tabs sub" id="subs" role="tablist" aria-label="Metric"></div>
+<p class="what" id="what"></p>
+<div class="bar">
+ <label><input type="checkbox" id="burn" checked> show the metric's signal on the frames</label>
+ <span class="seg" role="group" aria-label="Zoom"><button data-z="1" aria-pressed="true">1×</button><button data-z="2" aria-pressed="false">2×</button><button data-z="3" aria-pressed="false">3×</button></span>
+ <span>drag to pan when zoomed</span>
+ <button id="play" aria-pressed="true">Pause</button>
+ <label>frame <input type="range" id="scrub" min="0" max="47" value="0"> <span id="frameno">0</span></label>
+ <label><input type="checkbox" id="slow"> half speed</label>
+</div>
+<div class="scenes" id="scenes"></div>
+<div class="cases" id="cases"></div>
+<p class="note">Each panel is a wipe: the predicted rollout on the left of the handle, the recorded clip on the right, at the same instant. Drag the handle by moving the pointer across the panel; drag with the pointer held down to pan when zoomed. Under each frame runs the curve of the metric's per-frame value, teal for the prediction and grey for the recording where the metric has one, with a cursor at the current frame. All videos play in lockstep.</p>
+</div>
+<script>
+const M = __MANIFEST__;
+let dim = 0, sub = 0, scene = 0, zoom = 1, burn = true, pan = {x:0,y:0};
+const $ = s => document.querySelector(s);
+document.getElementById('lead').textContent = `Checkpoint ${M.label} on ${M.n_clips} held-out ABC clips, ${M.view} camera. For every metric, the clip it scored best on and the clip it scored worst on, with what the metric computed drawn onto the frames. Frames are ${M.scale}× the model resolution.`;
+
+function tabs(el, items, cur, onpick){
+  el.innerHTML='';
+  items.forEach((it,i)=>{ const b=document.createElement('button'); b.textContent=it; b.setAttribute('role','tab'); b.setAttribute('aria-pressed', String(i===cur));
+    b.addEventListener('click',()=>onpick(i)); el.appendChild(b); });
+}
+function renderDims(){ tabs($('#dims'), M.dims.map(d=>d.name), dim, i=>{dim=i;sub=0;scene=0;renderDims();}); renderSubs(); }
+function renderSubs(){ const d=M.dims[dim];
+  if(d.ckpt){ $('#subs').innerHTML=''; $('#what').textContent=d.what; renderScenes(d.scenes.map(s=>s.paths.thumb)); renderCkpt(); return; }
+  tabs($('#subs'), d.subs.map(s=>s.name), sub, i=>{sub=i;scene=0;renderSubs();});
+  const s=d.subs[sub]; $('#what').textContent=s.what; renderScenes(s.scenes.map(x=>x.good.paths.thumb)); renderCases(); }
+function renderScenes(thumbs){ const el=$('#scenes'); el.innerHTML=''; if(thumbs.length<2){el.hidden=true;return;} el.hidden=false;
+  thumbs.forEach((t,i)=>{ const im=document.createElement('img'); im.src=t; im.alt=`scene ${i+1}`; im.className=i===scene?'on':''; im.addEventListener('click',()=>{scene=i;renderSubs();}); el.appendChild(im); }); }
+
+function vid(src){ return `<video src="${src}" muted loop playsinline autoplay preload="auto"></video>`; }
+function cmp(id, leftSrc, rightSrc, leftLab, rightLab, plain){
+  return `<div class="cmp${plain?' plain':''}" id="${id}"><div class="zoomer">
+    <div class="layer right">${vid(rightSrc)}</div>
+    <div class="layer left">${vid(leftSrc)}</div>
+    <div class="handle"><i>⇔</i></div></div>
+    <span class="lab l">${leftLab}</span><span class="lab r">${rightLab}</span></div>`;
+}
+function fmtv(v){ return v==null?'—':(Math.abs(v)>=100?v.toFixed(1):v.toFixed(3)); }
+function renderCases(){
+  const s=M.dims[dim].subs[sub]; const sc=s.scenes[Math.min(scene,s.scenes.length-1)];
+  const panel=(c,kind)=>{
+    const p=c.paths; const L=burn?p.pred_burn:p.pred, R=burn?p.gt_burn:p.gt;
+    const judged = s.gap ? `distance to recorded ${fmtv(Math.abs(c.value-c.gt_value))}` : (s.high_bad?'lower is better':'higher is better');
+    return `<div class="case"><h3><span class="tag ${kind}">${kind} case</span><span>${c.instruction}</span></h3>
+      ${cmp('cmp-'+kind, L, R, 'predicted '+M.label, 'recorded', !burn)}
+      <dl class="meta">
+        <dt>${s.name}</dt><dd class="big ${kind}">${fmtv(c.value)}${c.gt_value!=null?` <span style="font-weight:400;color:var(--muted)">recorded ${fmtv(c.gt_value)}</span>`:''}</dd>
+        <dt>judged by</dt><dd>${judged}</dd>
+        <dt>PSNR / LPIPS</dt><dd>${c.psnr} dB / ${c.lpips}</dd>
+        <dt>clip</dt><dd>${c.clip_id}</dd>
+      </dl></div>`; };
+  $('#cases').innerHTML = panel(sc.good,'good') + panel(sc.bad,'bad');
+  wire();
+}
+function renderCkpt(){
+  const d=M.dims[dim]; const sc=d.scenes[Math.min(scene,d.scenes.length-1)]; const p=sc.paths;
+  const L=burn?p[d.label_prev+'_burn']:p.prev, R=burn?p[d.label+'_burn']:p.pred;
+  const gain=(sc.lpips_prev-sc.lpips);
+  $('#cases').innerHTML = `<div class="case" style="grid-column:1/-1"><h3><span class="tag ${gain>0?'good':'bad'}">${gain>0?d.label+' better':d.label_prev+' better'}</span><span>${sc.instruction}</span></h3>
+    <div class="cases">
+      <div>${cmp('cmp-ck', L, R, 'checkpoint '+d.label_prev, 'checkpoint '+d.label, !burn)}</div>
+      <div>${cmp('cmp-gt', p.gt, p.gt, 'recorded', 'recorded', true)}</div>
+    </div>
+    <dl class="meta">
+      <dt>LPIPS</dt><dd class="big">${d.label_prev} ${fmtv(sc.lpips_prev)} → ${d.label} ${fmtv(sc.lpips)}</dd>
+      <dt>PSNR</dt><dd>${sc.psnr_prev} → ${sc.psnr} dB</dd>
+      <dt>clip</dt><dd>${sc.clip_id}</dd>
+    </dl></div>`;
+  wire();
+}
+
+// ---- wipe, zoom, pan, sync
+let dragging=null;
+function applyZoom(){ document.querySelectorAll('.zoomer').forEach(z=>{ z.style.transform=`translate(${pan.x}px,${pan.y}px) scale(${zoom})`; }); }
+function setWipe(el, frac){ frac=Math.max(0,Math.min(1,frac)); el.querySelector('.layer.left').style.clipPath=`inset(0 ${(1-frac)*100}% 0 0)`; el.querySelector('.handle').style.left=`${frac*100}%`; }
+function wire(){
+  document.querySelectorAll('.cmp').forEach(el=>{
+    setWipe(el,0.5);
+    el.addEventListener('pointermove',e=>{ if(dragging) return; const r=el.getBoundingClientRect();
+      // wipe follows the pointer in content space, so it stays aligned when zoomed and panned
+      const x=(e.clientX-r.left-pan.x)/zoom; setWipe(el, x/r.width); });
+    el.addEventListener('pointerdown',e=>{ if(zoom===1) return; dragging={x:e.clientX,y:e.clientY,px:pan.x,py:pan.y}; el.classList.add('grabbing'); el.setPointerCapture(e.pointerId); });
+    el.addEventListener('pointerup',e=>{ dragging=null; el.classList.remove('grabbing'); });
+    el.addEventListener('pointercancel',()=>{ dragging=null; el.classList.remove('grabbing'); });
+    el.addEventListener('pointermove',e=>{ if(!dragging) return; const r=el.getBoundingClientRect();
+      pan.x=Math.min(0,Math.max(r.width*(1-zoom), dragging.px+e.clientX-dragging.x));
+      pan.y=Math.min(0,Math.max(r.height*(1-zoom), dragging.py+e.clientY-dragging.y)); applyZoom(); });
+  });
+  applyZoom();
+  const vids=[...document.querySelectorAll('video')];
+  vids.forEach(v=>{ v.playbackRate=$('#slow').checked?0.5:1; if(!playing) v.pause(); });
+}
+let playing=true;
+document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{ zoom=+b.dataset.z; pan={x:0,y:0};
+  document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); applyZoom(); }));
+$('#burn').addEventListener('change',e=>{ burn=e.target.checked; renderSubs(); });
+$('#play').addEventListener('click',()=>{ playing=!playing; $('#play').textContent=playing?'Pause':'Play'; $('#play').setAttribute('aria-pressed',String(playing));
+  document.querySelectorAll('video').forEach(v=>playing?v.play():v.pause()); });
+$('#slow').addEventListener('change',e=>{ document.querySelectorAll('video').forEach(v=>v.playbackRate=e.target.checked?0.5:1); });
+$('#scrub').addEventListener('input',e=>{ const t=(+e.target.value)/M.fps; playing=false; $('#play').textContent='Play';
+  document.querySelectorAll('video').forEach(v=>{ v.pause(); v.currentTime=t+0.001; }); $('#frameno').textContent=e.target.value; });
+// keep every video on the master's clock
+function tick(){ const vids=[...document.querySelectorAll('video')]; if(vids.length){ const m=vids[0];
+  vids.slice(1).forEach(v=>{ if(Math.abs(v.currentTime-m.currentTime)>0.12 && !v.seeking) v.currentTime=m.currentTime; });
+  if(playing){ const f=Math.floor(m.currentTime*M.fps); $('#scrub').value=f; $('#frameno').textContent=f; } }
+  requestAnimationFrame(tick); }
+renderDims(); requestAnimationFrame(tick);
+</script>
