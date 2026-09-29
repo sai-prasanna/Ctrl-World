@@ -591,6 +591,31 @@ wrists, with no clip above 0.0035. The text branch does not move the frames; wha
 model conditions on is the action chunk, and whether it obeys that is the counterfactual
 test in [evaluation.md](evaluation.md).
 
+#### Does the model obey its actions
+
+The counterfactual test of [evaluation.md](evaluation.md): the same 64 clips as the
+instruction-variant run, rolled out on another clip's joint trajectory shifted to start
+from their own first state, same conditioning frame and seed
+(`wmbench_step200000_swap.json`), paired clip by clip against the true-action rollout
+(`wmbench_compare_true_vs_swap.json`, 2000 bootstrap resamples over episodes):
+
+| top camera | true actions | swapped actions | paired difference |
+|---|---|---|---|
+| PSNR (dB) | 22.21 | 15.94 | −6.27 [−6.72, −5.79] |
+| LPIPS | 0.119 | 0.270 | +0.151 [+0.136, +0.164] |
+
+| wrist cameras | true actions | swapped actions | paired difference |
+|---|---|---|---|
+| PSNR (dB) | 17.22 | 13.50 | −3.72 [−4.32, −3.20] |
+| LPIPS | 0.386 | 0.575 | +0.189 [+0.162, +0.219] |
+
+The swapped rollout loses on 64 of 64 clips on the top camera and on 62 of 64 on the
+wrists. Its top-view PSNR, 15.9 dB, is below the 17.4 dB of holding the first frame for
+the whole clip: given the wrong motion the model produces it, and the frames move away
+from the recording faster than a still image would. The actions are what drive the
+frames. This is the reading that clears the checkpoint for policy-in-the-loop work; the
+instruction text, by contrast, does nothing (above).
+
 ### Known gaps
 
 - **The wrist views scatter between checkpoints.** Step 150000 ties 140000 on wrist PSNR
