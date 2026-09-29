@@ -627,9 +627,17 @@ def main():
         s = short(cid)
         for which in ('pred', 'gt'):
             frames = pred if which == 'pred' else gt[1:]
+            lab = a.label if which == 'pred' else 'gt'
             vid = render(frames, which, sig, spec['overlay'], spec['name'], series_t, n)
-            paths[f'{which}_burn'] = f'videos/{s}_{a.label if which == "pred" else "gt"}_{spec["key"]}.mp4'
+            paths[f'{which}_burn'] = f'videos/{s}_{lab}_{spec["key"]}.mp4'
             write_mp4(vid, os.path.join(a.out_dir, paths[f'{which}_burn']), a.crf)
+            if spec['overlay'] == 'diff':
+                # The difference heat hides the frame it explains, so the pixel metrics also
+                # get a curve-only variant: the strip under the frame and nothing on it.
+                bare = dict(sig, pred=None, gt=None)
+                vid = render(frames, which, bare, None, spec['name'], series_t, n)
+                paths[f'{which}_curve'] = f'videos/{s}_{lab}_{spec["key"]}_curve.mp4'
+                write_mp4(vid, os.path.join(a.out_dir, paths[f'{which}_curve']), a.crf)
         mt = per[cid]['metrics'][VIEW]
         return {'clip_id': cid, 'instruction': per[cid]['instruction'], 'episode': per[cid]['episode_id'],
                 'value': fmt(mt.get(spec['key'])), 'gt_value': fmt(mt.get(spec['key'] + '_gt')),
@@ -672,6 +680,9 @@ def main():
                 vid = render(pr, 'pred', sig, 'diff', f'PSNR, {lab}', lambda t: t, n)
                 paths[f'{lab}_burn'] = f'videos/{s}_{lab}_psnr.mp4'
                 write_mp4(vid, os.path.join(a.out_dir, paths[f'{lab}_burn']), a.crf)
+                vid = render(pr, 'pred', dict(sig, pred=None, gt=None), None, f'PSNR, {lab}', lambda t: t, n)
+                paths[f'{lab}_curve'] = f'videos/{s}_{lab}_psnr_curve.mp4'
+                write_mp4(vid, os.path.join(a.out_dir, paths[f'{lab}_curve']), a.crf)
             rec = per[cid]
             scenes.append({'clip_id': cid, 'instruction': rec['instruction'],
                            'lpips': fmt(rec['metrics'][VIEW]['lpips']),

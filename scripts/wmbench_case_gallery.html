@@ -59,7 +59,8 @@ p{max-width:78ch;margin:0 0 10px}.lead{color:var(--muted)}
 <div class="tabs sub" id="subs" role="tablist" aria-label="Metric"></div>
 <p class="what" id="what"></p>
 <div class="bar">
- <label><input type="checkbox" id="burn" checked> show the metric's signal on the frames</label>
+ <label><input type="checkbox" id="burn" checked> metric curve under the frames</label>
+ <label id="heatwrap"><input type="checkbox" id="heat" checked> difference heatmap on the frames</label>
  <span class="seg" role="group" aria-label="Zoom"><button data-z="1" aria-pressed="true">1×</button><button data-z="2" aria-pressed="false">2×</button><button data-z="3" aria-pressed="false">3×</button></span>
  <span>drag to pan when zoomed</span>
  <button id="play" aria-pressed="true">Pause</button>
@@ -72,7 +73,9 @@ p{max-width:78ch;margin:0 0 10px}.lead{color:var(--muted)}
 </div>
 <script>
 const M = __MANIFEST__;
-let dim = 0, sub = 0, scene = 0, zoom = 1, burn = true, pan = {x:0,y:0};
+let dim = 0, sub = 0, scene = 0, zoom = 1, burn = true, heat = true, pan = {x:0,y:0};
+// which burned video to show: with the spatial overlay, or curve-only when the metric has that variant and the heat is off
+const pick = (p, key) => (burn ? (!heat && p[key+'_curve'] ? p[key+'_curve'] : p[key+'_burn']) : p[key]);
 const $ = s => document.querySelector(s);
 document.getElementById('lead').textContent = `Checkpoint ${M.label} on ${M.n_clips} held-out ABC clips, ${M.view} camera. For every metric, the clip it scored best on and the clip it scored worst on, with what the metric computed drawn onto the frames. Frames are ${M.scale}× the model resolution.`;
 
@@ -101,7 +104,7 @@ function fmtv(v){ return v==null?'—':(Math.abs(v)>=100?v.toFixed(1):v.toFixed(
 function renderCases(){
   const s=M.dims[dim].subs[sub]; const sc=s.scenes[Math.min(scene,s.scenes.length-1)];
   const panel=(c,kind)=>{
-    const p=c.paths; const L=burn?p.pred_burn:p.pred, R=burn?p.gt_burn:p.gt;
+    const p=c.paths; const L=pick(p,'pred'), R=pick(p,'gt');
     const judged = s.gap ? `distance to recorded ${fmtv(Math.abs(c.value-c.gt_value))}` : (s.high_bad?'lower is better':'higher is better');
     return `<div class="case"><h3><span class="tag ${kind}">${kind} case</span><span>${c.instruction}</span></h3>
       ${cmp('cmp-'+kind, L, R, 'predicted '+M.label, 'recorded', !burn)}
@@ -112,11 +115,13 @@ function renderCases(){
         <dt>clip</dt><dd>${c.clip_id}</dd>
       </dl></div>`; };
   $('#cases').innerHTML = panel(sc.good,'good') + panel(sc.bad,'bad');
+  $('#heatwrap').hidden = !sc.good.paths.pred_curve;
   wire();
 }
 function renderCkpt(){
   const d=M.dims[dim]; const sc=d.scenes[Math.min(scene,d.scenes.length-1)]; const p=sc.paths;
-  const L=burn?p[d.label_prev+'_burn']:p.prev, R=burn?p[d.label+'_burn']:p.pred;
+  const L=burn?(!heat&&p[d.label_prev+'_curve']?p[d.label_prev+'_curve']:p[d.label_prev+'_burn']):p.prev;
+  const R=burn?(!heat&&p[d.label+'_curve']?p[d.label+'_curve']:p[d.label+'_burn']):p.pred;
   const gain=(sc.lpips_prev-sc.lpips);
   $('#cases').innerHTML = `<div class="case" style="grid-column:1/-1"><h3><span class="tag ${gain>0?'good':'bad'}">${gain>0?d.label+' better':d.label_prev+' better'}</span><span>${sc.instruction}</span></h3>
     <div class="cases">
@@ -128,6 +133,7 @@ function renderCkpt(){
       <dt>PSNR</dt><dd>${sc.psnr_prev} → ${sc.psnr} dB</dd>
       <dt>clip</dt><dd>${sc.clip_id}</dd>
     </dl></div>`;
+  $('#heatwrap').hidden = !p[d.label+'_curve'];
   wire();
 }
 
@@ -156,6 +162,7 @@ let playing=true;
 document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{ zoom=+b.dataset.z; pan={x:0,y:0};
   document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); applyZoom(); }));
 $('#burn').addEventListener('change',e=>{ burn=e.target.checked; renderSubs(); });
+$('#heat').addEventListener('change',e=>{ heat=e.target.checked; renderSubs(); });
 $('#play').addEventListener('click',()=>{ playing=!playing; $('#play').textContent=playing?'Pause':'Play'; $('#play').setAttribute('aria-pressed',String(playing));
   document.querySelectorAll('video').forEach(v=>playing?v.play():v.pause()); });
 $('#slow').addEventListener('change',e=>{ document.querySelectorAll('video').forEach(v=>v.playbackRate=e.target.checked?0.5:1); });
