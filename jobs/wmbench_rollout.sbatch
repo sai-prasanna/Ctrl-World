@@ -75,6 +75,7 @@ srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK --cpu-bind=none \
     --batch_size ${BATCH_SIZE:-4} \
     ${HIST:+--history_idx $HIST} \
     ${LIMIT:+--limit $LIMIT} \
+    ${VARIANTS:+--instruction_variants $VARIANTS} \
     --out $OUT
 
 # The npz files are gigabytes and stay in the durable tree; `cluster fetch` pulls the run

@@ -8,6 +8,10 @@
 #
 #   sbatch --export=ALL,MANIFEST=$ROOT/outputs/0003_abc_mcap/wmbench/step200000 wmbench_score.sbatch
 #
+# CAPTIONS (a `judge --rubric caption` file), MASKS=grounding-dino and OBJECTS (the
+# dataset's object list) unlock semantic_alignment and the trajectory metrics; without
+# them those columns are reported as skipped, as before.
+#
 #SBATCH -A aifac_s07_034
 #SBATCH -p boost_usr_prod
 #SBATCH --qos=boost_qos_lprod
@@ -55,6 +59,9 @@ srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK --cpu-bind=none \
     --per-clip \
     $I3D_ARG \
     ${NORM_BOUNDS:+--norm-bounds $NORM_BOUNDS} \
+    ${CAPTIONS:+--captions $CAPTIONS} \
+    ${MASKS:+--masks $MASKS} \
+    ${OBJECTS:+--objects $OBJECTS} \
     ${LIMIT:+--limit $LIMIT} \
     --out "$OUT"
 

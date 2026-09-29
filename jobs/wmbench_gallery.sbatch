@@ -44,6 +44,9 @@ srun --ntasks=1 --cpus-per-task=$SLURM_CPUS_PER_TASK --cpu-bind=none \
     --device cuda \
     ${VIEW:+--view $VIEW} \
     ${METRICS:+--metrics $METRICS} \
+    ${JUDGE:+--judge $JUDGE} \
+    ${CAPTIONS:+--captions $CAPTIONS} \
+    ${OBJECTS:+--objects $OBJECTS} \
     ${N_CASES:+--n-cases $N_CASES} \
     --out-dir "$OUT"
 
