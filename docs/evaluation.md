@@ -257,6 +257,19 @@ definition. `tools/parity_worldarena.py` in the benchmark repository measures th
 real clips; it runs 0.975 to 1.038 of WorldArena's values across the six metrics that can
 be checked, with the flow metrics widest.
 
+### Seeing the cases
+
+`wmbench gallery` is the page to open before trusting any row of the tables above. For
+every metric it plays the clip the checkpoint scored best on and the clip it scored worst
+on, prediction against recording under a wipe, with the metric's own signal drawn onto
+the frames and its per-frame value running underneath. Object survival paints exactly
+the pixels it counts and each colour's centroid path; depth blends the two
+Depth-Anything maps; the flow metrics paint RAFT magnitude with arrows; the pixel metrics
+paint the difference. When a metric's worst clip does not look worse than its best one,
+the metric is not measuring what its name says at this operating point, and that is the
+finding. `jobs/wmbench_gallery.sbatch` builds it on Leonardo from a scored manifest;
+the videos are files beside the page, so copy the directory, not the HTML.
+
 ### The judge
 
 Three of WorldArena's metrics are Likert scores from a vision-language model: interaction
