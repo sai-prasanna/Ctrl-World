@@ -544,6 +544,23 @@ scripts/wmbench_leonardo.sh run compare \
 The scores and the comparison are in `experiments/0003_abc_mcap/eval/wmbench_*.json`. The
 report pages are 20 MB each and stay in `outputs/`, which is gitignored.
 
+#### The judge
+
+`wmbench judge --rubric triad` scored the step-200000 rollout with Qwen3-VL-8B-Instruct on
+2026-09-29, greedy, 16 frames per clip, top camera, 256 clips
+(`experiments/0003_abc_mcap/eval/wmbench_judge_triad_step200000.json`):
+
+| | mean over 256 clips, 1 to 5 |
+|---|---|
+| interaction quality | 2.96 |
+| perspectivity | 4.25 |
+| instruction following | 2.71 |
+
+These are unvalidated: the temperature-0 self-agreement check and the replay >= policy >>
+random ordering in [evaluation.md](evaluation.md) have not run, so read them as the
+judge's opinion, not a measurement. The case gallery shows the highest- and lowest-scored
+clip with the answer that produced the score.
+
 ### Known gaps
 
 - **The wrist views scatter between checkpoints.** Step 150000 ties 140000 on wrist PSNR
