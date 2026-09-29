@@ -172,6 +172,7 @@ cmd_setup() {
     hf_get openai/clip-vit-large-patch14                 # aesthetic quality
     hf_get openai/clip-vit-base-patch16                  # semantic alignment
     hf_get depth-anything/Depth-Anything-V2-Small-hf     # depth accuracy
+    hf_get IDEA-Research/grounding-dino-base             # trajectory accuracy (object tracks)
     hf_get hzwer/RIFE 'RIFEv3.6_HD_preview.zip'          # motion smoothness
     hf_get Qwen/Qwen3-VL-8B-Instruct                     # judge rubrics
     hf_get Qwen/Qwen2.5-VL-7B-Instruct                   # judge captions
@@ -352,6 +353,7 @@ PY
         "$hf/models--openai--clip-vit-large-patch14" \
         "$hf/models--openai--clip-vit-base-patch16" \
         "$hf/models--depth-anything--Depth-Anything-V2-Small-hf" \
+        "$hf/models--IDEA-Research--grounding-dino-base" \
         "$hf/models--Qwen--Qwen3-VL-8B-Instruct" \
         "$hf/models--Qwen--Qwen2.5-VL-7B-Instruct" \
         "$TORCH_HOME/hub/checkpoints/raft_large_C_T_V2-1bb1363a.pth" \

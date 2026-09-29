@@ -78,6 +78,11 @@ def parse_args():
                    help='comma-separated history buffer indexes; defaults to the uniform '
                         '"-6,-5,-4,-3,-2,-1". The authors use "0,0,-12,-9,-6,-3".')
     p.add_argument('--seed', type=int, default=0)
+    p.add_argument('--instruction_variants', type=str, default=None,
+                   help='JSON {"tasks": {task: [wording, ...]}}; every clip is rolled out '
+                        'again under each wording after the first, same actions and '
+                        'seed, and the extra rollouts go in the manifest for '
+                        'action_following. "abc" takes the list wmbench ships for ABC')
     return p.parse_args()
 
 
@@ -157,14 +162,39 @@ def main():
         },
     })
 
+    variants = None
+    if args.instruction_variants:
+        from dataclasses import replace as dc_replace
+        path = args.instruction_variants
+        if path == 'abc':
+            from wmbench.datasets.abc130k.policies import INSTRUCTIONS as path
+        with open(path) as fh:
+            variants = json.load(fh)['tasks']
+        writer.meta['instruction_variants'] = os.path.abspath(path)
+
     latent_mse = []
     for start in tqdm(range(0, len(clips), args.batch_size), desc='rollout'):
         batch = clips[start:start + args.batch_size]
         frames = replay(wm, source, batch, rounds, seed=args.seed, split=args.split)
-        for clip, clip_frames in zip(batch, frames):
-            writer.add(clip_frames, clip)
         if wm.last_latent_mse is not None:
             latent_mse.append(wm.last_latent_mse)
+        if variants:
+            # The same clips again under each other wording. The seed is the clip's, so
+            # the sampler noise is identical and only the text branch differs; that is
+            # what action_following measures. Wording 0 is the recorded one and is
+            # `pred` itself.
+            wordings = sorted({w for c in batch for w in variants.get(c.task, [])[1:]})
+            for wording in wordings:
+                subset = [(i, c) for i, c in enumerate(batch)
+                          if wording in variants.get(c.task, [])[1:]]
+                reworded = [dc_replace(c, instruction=wording) for _, c in subset]
+                extra = replay(wm, source, reworded, rounds, seed=args.seed,
+                               split=args.split)
+                for (i, _), extra_frames in zip(subset, extra):
+                    frames[i].variants = dict(frames[i].variants or {},
+                                              **{wording: extra_frames.pred})
+        for clip, clip_frames in zip(batch, frames):
+            writer.add(clip_frames, clip)
 
     if latent_mse:
         # The one diagnostic measured in the space the model predicts in, so it carries no
