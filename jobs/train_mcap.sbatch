@@ -63,7 +63,7 @@ fi
 
 SVD=$HF_HOME/hub/models--stabilityai--stable-video-diffusion-img2vid/snapshots/9cf024d5bfa8f56622af86c884f26a52f6676f2e
 CLIP=$HF_HOME/hub/models--openai--clip-vit-base-patch32/snapshots/3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268
-TAG=0003_abc_mcap
+TAG=${TAG:-0003_abc_mcap}
 # Checkpoints and samples want different homes. The chain resumes from the previous job's
 # checkpoints, so those stay in the durable tag-keyed tree and are the same directory for
 # every runid. Samples and rollouts are the one job's own, so under `cluster submit` they

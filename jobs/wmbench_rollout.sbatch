@@ -50,7 +50,10 @@ SVD=$HF_HOME/hub/models--stabilityai--stable-video-diffusion-img2vid/snapshots/9
 CLIP=$HF_HOME/hub/models--openai--clip-vit-base-patch32/snapshots/3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268
 STEP=${STEP:?set STEP, e.g. --export=ALL,STEP=200000}
 TAG=${TAG:-0003_abc_mcap}
-CKPT=${CKPT:-outputs/$TAG/model/checkpoint-${STEP}.pt}
+# STEP=0 is the SVD initialization: no file to load, so the script gets no --ckpt_path and
+# builds the model the way train_wm.py does on its first step. It is the floor every
+# metric reports for a model that has seen no ABC frame, and costs no training.
+if [ "$STEP" = 0 ]; then CKPT=${CKPT:-none}; else CKPT=${CKPT:-outputs/$TAG/model/checkpoint-${STEP}.pt}; fi
 # The run name is what distinguishes one manifest from the next under the same tag, so an
 # alternative history pattern or a smoke run does not overwrite the default rollout.
 RUN=${RUN:-step${STEP}}

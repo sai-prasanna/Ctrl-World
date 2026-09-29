@@ -111,7 +111,10 @@ class CtrlWorldModel:
         cfg: a `config.wm_args`, which carries the geometry, the sampler settings and the
             rollout shape. `pred_step` and `interact_num` come from the clip list, so the
             caller sets them on `cfg` before constructing this.
-        ckpt_path: the checkpoint to score. Defaults to `cfg.val_model_path`.
+        ckpt_path: the checkpoint to score. Defaults to `cfg.val_model_path`; when both
+            are None the model is the SVD initialization, with the action layers freshly
+            drawn under a fixed seed. That is step 0 of training, and it anchors what
+            every metric reports for a model that has seen no ABC frame.
         val_dataset_dir: dataset root holding `annotation/` and `latent_videos/`.
         data_stat_path: `stat.json` with the `state_01`/`state_99` percentiles the states
             are normalized by. Defaults to `cfg.data_stat_path`. It has to be the same
@@ -150,8 +153,13 @@ class CtrlWorldModel:
 
         if model is None:
             cfg.val_model_path = self.ckpt_path
+            if self.ckpt_path is None:
+                # kaiming_normal_ in Action_encoder2 and the unet's new layers draw from
+                # the global RNG, so a step-0 run is only repeatable if that is pinned.
+                torch.manual_seed(0)
             model = CrtlWorld(cfg)
-            model.load_state_dict(torch.load(self.ckpt_path, map_location='cpu'))
+            if self.ckpt_path is not None:
+                model.load_state_dict(torch.load(self.ckpt_path, map_location='cpu'))
             model.to(self.device).to(self.dtype)
             model.eval()
         self.model = model

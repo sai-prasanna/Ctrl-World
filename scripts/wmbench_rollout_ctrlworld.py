@@ -48,7 +48,9 @@ def parse_args():
     # Flag names follow eval_video_metrics.py, so a command line written for that script
     # runs here with only --out changing meaning: a manifest directory, not a JSON file.
     p = argparse.ArgumentParser()
-    p.add_argument('--ckpt_path', type=str, required=True)
+    p.add_argument('--ckpt_path', type=str, default=None,
+                   help='checkpoint-<step>.pt; omit or pass "none" to roll out the SVD '
+                        'initialization, the model before any ABC training')
     p.add_argument('--clips', type=str, required=True,
                    help='clip list from scripts/make_eval_clips.py or `wmbench clips`')
     p.add_argument('--val_dataset_dir', type=str, default=None,
@@ -102,6 +104,8 @@ def main():
     # is overridable for the same reason train_wm.py's is.
     run_dir = args.run_dir or (f'outputs/{args.tag}' if args.tag else cfg.run_dir)
 
+    if args.ckpt_path in (None, '', 'none'):
+        args.ckpt_path = None
     wm = CtrlWorldModel(cfg, ckpt_path=args.ckpt_path,
                         val_dataset_dir=args.val_dataset_dir,
                         data_stat_path=args.data_stat_path, split=args.split,
@@ -117,11 +121,12 @@ def main():
     if args.limit:
         clips = clips[:args.limit]
 
-    out = args.out or os.path.join(
-        run_dir, 'wmbench', os.path.basename(args.ckpt_path).removesuffix('.pt'))
+    ckpt_name = (os.path.basename(args.ckpt_path).removesuffix('.pt')
+                 if args.ckpt_path else 'checkpoint-0')
+    out = args.out or os.path.join(run_dir, 'wmbench', ckpt_name)
     writer = ManifestWriter(out, meta={
         'world_model': 'bridges.ctrlworld_wm:CtrlWorldModel',
-        'checkpoint': os.path.abspath(args.ckpt_path),
+        'checkpoint': os.path.abspath(args.ckpt_path) if args.ckpt_path else 'svd_init',
         'source': 'abc130k.bench_source:AnnotationSource',
         'source_args': {'root': os.path.abspath(args.val_dataset_dir)},
         'provenance': source.provenance.to_dict(),
