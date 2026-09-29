@@ -257,6 +257,19 @@ definition. `tools/parity_worldarena.py` in the benchmark repository measures th
 real clips; it runs 0.975 to 1.038 of WorldArena's values across the six metrics that can
 be checked, with the flow metrics widest.
 
+### Does the model obey its actions
+
+Every metric above compares a rollout with the recording, so a model that ignores the
+action chunk and continues the scene plausibly still scores well on all of them. The test
+that separates the two is counterfactual: roll the same clips out again on another clip's
+motion, that clip's joint trajectory shifted to start from this clip's own first state,
+with the same conditioning frame and the same seed, and score both rollouts against the
+clip's own recording. `jobs/wmbench_rollout.sbatch` with `COUNTERFACTUAL=shift` writes
+that manifest, `wmbench compare` pairs it with the true-action rollout, and the paired
+PSNR and LPIPS difference is the reading. A margin near zero means the actions are not
+what drives the frames, and no other number in this document matters for VLAW until it
+is fixed.
+
 ### Seeing the cases
 
 `wmbench gallery` is the page to open before trusting any row of the tables above. For

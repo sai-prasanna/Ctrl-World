@@ -78,6 +78,12 @@ def parse_args():
                    help='comma-separated history buffer indexes; defaults to the uniform '
                         '"-6,-5,-4,-3,-2,-1". The authors use "0,0,-12,-9,-6,-3".')
     p.add_argument('--seed', type=int, default=0)
+    p.add_argument('--counterfactual_actions', type=str, default=None,
+                   choices=['shift'],
+                   help='step every clip on another clip\'s motion instead of its own: '
+                        '"shift" pairs clip i with clip i + n/2 of the list. The recording '
+                        'stays the clip\'s own, so scoring this manifest against the '
+                        'true-action rollout measures how much the actions drive the frames')
     p.add_argument('--instruction_variants', type=str, default=None,
                    help='JSON {"tasks": {task: [wording, ...]}}; every clip is rolled out '
                         'again under each wording after the first, same actions and '
@@ -172,10 +178,20 @@ def main():
             variants = json.load(fh)['tasks']
         writer.meta['instruction_variants'] = os.path.abspath(path)
 
+    donors = None
+    if args.counterfactual_actions == 'shift':
+        # Half the list away, so a donor is another episode and usually another task;
+        # a neighbour in a task-sorted list could share the scene and the motion.
+        n = len(clips)
+        donors = {c.clip_id: clips[(i + n // 2) % n] for i, c in enumerate(clips)}
+        writer.meta['counterfactual_actions'] = {
+            'kind': 'shift', 'donors': {k: v.clip_id for k, v in donors.items()}}
+
     latent_mse = []
     for start in tqdm(range(0, len(clips), args.batch_size), desc='rollout'):
         batch = clips[start:start + args.batch_size]
-        frames = replay(wm, source, batch, rounds, seed=args.seed, split=args.split)
+        frames = replay(wm, source, batch, rounds, seed=args.seed, split=args.split,
+                        donors=donors)
         if wm.last_latent_mse is not None:
             latent_mse.append(wm.last_latent_mse)
         if variants:
