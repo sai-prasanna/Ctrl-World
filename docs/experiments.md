@@ -582,7 +582,14 @@ model's resolution; the detector sees a small object in a minority of frames, so
 tracks are sparse and the number is a first reading rather than a measurement. The boxes
 are in the score file and drawn in the case gallery.
 
-`action_following` on the 64-clip instruction-variant rollout is pending a rescore.
+`action_following` is WorldArena's name for a different question: how far the rollout
+moves when the instruction is reworded and the actions are not. On 64 clips rolled out
+under the three ABC wordings with the same actions and seed
+(`wmbench_step200000_variants.json`), the mean pairwise CLIP cosine distance between the
+rollouts is 0.0011 [0.0009, 0.0013] on the top camera and 0.0059 [0.0047, 0.0067] on the
+wrists, with no clip above 0.0035. The text branch does not move the frames; what the
+model conditions on is the action chunk, and whether it obeys that is the counterfactual
+test in [evaluation.md](evaluation.md).
 
 ### Known gaps
 

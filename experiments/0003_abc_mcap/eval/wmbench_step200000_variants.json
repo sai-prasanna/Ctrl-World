@@ -10,9 +10,7 @@
     "psnr",
     "lpips"
   ],
-  "metrics_skipped": {
-    "action_following": "needs instruction_variants, which this run did not provide"
-  },
+  "metrics_skipped": {},
   "per_view": {
     "top": {
       "psnr": {
@@ -28,6 +26,14 @@
           0.11196244322309494,
           0.12796025276321707
         ]
+      },
+      "action_following": {
+        "mean": 0.0010790933856696938,
+        "ci95": [
+          0.0009029652164023245,
+          0.001280401900277316
+        ],
+        "n": 64
       }
     },
     "left_wrist": {
@@ -44,6 +50,14 @@
           0.34070123391151036,
           0.42037582444151145
         ]
+      },
+      "action_following": {
+        "mean": 0.00639895275253366,
+        "ci95": [
+          0.004884559289686961,
+          0.007603803704808152
+        ],
+        "n": 64
       }
     },
     "right_wrist": {
@@ -60,6 +74,14 @@
           0.35302024150525346,
           0.425772172196808
         ]
+      },
+      "action_following": {
+        "mean": 0.005343998320313403,
+        "ci95": [
+          0.00433490794973697,
+          0.006293662232319759
+        ],
+        "n": 64
       }
     }
   },
@@ -78,6 +100,13 @@
           0.11196244322309494,
           0.12796025276321707
         ]
+      },
+      "action_following": {
+        "mean": 0.0010790933856696938,
+        "ci95": [
+          0.0009029652164023245,
+          0.001280401900277316
+        ]
       }
     },
     "wrist_view": {
@@ -93,6 +122,13 @@
         "ci95": [
           0.353286685309607,
           0.4188908936094982
+        ]
+      },
+      "action_following": {
+        "mean": 0.005871475536423532,
+        "ci95": [
+          0.004746031467026156,
+          0.0066850065614173304
         ]
       }
     }
@@ -214,6 +250,14 @@
             "n_clips": 64,
             "covariate_mean": 5.8544516284018755,
             "metrics": {
+              "action_following": {
+                "mean": 0.0010790933856696938,
+                "ci95": [
+                  0.0009029652164023245,
+                  0.001280401900277316
+                ],
+                "n": 64
+              },
               "lpips": {
                 "mean": 0.1191140494896293,
                 "ci95": [
@@ -243,6 +287,14 @@
             "n_clips": 17,
             "covariate_mean": 8.676896225003635,
             "metrics": {
+              "action_following": {
+                "mean": 0.005553657041780432,
+                "ci95": [
+                  0.0030470935462150153,
+                  0.00678841954773256
+                ],
+                "n": 17
+              },
               "lpips": {
                 "mean": 0.27907863142443634,
                 "ci95": [
@@ -268,6 +320,14 @@
             "n_clips": 32,
             "covariate_mean": 21.609916985034943,
             "metrics": {
+              "action_following": {
+                "mean": 0.007978984744113404,
+                "ci95": [
+                  0.006071063843774027,
+                  0.00985192198313598
+                ],
+                "n": 32
+              },
               "lpips": {
                 "mean": 0.4250380035906952,
                 "ci95": [
@@ -293,6 +353,14 @@
             "n_clips": 15,
             "covariate_mean": 37.16920649210612,
             "metrics": {
+              "action_following": {
+                "mean": 0.003986219642683864,
+                "ci95": [
+                  0.0029287208667553317,
+                  0.005455130894328109
+                ],
+                "n": 15
+              },
               "lpips": {
                 "mean": 0.4035479914086561,
                 "ci95": [
@@ -322,6 +390,14 @@
             "n_clips": 14,
             "covariate_mean": 10.541941029684883,
             "metrics": {
+              "action_following": {
+                "mean": 0.006295996285708887,
+                "ci95": [
+                  0.00334397597083201,
+                  0.009185989866333935
+                ],
+                "n": 14
+              },
               "lpips": {
                 "mean": 0.320022917940237,
                 "ci95": [
@@ -347,6 +423,14 @@
             "n_clips": 20,
             "covariate_mean": 23.10046057701111,
             "metrics": {
+              "action_following": {
+                "mean": 0.006628534384071827,
+                "ci95": [
+                  0.004820513637645895,
+                  0.009576170484069734
+                ],
+                "n": 20
+              },
               "lpips": {
                 "mean": 0.4067412916260461,
                 "ci95": [
@@ -372,6 +456,14 @@
             "n_clips": 30,
             "covariate_mean": 38.95460007985433,
             "metrics": {
+              "action_following": {
+                "mean": 0.004043375227289895,
+                "ci95": [
+                  0.0031941011038118935,
+                  0.005028025671526848
+                ],
+                "n": 30
+              },
               "lpips": {
                 "mean": 0.4128501732368022,
                 "ci95": [
@@ -513,14 +605,17 @@
         "instruction": "put the screwdriver in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.0010688703041523695,
             "psnr": 20.296169479688007,
             "lpips": 0.17924111258859435
           },
           "left_wrist": {
+            "action_following": 0.00439240550622344,
             "psnr": 16.05264751116435,
             "lpips": 0.5366505736795565
           },
           "right_wrist": {
+            "action_following": 0.001645167707465589,
             "psnr": 18.16676874955495,
             "lpips": 0.4776288160743813
           }
@@ -635,14 +730,17 @@
         "instruction": "put the plastic bottles in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.0020622611045837402,
             "psnr": 20.438768704732258,
             "lpips": 0.16081867522249618
           },
           "left_wrist": {
+            "action_following": 0.01076469849795103,
             "psnr": 14.192590117454529,
             "lpips": 0.6243491414934397
           },
           "right_wrist": {
+            "action_following": 0.004589716903865337,
             "psnr": 15.982741157213846,
             "lpips": 0.5068358664090434
           }
@@ -757,14 +855,17 @@
         "instruction": "sort the tools into containers",
         "metrics": {
           "top": {
+            "action_following": 0.0010864536743611097,
             "psnr": 22.632232228914898,
             "lpips": 0.10350533698995908
           },
           "left_wrist": {
+            "action_following": 0.01750638149678707,
             "psnr": 20.22287841637929,
             "lpips": 0.20932680958261093
           },
           "right_wrist": {
+            "action_following": 0.009397685527801514,
             "psnr": 15.73831441005071,
             "lpips": 0.4061368502055605
           }
@@ -879,14 +980,17 @@
         "instruction": "sort the tools into containers",
         "metrics": {
           "top": {
+            "action_following": 0.0011984705924987793,
             "psnr": 22.440843145052593,
             "lpips": 0.09290069698666532
           },
           "left_wrist": {
+            "action_following": 0.0018936594715341926,
             "psnr": 26.364941636721294,
             "lpips": 0.10937937077445288
           },
           "right_wrist": {
+            "action_following": 0.001891712425276637,
             "psnr": 17.817679742972057,
             "lpips": 0.32447847941269475
           }
@@ -1001,14 +1105,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0019355615368112922,
             "psnr": 22.41905176639557,
             "lpips": 0.12752715529253086
           },
           "left_wrist": {
+            "action_following": 0.0031545560341328382,
             "psnr": 10.826229910055796,
             "lpips": 0.6509000863879919
           },
           "right_wrist": {
+            "action_following": 0.005067706108093262,
             "psnr": 11.029732624689737,
             "lpips": 0.6939228332291046
           }
@@ -1123,14 +1230,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0006124178762547672,
             "psnr": 23.764623006184895,
             "lpips": 0.11731570524473985
           },
           "left_wrist": {
+            "action_following": 0.010315438732504845,
             "psnr": 12.570181349913279,
             "lpips": 0.613573701120913
           },
           "right_wrist": {
+            "action_following": 0.0066917939111590385,
             "psnr": 12.391345977783203,
             "lpips": 0.6796367261558771
           }
@@ -1245,14 +1355,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0008765856618992984,
             "psnr": 20.958011825879414,
             "lpips": 0.12836423593883714
           },
           "left_wrist": {
+            "action_following": 0.0025761923752725124,
             "psnr": 9.680906693140665,
             "lpips": 0.7348255254328251
           },
           "right_wrist": {
+            "action_following": 0.007149259559810162,
             "psnr": 10.813010543584824,
             "lpips": 0.7089076538880666
           }
@@ -1367,14 +1480,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0015021960716694593,
             "psnr": 22.436934034029644,
             "lpips": 0.1319516453271111
           },
           "left_wrist": {
+            "action_following": 0.0052403612062335014,
             "psnr": 17.257583896319073,
             "lpips": 0.4097288701062401
           },
           "right_wrist": {
+            "action_following": 0.006314973346889019,
             "psnr": 17.971560815970104,
             "lpips": 0.2951354971155524
           }
@@ -1489,14 +1605,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0013304551830515265,
             "psnr": 22.518472234408062,
             "lpips": 0.1210678086305658
           },
           "left_wrist": {
+            "action_following": 0.018496990203857422,
             "psnr": 14.976024667421976,
             "lpips": 0.4808914130553603
           },
           "right_wrist": {
+            "action_following": 0.007325093261897564,
             "psnr": 14.485642810662588,
             "lpips": 0.5388080443566045
           }
@@ -1611,14 +1730,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0016938846092671156,
             "psnr": 21.583579460779827,
             "lpips": 0.14896338960776725
           },
           "left_wrist": {
+            "action_following": 0.006032427307218313,
             "psnr": 15.805097341537476,
             "lpips": 0.43020140503843624
           },
           "right_wrist": {
+            "action_following": 0.0037419002037495375,
             "psnr": 19.49742027123769,
             "lpips": 0.184715262769411
           }
@@ -1733,14 +1855,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0010075768223032355,
             "psnr": 21.8872047662735,
             "lpips": 0.14196062491585812
           },
           "left_wrist": {
+            "action_following": 0.0014241933822631836,
             "psnr": 17.635448654492695,
             "lpips": 0.3738173966606458
           },
           "right_wrist": {
+            "action_following": 0.0010017752647399902,
             "psnr": 17.74539391199748,
             "lpips": 0.2249402767047286
           }
@@ -1855,14 +1980,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0012059013824909925,
             "psnr": 21.678146998087566,
             "lpips": 0.10517367456729214
           },
           "left_wrist": {
+            "action_following": 0.006652355194091797,
             "psnr": 12.345568577448526,
             "lpips": 0.5800706595182419
           },
           "right_wrist": {
+            "action_following": 0.022757291793823242,
             "psnr": 13.515251378218332,
             "lpips": 0.5792835311343273
           }
@@ -1977,14 +2105,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0023822784423828125,
             "psnr": 19.31191325187683,
             "lpips": 0.13733076738814512
           },
           "left_wrist": {
+            "action_following": 0.003541926620528102,
             "psnr": 15.079322437445322,
             "lpips": 0.5742597666879495
           },
           "right_wrist": {
+            "action_following": 0.004209061618894339,
             "psnr": 13.47408034404119,
             "lpips": 0.5817754628757635
           }
@@ -2099,14 +2230,17 @@
         "instruction": "put the trash bags into the trash bin",
         "metrics": {
           "top": {
+            "action_following": 0.00043145817471668124,
             "psnr": 20.768266797065735,
             "lpips": 0.14915450615808368
           },
           "left_wrist": {
+            "action_following": 0.003307739971205592,
             "psnr": 19.178397337595623,
             "lpips": 0.4122139547641079
           },
           "right_wrist": {
+            "action_following": 0.0008008480072021484,
             "psnr": 19.115653296311695,
             "lpips": 0.35496976257612306
           }
@@ -2221,14 +2355,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.001383026479743421,
             "psnr": 23.25757098197937,
             "lpips": 0.12173917315279444
           },
           "left_wrist": {
+            "action_following": 0.004815737716853619,
             "psnr": 13.083221584558487,
             "lpips": 0.5086907418444753
           },
           "right_wrist": {
+            "action_following": 0.020024996250867844,
             "psnr": 14.666780392328898,
             "lpips": 0.47682772964860004
           }
@@ -2343,14 +2480,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.000792086124420166,
             "psnr": 23.216607610384624,
             "lpips": 0.11665887975444396
           },
           "left_wrist": {
+            "action_following": 0.006494681350886822,
             "psnr": 14.74796254436175,
             "lpips": 0.5580237371226152
           },
           "right_wrist": {
+            "action_following": 0.00815222691744566,
             "psnr": 22.19135198990504,
             "lpips": 0.33055364682028693
           }
@@ -2465,14 +2605,17 @@
         "instruction": "sort the stationery into containers",
         "metrics": {
           "top": {
+            "action_following": 0.0005340775242075324,
             "psnr": 22.58475661277771,
             "lpips": 0.08774960801626246
           },
           "left_wrist": {
+            "action_following": 0.006445547100156546,
             "psnr": 20.78375204404195,
             "lpips": 0.20800097535053888
           },
           "right_wrist": {
+            "action_following": 0.0042325458489358425,
             "psnr": 19.635648012161255,
             "lpips": 0.27785222698003054
           }
@@ -2587,14 +2730,17 @@
         "instruction": "sort the stationery into containers",
         "metrics": {
           "top": {
+            "action_following": 0.0001905163226183504,
             "psnr": 22.141247431437176,
             "lpips": 0.08802253496833146
           },
           "left_wrist": {
+            "action_following": 0.00412305211648345,
             "psnr": 21.25325616200765,
             "lpips": 0.22089885516713062
           },
           "right_wrist": {
+            "action_following": 0.004244009964168072,
             "psnr": 18.06572953859965,
             "lpips": 0.2736580544151366
           }
@@ -2709,14 +2855,17 @@
         "instruction": "put the plastic bottles in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.0006298621883615851,
             "psnr": 22.516233205795288,
             "lpips": 0.13068392981464663
           },
           "left_wrist": {
+            "action_following": 0.008149961940944195,
             "psnr": 21.581023414929707,
             "lpips": 0.33821564447134733
           },
           "right_wrist": {
+            "action_following": 0.0014325976371765137,
             "psnr": 21.193331400553387,
             "lpips": 0.3350388805071513
           }
@@ -2831,14 +2980,17 @@
         "instruction": "put the plastic bottles in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.0014038881054148078,
             "psnr": 22.599231719970703,
             "lpips": 0.13212956891705593
           },
           "left_wrist": {
+            "action_following": 0.005617400165647268,
             "psnr": 18.667361855506897,
             "lpips": 0.4770488180220127
           },
           "right_wrist": {
+            "action_following": 0.0005123615264892578,
             "psnr": 21.606321851412456,
             "lpips": 0.3692245935089886
           }
@@ -2953,14 +3105,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0007198452949523926,
             "psnr": 23.849055012067158,
             "lpips": 0.09398434388761719
           },
           "left_wrist": {
+            "action_following": 0.0009177327156066895,
             "psnr": 24.733402808507282,
             "lpips": 0.09040626999922097
           },
           "right_wrist": {
+            "action_following": 0.0035280785523355007,
             "psnr": 17.071978112061817,
             "lpips": 0.3109590082118909
           }
@@ -3075,14 +3230,17 @@
         "instruction": "put the plastic bottles in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.0004693071241490543,
             "psnr": 22.739614248275757,
             "lpips": 0.13500617630779743
           },
           "left_wrist": {
+            "action_following": 0.010177671909332275,
             "psnr": 18.142922401428223,
             "lpips": 0.4375150725245476
           },
           "right_wrist": {
+            "action_following": 0.0007402896881103516,
             "psnr": 20.09905691941579,
             "lpips": 0.48834917570153874
           }
@@ -3197,14 +3355,17 @@
         "instruction": "put the plastic bottles in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.0007409056415781379,
             "psnr": 23.43164296944936,
             "lpips": 0.1173659375247856
           },
           "left_wrist": {
+            "action_following": 0.0110434889793396,
             "psnr": 20.800532897313435,
             "lpips": 0.41441092391808826
           },
           "right_wrist": {
+            "action_following": 0.0041124820709228516,
             "psnr": 21.880553881327312,
             "lpips": 0.3677296880632639
           }
@@ -3319,14 +3480,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0008602937450632453,
             "psnr": 22.24070958296458,
             "lpips": 0.08635447624449928
           },
           "left_wrist": {
+            "action_following": 0.007400890346616507,
             "psnr": 17.433100084463756,
             "lpips": 0.30418280434484285
           },
           "right_wrist": {
+            "action_following": 0.00347822904586792,
             "psnr": 17.726442595322926,
             "lpips": 0.2386847147718072
           }
@@ -3441,14 +3605,17 @@
         "instruction": "put the plastic bottles in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.00020994743681512773,
             "psnr": 23.348551948865254,
             "lpips": 0.08041578298434615
           },
           "left_wrist": {
+            "action_following": 0.0056885285302996635,
             "psnr": 22.638316253821056,
             "lpips": 0.18472337707256278
           },
           "right_wrist": {
+            "action_following": 0.0009363293647766113,
             "psnr": 20.272511422634125,
             "lpips": 0.27763066968570155
           }
@@ -3563,14 +3730,17 @@
         "instruction": "put the plastic bottles in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.00012612342834472656,
             "psnr": 23.504423062006634,
             "lpips": 0.08308993893054624
           },
           "left_wrist": {
+            "action_following": 0.0028225979767739773,
             "psnr": 23.381946484247845,
             "lpips": 0.21004743330801526
           },
           "right_wrist": {
+            "action_following": 0.0012993018608540297,
             "psnr": 20.641916851202648,
             "lpips": 0.227561479434371
           }
@@ -3685,14 +3855,17 @@
         "instruction": "throw the plastic bottles in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.0015052160015329719,
             "psnr": 18.932459433873493,
             "lpips": 0.18194985731194416
           },
           "left_wrist": {
+            "action_following": 0.00945387315005064,
             "psnr": 16.084590355555218,
             "lpips": 0.45254697402318317
           },
           "right_wrist": {
+            "action_following": 0.011827568523585796,
             "psnr": 16.36868182818095,
             "lpips": 0.511568940555056
           }
@@ -3807,14 +3980,17 @@
         "instruction": "throw the plastic bottles in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.0002713203430175781,
             "psnr": 19.844990730285645,
             "lpips": 0.1667317502821485
           },
           "left_wrist": {
+            "action_following": 0.0005313555593602359,
             "psnr": 18.92084999879201,
             "lpips": 0.29719281134506065
           },
           "right_wrist": {
+            "action_following": 0.0009924968471750617,
             "psnr": 17.27758115530014,
             "lpips": 0.4463872027893861
           }
@@ -3929,14 +4105,17 @@
         "instruction": "put the plastic bottles in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.00048534077359363437,
             "psnr": 23.217886288960774,
             "lpips": 0.10155694062511127
           },
           "left_wrist": {
+            "action_following": 0.0022008023224771023,
             "psnr": 16.16074699163437,
             "lpips": 0.5538669511054953
           },
           "right_wrist": {
+            "action_following": 0.003308554645627737,
             "psnr": 16.589991947015125,
             "lpips": 0.5417298935353756
           }
@@ -4051,14 +4230,17 @@
         "instruction": "put the plastic bottles in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.0007877945899963379,
             "psnr": 22.624603072802227,
             "lpips": 0.11231035335610311
           },
           "left_wrist": {
+            "action_following": 0.03151872009038925,
             "psnr": 18.344031711419422,
             "lpips": 0.5092477275369068
           },
           "right_wrist": {
+            "action_following": 0.010414382442831993,
             "psnr": 15.250337799390158,
             "lpips": 0.5911039852847656
           }
@@ -4173,14 +4355,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0004728039202746004,
             "psnr": 23.46658245722453,
             "lpips": 0.10389066472028692
           },
           "left_wrist": {
+            "action_following": 0.007197578903287649,
             "psnr": 14.952771564324697,
             "lpips": 0.40873080864548683
           },
           "right_wrist": {
+            "action_following": 0.0047976179048419,
             "psnr": 22.863916714986164,
             "lpips": 0.20790380518883467
           }
@@ -4295,14 +4480,17 @@
         "instruction": "sort the pills into containers",
         "metrics": {
           "top": {
+            "action_following": 0.001669764518737793,
             "psnr": 22.505534887313843,
             "lpips": 0.10847230907529593
           },
           "left_wrist": {
+            "action_following": 0.016492724418640137,
             "psnr": 14.017837564150492,
             "lpips": 0.4627949272592862
           },
           "right_wrist": {
+            "action_following": 0.006976286880671978,
             "psnr": 14.69987690448761,
             "lpips": 0.3982142473881443
           }
@@ -4417,14 +4605,17 @@
         "instruction": "sort the pills into containers",
         "metrics": {
           "top": {
+            "action_following": 0.0018099944572895765,
             "psnr": 22.556039849917095,
             "lpips": 0.1085325429836909
           },
           "left_wrist": {
+            "action_following": 0.005457143299281597,
             "psnr": 19.588804801305134,
             "lpips": 0.25452026010801393
           },
           "right_wrist": {
+            "action_following": 0.0009534955024719238,
             "psnr": 24.090129852294922,
             "lpips": 0.19832584836209813
           }
@@ -4539,14 +4730,17 @@
         "instruction": "sort the pills into containers",
         "metrics": {
           "top": {
+            "action_following": 0.0013335347175598145,
             "psnr": 21.462895552317303,
             "lpips": 0.12505258542175093
           },
           "left_wrist": {
+            "action_following": 0.006356418132781982,
             "psnr": 16.367764234542847,
             "lpips": 0.38023855940749246
           },
           "right_wrist": {
+            "action_following": 0.005324681755155325,
             "psnr": 15.90549131234487,
             "lpips": 0.33422837189088267
           }
@@ -4661,14 +4855,17 @@
         "instruction": "sort the stationery into containers",
         "metrics": {
           "top": {
+            "action_following": 0.0002789100108202547,
             "psnr": 23.810211102167766,
             "lpips": 0.06898284835430483
           },
           "left_wrist": {
+            "action_following": 0.0011136134853586555,
             "psnr": 20.6138378183047,
             "lpips": 0.22224769104893008
           },
           "right_wrist": {
+            "action_following": 0.0013556083431467414,
             "psnr": 21.58190506696701,
             "lpips": 0.22518900719781718
           }
@@ -4783,14 +4980,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0008824865217320621,
             "psnr": 23.28675103187561,
             "lpips": 0.12794057885184884
           },
           "left_wrist": {
+            "action_following": 0.0006784796714782715,
             "psnr": 18.81652255853017,
             "lpips": 0.18626325422277054
           },
           "right_wrist": {
+            "action_following": 0.006481131073087454,
             "psnr": 18.80542329947154,
             "lpips": 0.5787338063431283
           }
@@ -4905,14 +5105,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0011269053211435676,
             "psnr": 23.359808087348938,
             "lpips": 0.10055173576499025
           },
           "left_wrist": {
+            "action_following": 0.009473403915762901,
             "psnr": 17.990910569826763,
             "lpips": 0.32508991643165547
           },
           "right_wrist": {
+            "action_following": 0.0043550534173846245,
             "psnr": 16.98049573103587,
             "lpips": 0.31939661658058566
           }
@@ -5027,14 +5230,17 @@
         "instruction": "put the plastic bottles in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.003452400444075465,
             "psnr": 18.695773482322693,
             "lpips": 0.14225680272405347
           },
           "left_wrist": {
+            "action_following": 0.0020608901977539062,
             "psnr": 16.757739027341206,
             "lpips": 0.3687654500827193
           },
           "right_wrist": {
+            "action_following": 0.004846831317991018,
             "psnr": 17.810353835423786,
             "lpips": 0.42603242055823404
           }
@@ -5149,14 +5355,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0006751815672032535,
             "psnr": 21.15658183892568,
             "lpips": 0.1475341011149188
           },
           "left_wrist": {
+            "action_following": 0.001984238624572754,
             "psnr": 17.32573499282201,
             "lpips": 0.3319171282152335
           },
           "right_wrist": {
+            "action_following": 0.0035473506432026625,
             "psnr": 15.19640056292216,
             "lpips": 0.4107838732500871
           }
@@ -5271,14 +5480,17 @@
         "instruction": "put the plastic bottles in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.0014711618423461914,
             "psnr": 23.87069578965505,
             "lpips": 0.11236295662820339
           },
           "left_wrist": {
+            "action_following": 0.0017460386734455824,
             "psnr": 19.388328035672505,
             "lpips": 0.282173210910211
           },
           "right_wrist": {
+            "action_following": 0.0020195841789245605,
             "psnr": 19.91116197903951,
             "lpips": 0.416857048869133
           }
@@ -5393,14 +5605,17 @@
         "instruction": "put the plastic bottles in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.0008517305250279605,
             "psnr": 23.48856496810913,
             "lpips": 0.11753339258333047
           },
           "left_wrist": {
+            "action_following": 0.02154630422592163,
             "psnr": 20.246313254038494,
             "lpips": 0.3077683898930748
           },
           "right_wrist": {
+            "action_following": 0.005152742378413677,
             "psnr": 18.936999837557476,
             "lpips": 0.4543732811386387
           }
@@ -5515,14 +5730,17 @@
         "instruction": "sort the pills into containers",
         "metrics": {
           "top": {
+            "action_following": 0.00044715404510498047,
             "psnr": 22.409979224205017,
             "lpips": 0.09392578511809309
           },
           "left_wrist": {
+            "action_following": 0.0018730362644419074,
             "psnr": 17.192113558451336,
             "lpips": 0.35465767824401456
           },
           "right_wrist": {
+            "action_following": 0.004734396934509277,
             "psnr": 16.82535429795583,
             "lpips": 0.3186343864848216
           }
@@ -5637,14 +5855,17 @@
         "instruction": "sort the pills into containers",
         "metrics": {
           "top": {
+            "action_following": 0.0003162225184496492,
             "psnr": 23.088913400967915,
             "lpips": 0.07738213598107298
           },
           "left_wrist": {
+            "action_following": 0.002056419849395752,
             "psnr": 16.350580990314484,
             "lpips": 0.27346273853133124
           },
           "right_wrist": {
+            "action_following": 0.0017030438175424933,
             "psnr": 16.12969070672989,
             "lpips": 0.2976507544517517
           }
@@ -5759,14 +5980,17 @@
         "instruction": "put the plastic bottles in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.0001386404037475586,
             "psnr": 24.19272776444753,
             "lpips": 0.09419168500850598
           },
           "left_wrist": {
+            "action_following": 0.0010845065116882324,
             "psnr": 21.469889839490254,
             "lpips": 0.4503196803852916
           },
           "right_wrist": {
+            "action_following": 0.0013748606434091926,
             "psnr": 21.511678139368694,
             "lpips": 0.2413034033961594
           }
@@ -5881,14 +6105,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.001143594621680677,
             "psnr": 22.512994527816772,
             "lpips": 0.10053068958222866
           },
           "left_wrist": {
+            "action_following": 0.0077536506578326225,
             "psnr": 16.65812176465988,
             "lpips": 0.3146466752514243
           },
           "right_wrist": {
+            "action_following": 0.0032454333268105984,
             "psnr": 16.059393525123596,
             "lpips": 0.33940420222158235
           }
@@ -6003,14 +6230,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0013197462540119886,
             "psnr": 24.157431324323017,
             "lpips": 0.08577656528602044
           },
           "left_wrist": {
+            "action_following": 0.009597758762538433,
             "psnr": 12.414141992727915,
             "lpips": 0.4352589038511117
           },
           "right_wrist": {
+            "action_following": 0.004693289753049612,
             "psnr": 13.90470576286316,
             "lpips": 0.38634764465192956
           }
@@ -6125,14 +6355,17 @@
         "instruction": "sort the hair-cutting tools",
         "metrics": {
           "top": {
+            "action_following": 0.002558728214353323,
             "psnr": 18.76369384924571,
             "lpips": 0.1328998745108644
           },
           "left_wrist": {
+            "action_following": 0.004028757568448782,
             "psnr": 12.053260445594788,
             "lpips": 0.29665177951877314
           },
           "right_wrist": {
+            "action_following": 0.0031478404998779297,
             "psnr": 10.840036849180857,
             "lpips": 0.49517066963016987
           }
@@ -6247,14 +6480,17 @@
         "instruction": "sort the hair-cutting tools",
         "metrics": {
           "top": {
+            "action_following": 0.00023943185806274414,
             "psnr": 20.509555498758953,
             "lpips": 0.11384417116641998
           },
           "left_wrist": {
+            "action_following": 0.0016033649444580078,
             "psnr": 13.796322623888651,
             "lpips": 0.24283351625005403
           },
           "right_wrist": {
+            "action_following": 0.0040469965897500515,
             "psnr": 11.097287972768148,
             "lpips": 0.45920436022182304
           }
@@ -6369,14 +6605,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0005232493276707828,
             "psnr": 21.678681532541912,
             "lpips": 0.14266109264766177
           },
           "left_wrist": {
+            "action_following": 0.0034961900673806667,
             "psnr": 15.493111272652945,
             "lpips": 0.39759191684424877
           },
           "right_wrist": {
+            "action_following": 0.0008058547973632812,
             "psnr": 17.87319004535675,
             "lpips": 0.27452203010519344
           }
@@ -6491,14 +6730,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0007083615055307746,
             "psnr": 22.098100185394287,
             "lpips": 0.14484266734992465
           },
           "left_wrist": {
+            "action_following": 0.005333980079740286,
             "psnr": 16.75749723116557,
             "lpips": 0.3685181960463524
           },
           "right_wrist": {
+            "action_following": 0.002643247600644827,
             "psnr": 17.13620012998581,
             "lpips": 0.35412033398946124
           }
@@ -6613,14 +6855,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0011794965248554945,
             "psnr": 22.42577815055847,
             "lpips": 0.11788390049089988
           },
           "left_wrist": {
+            "action_following": 0.005063951015472412,
             "psnr": 16.67556744813919,
             "lpips": 0.36761100372920436
           },
           "right_wrist": {
+            "action_following": 0.005271613597869873,
             "psnr": 17.509210129578907,
             "lpips": 0.27871244090298813
           }
@@ -6735,14 +6980,17 @@
         "instruction": "sort the screws and nuts into containers",
         "metrics": {
           "top": {
+            "action_following": 0.0013281902065500617,
             "psnr": 20.70064111550649,
             "lpips": 0.17420078131059805
           },
           "left_wrist": {
+            "action_following": 0.0015679597854614258,
             "psnr": 21.89569902420044,
             "lpips": 0.31443485897034407
           },
           "right_wrist": {
+            "action_following": 0.00618086289614439,
             "psnr": 17.28094748655955,
             "lpips": 0.44718659731249016
           }
@@ -6857,14 +7105,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0009273688192479312,
             "psnr": 21.87446089585622,
             "lpips": 0.1266053452466925
           },
           "left_wrist": {
+            "action_following": 0.004362940788269043,
             "psnr": 15.212214469909668,
             "lpips": 0.3900233196715514
           },
           "right_wrist": {
+            "action_following": 0.005346556659787893,
             "psnr": 17.137770295143127,
             "lpips": 0.36898469273000956
           }
@@ -6979,14 +7230,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0034453868865966797,
             "psnr": 21.72534982363383,
             "lpips": 0.1339943118703862
           },
           "left_wrist": {
+            "action_following": 0.008775075897574425,
             "psnr": 16.546925107638042,
             "lpips": 0.41612479494263727
           },
           "right_wrist": {
+            "action_following": 0.0073819756507873535,
             "psnr": 15.55325174331665,
             "lpips": 0.5053931850319108
           }
@@ -7101,14 +7355,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0013771455269306898,
             "psnr": 23.3962828318278,
             "lpips": 0.12629900903751454
           },
           "left_wrist": {
+            "action_following": 0.004851102828979492,
             "psnr": 15.830255468686422,
             "lpips": 0.36637219848732155
           },
           "right_wrist": {
+            "action_following": 0.00989637803286314,
             "psnr": 16.612863222757976,
             "lpips": 0.39320596555868786
           }
@@ -7223,14 +7480,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.001131296157836914,
             "psnr": 21.463181177775066,
             "lpips": 0.13110861259823045
           },
           "left_wrist": {
+            "action_following": 0.004126429557800293,
             "psnr": 16.034425377845764,
             "lpips": 0.3788379955415924
           },
           "right_wrist": {
+            "action_following": 0.007629971019923687,
             "psnr": 18.794782479604084,
             "lpips": 0.33003082654128474
           }
@@ -7345,14 +7605,17 @@
         "instruction": "sort the pills into containers",
         "metrics": {
           "top": {
+            "action_following": 0.00040688118315301836,
             "psnr": 25.529749155044556,
             "lpips": 0.07559367618523538
           },
           "left_wrist": {
+            "action_following": 0.013438026420772076,
             "psnr": 21.64686854680379,
             "lpips": 0.388428623167177
           },
           "right_wrist": {
+            "action_following": 0.012850185856223106,
             "psnr": 21.014577229817707,
             "lpips": 0.322289254826804
           }
@@ -7467,14 +7730,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0019948086701333523,
             "psnr": 23.26290762424469,
             "lpips": 0.10607558690632383
           },
           "left_wrist": {
+            "action_following": 0.011476695537567139,
             "psnr": 11.291302919387817,
             "lpips": 0.526395347279807
           },
           "right_wrist": {
+            "action_following": 0.016395827755331993,
             "psnr": 13.959932943185171,
             "lpips": 0.4854697783788045
           }
@@ -7589,14 +7855,17 @@
         "instruction": "sort the legos into containers by color",
         "metrics": {
           "top": {
+            "action_following": 0.0006101727485656738,
             "psnr": 23.754871884981792,
             "lpips": 0.10047906093920271
           },
           "left_wrist": {
+            "action_following": 0.005620340816676617,
             "psnr": 13.77226436138153,
             "lpips": 0.4419371734062831
           },
           "right_wrist": {
+            "action_following": 0.000972708105109632,
             "psnr": 18.017814616362255,
             "lpips": 0.18615117001657686
           }
@@ -7711,14 +7980,17 @@
         "instruction": "put the plastic bottles in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.0010196566581726074,
             "psnr": 19.958592494328816,
             "lpips": 0.14211559388786554
           },
           "left_wrist": {
+            "action_following": 0.003429929492995143,
             "psnr": 16.645344694455463,
             "lpips": 0.2756953874292473
           },
           "right_wrist": {
+            "action_following": 0.006102859973907471,
             "psnr": 16.76447840531667,
             "lpips": 0.403381888444225
           }
@@ -7833,14 +8105,17 @@
         "instruction": "put the plastic bottles in the bin",
         "metrics": {
           "top": {
+            "action_following": 0.0006657044286839664,
             "psnr": 21.02171715100606,
             "lpips": 0.11314070954297979
           },
           "left_wrist": {
+            "action_following": 0.0014224052429199219,
             "psnr": 16.978390713532765,
             "lpips": 0.3270641773318251
           },
           "right_wrist": {
+            "action_following": 0.0010880231857299805,
             "psnr": 16.78267769018809,
             "lpips": 0.37098328458766144
           }
@@ -7955,14 +8230,17 @@
         "instruction": "sort the tools into containers",
         "metrics": {
           "top": {
+            "action_following": 0.000641385733615607,
             "psnr": 21.355757753054302,
             "lpips": 0.11150244188805421
           },
           "left_wrist": {
+            "action_following": 0.0037153761368244886,
             "psnr": 17.019181032975514,
             "lpips": 0.2436033890893062
           },
           "right_wrist": {
+            "action_following": 0.005339562892913818,
             "psnr": 14.812406599521637,
             "lpips": 0.42878586426377296
           }
@@ -8077,14 +8355,17 @@
         "instruction": "sort the pills into containers",
         "metrics": {
           "top": {
+            "action_following": 0.0011020898818969727,
             "psnr": 22.932794729868572,
             "lpips": 0.10860513802617788
           },
           "left_wrist": {
+            "action_following": 0.009814044460654259,
             "psnr": 15.871323664983114,
             "lpips": 0.43784870207309723
           },
           "right_wrist": {
+            "action_following": 0.005072116851806641,
             "psnr": 17.608193119366963,
             "lpips": 0.33955584466457367
           }
@@ -8199,14 +8480,17 @@
         "instruction": "sort the pills into containers",
         "metrics": {
           "top": {
+            "action_following": 0.0023084681015461683,
             "psnr": 21.88680060704549,
             "lpips": 0.1255052275955677
           },
           "left_wrist": {
+            "action_following": 0.008232831954956055,
             "psnr": 17.234758337338764,
             "lpips": 0.3547372765218218
           },
           "right_wrist": {
+            "action_following": 0.01846146583557129,
             "psnr": 15.853261907895407,
             "lpips": 0.38209002278745174
           }
