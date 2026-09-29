@@ -561,6 +561,29 @@ random ordering in [evaluation.md](evaluation.md) have not run, so read them as 
 judge's opinion, not a measurement. The case gallery shows the highest- and lowest-scored
 clip with the answer that produced the score.
 
+#### The three metrics the first pass skipped
+
+Rescored on 2026-09-30 with the inputs the rollout does not produce
+(`experiments/0003_abc_mcap/eval/wmbench_step200000_full.json`). Brackets are 95% bootstrap
+intervals over episodes.
+
+| | third_view | wrist_view |
+|---|---|---|
+| semantic alignment | 0.863 [0.856, 0.871] | not captioned |
+| trajectory accuracy (nDTW, 1 is identical) | 0.323 [0.266, 0.378] | 0.106 [0.087, 0.124] |
+| trajectory DTW cost per step (fraction of frame) | 0.126 [0.108, 0.148] | 0.251 [0.235, 0.268] |
+
+Semantic alignment is the CLIP text cosine between Qwen2.5-VL-7B captions of the prediction
+and of the recording on the top camera, 512 captions in
+`wmbench_judge_caption_step200000.json`. The captions describe the scene more than the
+action, so 0.86 says the two clips read as the same kind of scene, not that the same thing
+happened. Trajectory accuracy tracks the task's objects with Grounding DINO at the
+model's resolution; the detector sees a small object in a minority of frames, so the
+tracks are sparse and the number is a first reading rather than a measurement. The boxes
+are in the score file and drawn in the case gallery.
+
+`action_following` on the 64-clip instruction-variant rollout is pending a rescore.
+
 ### Known gaps
 
 - **The wrist views scatter between checkpoints.** Step 150000 ties 140000 on wrist PSNR
