@@ -58,8 +58,11 @@ POLICY=${POLICY:-abc_dit_xl_200k}
 RUN=${RUN:-step${STEP}_${POLICY}}
 OUT=${OUT:-outputs/$TAG/wmbench/policy/$RUN}
 # The ABC checkpoint cache, prestaged on a login node: compute nodes have no internet and
-# abc_dit_xl_200k_model.pt is 8.1 GB behind a User-Agent header.
-ABC_CKPT_DIR=${ABC_CKPT_DIR:-$ROOT/abc_cache}
+# abc_dit_xl_200k_model.pt is 8.1 GB behind a User-Agent header. The path is
+# wmbench_leonardo.sh's, not one of this file's own: `setup` fetches the weight into
+# $WMBENCH_WEIGHTS/abc and `bench_env` exports that same default, so a second spelling here
+# would send the client looking where nothing was staged.
+ABC_CKPT_DIR=${ABC_CKPT_DIR:-${WMBENCH_WEIGHTS:-$ROOT/weights}/abc}
 # The pinned amazon-far/abc checkout, staged rather than vendored; venv_bench installs it,
 # and this keeps the path on PYTHONPATH for a checkout that was not installed.
 ABC_REPO=${ABC_REPO:-$ROOT/third_party/abc}
@@ -112,18 +115,20 @@ srun --overlap --ntasks=1 --cpus-per-task=6 --cpu-bind=none \
     --out $OUT
 STATUS=$?
 
+# Before the judge, not after: the server holds the checkpoint on the GPU for as long as
+# it lives, and the judge is a second 8B model wanting the same card.
+kill $SERVER 2>/dev/null
+wait $SERVER 2>/dev/null
+
 # The judge is a separate stage and a separate model, so it is not run here; when
 # JUDGE_MODEL names a prestaged Qwen3-VL it runs in the same allocation, because the
 # rollouts are already on this node's disk.
 if [ $STATUS -eq 0 ] && [ -n "${JUDGE_MODEL:-}" ]; then
   echo "judging $OUT for success"
-  srun --overlap --ntasks=1 --cpus-per-task=6 --cpu-bind=none \
+  srun --overlap --ntasks=1 --cpus-per-task=8 --cpu-bind=none \
     $ROOT/venv_bench/bin/python -m wmbench.cli judge \
       --manifest $OUT --rubric success --model "$JUDGE_MODEL" --view top
 fi
-
-kill $SERVER 2>/dev/null
-wait $SERVER 2>/dev/null
 
 # summary.json and the manifest are a few KB of provenance; the npz files and the mp4s are
 # gigabytes and stay in the durable tree, which `cluster fetch` does not reach into.

@@ -23,7 +23,7 @@ which clips, which policy, where the results go.
         --ready_file $TMPDIR/cw.ready \\
         --val_dataset_dir $CTRLWORLD_DATA/abc_mcap \\
         --clips dataset_meta_info/abc_mcap/eval_clips_v1.json \\
-        --policy abc_dit_xl_200k --ckpt_dir $CTRLWORLD_ROOT/abc_cache \\
+        --policy abc_dit_xl_200k --ckpt_dir $CTRLWORLD_ROOT/weights/abc \\
         --out outputs/0003_abc_mcap/wmbench/policy/step200000_dit
 
 The output directory is ABC's, not this repository's: `summary.json` in ABC's
@@ -126,8 +126,15 @@ def chunks_for(rounds, cadence, execute_chunk_dim):
     down costs the tail of the last round; rounding up would run the loop past its
     horizon, where it freezes, and a judge shown a frozen tail reads it as a scene where
     nothing happens. Losing a fraction of a round is the cheaper error.
+
+    The floor is a round, not a chunk. One chunk is fewer ticks than one round, so
+    `--rounds 1` -- the obvious first smoke run -- bought 15 ticks, never reached the 24
+    a round needs, and wrote a manifest of zero predicted frames without failing
+    anywhere: an empty `pred` is a valid array to every reader downstream.
     """
-    return max(1, (rounds * cadence.ticks_per_step) // int(execute_chunk_dim))
+    per_chunk = int(execute_chunk_dim)
+    one_round = -(-cadence.ticks_per_step // per_chunk)
+    return max(one_round, (rounds * cadence.ticks_per_step) // per_chunk)
 
 
 def main():
@@ -233,6 +240,9 @@ def write_manifest(abc_env, out_dir, op, reached, args, header, clips_path):
         'policy_checkpoint': args.ckpt_dir,
         'summary': 'summary.json'})
     videos = os.path.join(out_dir, 'views')
+    # The clip a rollout ran on, for the recorded duration: a record written without it
+    # claims `duration_s` 0, which reads as a clip of no length rather than as unknown.
+    by_id = {clip.clip_id: clip for clip in abc_env.clips}
     for rollout in abc_env.rollouts:
         views = list(rollout.frames)
         pred = np.stack([rollout.frames[v][1:] for v in views])
@@ -243,7 +253,7 @@ def write_manifest(abc_env, out_dir, op, reached, args, header, clips_path):
         frames = ClipFrames(gt=gt, pred=pred, views=views,
                             episode_id=rollout.episode_id,
                             start_idx=int(round(rollout.start_s * op.fps)))
-        record = writer.add(frames)
+        record = writer.add(frames, by_id.get(rollout.clip_id))
         record.start_s = rollout.start_s
         record.task = rollout.task
         record.instruction = rollout.instruction
